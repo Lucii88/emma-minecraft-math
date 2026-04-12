@@ -1,7 +1,16 @@
 import { GameState } from './types';
 
 const STORAGE_KEY = 'emmaMathQuest';
-const API_URL = '/api/save';
+const SUPABASE_URL = 'https://tkjgznrhxcdcxybxmjsj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRramd6bnJoeGNkY3h5YnhtanNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NzQwMDAsImV4cCI6MjA5MTU1MDAwMH0.BRuZkKvwGdhpxmoh354P5vU2BOZkYcDs_EkgOhXvXuk';
+const SAVE_ID = 'emma';
+
+const headers = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': `Bearer ${SUPABASE_KEY}`,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=minimal',
+};
 
 export function defaultState(): GameState {
   return {
@@ -30,12 +39,19 @@ export function defaultState(): GameState {
 
 export async function loadGameState(): Promise<GameState> {
   try {
-    const res = await fetch(API_URL);
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/game_saves?id=eq.${SAVE_ID}&select=state`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } },
+    );
     if (res.ok) {
-      const data = await res.json();
-      if (data && data.level) return { ...defaultState(), ...data };
+      const rows = await res.json();
+      if (rows.length > 0 && rows[0].state?.level) {
+        const cloud = { ...defaultState(), ...rows[0].state };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cloud));
+        return cloud;
+      }
     }
-  } catch { /* dev server not running, fall through */ }
+  } catch { /* offline, fall through to localStorage */ }
 
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -48,18 +64,23 @@ export async function loadGameState(): Promise<GameState> {
   return defaultState();
 }
 
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
 export async function saveGameState(state: GameState): Promise<void> {
-  const json = JSON.stringify(state, null, 2);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 
-  localStorage.setItem(STORAGE_KEY, json);
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => syncToCloud(state), 1000);
+}
 
+async function syncToCloud(state: GameState): Promise<void> {
   try {
-    await fetch(API_URL, {
+    await fetch(`${SUPABASE_URL}/rest/v1/game_saves`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: json,
+      headers: { ...headers, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ id: SAVE_ID, state, updated_at: new Date().toISOString() }),
     });
-  } catch { /* dev server not running */ }
+  } catch { /* offline — data safe in localStorage */ }
 }
 
 export function exportSave(state: GameState) {
