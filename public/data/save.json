@@ -1,0 +1,38 @@
+{
+  "level": 4,
+  "xp": 67,
+  "xpToNext": 172,
+  "emeralds": 8,
+  "gold": 4,
+  "streak": 5,
+  "bestStreak": 9,
+  "totalCorrect": 20,
+  "totalAttempts": 26,
+  "totalEffortPoints": 12,
+  "questsCompleted": 2,
+  "perfectQuests": 2,
+  "achievements": {
+    "first_quest": true,
+    "streak5": true
+  },
+  "inventory": {
+    "pet_cat": true,
+    "pickaxe_gold": true
+  },
+  "shopPurchases": {
+    "pet_cat": true,
+    "pickaxe_gold": true
+  },
+  "worldProgress": {
+    "plains": {
+      "completed": 1
+    },
+    "village": {
+      "completed": 1
+    }
+  },
+  "dailyDate": "Sun Apr 12 2026",
+  "dailyDone": false,
+  "hintsUsed": 2,
+  "sessionsPlayed": 5
+}
