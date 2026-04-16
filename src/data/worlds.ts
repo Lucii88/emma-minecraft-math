@@ -14,10 +14,28 @@ export const WORLDS: WorldDef[] = [
     color: '#8B8B8B', theme: 'normal',
   },
   {
+    id: 'beads', name: 'Korálková dílna', desc: 'Zlaté korálky a rozklad čísel!',
+    icon: '📿', type: 'beads_mixed', difficulty: 1, unlockLevel: 2,
+    quests: ['Korálkový had', 'Stavba stovky', 'Rozklad bloků', 'Doplněk diamantů', 'Korálková výzva'],
+    color: '#FF9800', theme: 'normal',
+  },
+  {
     id: 'village', name: 'Vesnice slovních úloh', desc: 'Pomoz vesničanům s problémy!',
     icon: '🏘️', type: 'word_problems', difficulty: 2, unlockLevel: 2,
     quests: ['Tržiště', 'Stavba domu', 'Obrana vesnice', 'Knihovna', 'Festival'],
     color: '#B8860B', theme: 'normal',
+  },
+  {
+    id: 'memory', name: 'Paměťová pevnost', desc: 'Trénuj paměť a vizuální vnímání!',
+    icon: '🧠', type: 'memory', difficulty: 1, unlockLevel: 2,
+    quests: ['Kouzelnická věž', 'Knihovna', 'Brána Endu', 'Čarodějova komnata', 'Trůnní sál'],
+    color: '#6A1B9A', theme: 'night',
+  },
+  {
+    id: 'snake_cave', name: 'Hadí jeskyně', desc: 'Skládej desítky z korálkových hadů!',
+    icon: '🐍', type: 'snake', difficulty: 2, unlockLevel: 3,
+    quests: ['Hadí doupě', 'Výměna za zlato', 'Desetinný labyrint', 'Hadí král', 'Hadí mistr'],
+    color: '#4CAF50', theme: 'normal',
   },
   {
     id: 'nether', name: 'Nether hádanek', desc: 'Logické hádanky v Netheru!',
@@ -26,16 +44,10 @@ export const WORLDS: WorldDef[] = [
     color: '#CC3300', theme: 'nether',
   },
   {
-    id: 'ocean', name: 'Oceán vzorců', desc: 'Najdi vzorce a posloupnosti!',
+    id: 'ocean', name: 'Oceán vzorců', desc: 'Najdi vzorce a stovkovou tabulku!',
     icon: '🌊', type: 'patterns', difficulty: 2, unlockLevel: 3,
     quests: ['Podmořský chrám', 'Korálový útes', 'Poklad na dně', 'Delfíní stezka', 'Podmořská pevnost'],
     color: '#0277BD', theme: 'ocean',
-  },
-  {
-    id: 'memory', name: 'Paměťová pevnost', desc: 'Trénuj paměť a vizuální vnímání!',
-    icon: '🧠', type: 'memory', difficulty: 1, unlockLevel: 2,
-    quests: ['Kouzelnická věž', 'Knihovna', 'Brána Endu', 'Čarodějova komnata', 'Trůnní sál'],
-    color: '#6A1B9A', theme: 'night',
   },
   {
     id: 'redstone', name: 'Redstone logika', desc: 'Logické operace a porovnávání!',

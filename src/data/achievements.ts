@@ -25,4 +25,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'effort500', name: 'Vytrvalá bojovnice', icon: '🔥', desc: '500 bodů za úsilí', check: s => s.totalEffortPoints >= 500 },
   { id: 'emeralds50', name: 'Bohatá obchodnice', icon: '💰', desc: 'Nastřádej 50 smaragdů', check: s => s.emeralds >= 50 },
   { id: 'sessions10', name: 'Věrná hráčka', icon: '🎮', desc: 'Odehraj 10 her', check: s => s.sessionsPlayed >= 10 },
+  { id: 'collector3', name: 'Sběratelka', icon: '🎒', desc: 'Kup 3 předměty v obchodě', check: s => Object.keys(s.shopPurchases).length >= 3 },
+  { id: 'collector8', name: 'Obchodní mistryně', icon: '🏪', desc: 'Kup 8 předmětů v obchodě', check: s => Object.keys(s.shopPurchases).length >= 8 },
+  { id: 'beads_world', name: 'Korálková mistryně', icon: '📿', desc: 'Dokonči 5 výprav v Korálkové dílně', check: s => (s.worldProgress['beads']?.completed || 0) >= 5 },
+  { id: 'snake_world', name: 'Hadí krotitelka', icon: '🐍', desc: 'Dokonči 5 výprav v Hadí jeskyni', check: s => (s.worldProgress['snake_cave']?.completed || 0) >= 5 },
+  { id: 'dragon_slayer', name: 'Drakobijce', icon: '🐉', desc: 'Dokonči Dračí výpravu', check: s => (s.worldProgress['dragon']?.completed || 0) >= 1 },
+  { id: 'gold_hoarder', name: 'Zlatá horečka', icon: '🪙', desc: 'Nastřádej 30 zlatých', check: s => s.gold >= 30 },
 ];

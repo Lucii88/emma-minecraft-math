@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useGameStore } from '../../data/state';
 import { TopBar } from '../components/TopBar';
 import { PixelCanvas, particles } from '../../engine/PixelCanvas';
@@ -6,6 +6,8 @@ import { playCorrect, playWrong, playClick, playXPOrb, playFlip, playMatch } fro
 import { getCorrectPraise, getEffortPraise, getStreakMessage } from '../../data/messages';
 import { Question } from '../../data/types';
 import { shuffle } from '../../game/questions/helpers';
+import { computeActiveEffects, ActiveEffects } from '../../game/ItemEffects';
+import { MontessoriVisual } from '../components/MontessoriVisual';
 
 const MC_ITEMS = ['🧱', '⛏️', '🗡️', '🏹', '🛡️', '🍎', '🍖', '🐑', '🐄', '🐷', '💎', '🪙', '🏠', '🌾', '🔥', '🪓'];
 
@@ -13,19 +15,28 @@ export function GameScreen() {
   const store = useGameStore();
   const {
     currentWorld, currentQuest, questQuestions, currentQIdx,
-    questErrors, questStartTime, streak,
+    questErrors, questStartTime, streak, inventory,
     setCurrentQIdx, addQuestError, setQuestion,
     gainXP, gainCurrency, incrementStreak, resetStreak,
     incrementCorrect, incrementAttempts, addEffortPoints,
     completeQuest, setWorldProgress, completeDailyChallenge,
     checkAchievements, showToast, setScreen, useHint, save,
+    useConsumable,
   } = store;
+
+  const effects = useMemo<ActiveEffects>(() => computeActiveEffects(inventory), [inventory]);
 
   const [feedback, setFeedback] = useState<{ type: string; msg: string; sub?: string } | null>(null);
   const [hintVisible, setHintVisible] = useState(false);
   const [inputVal, setInputVal] = useState('');
   const [disabledOpts, setDisabledOpts] = useState(false);
+  const [eliminatedOpts, setEliminatedOpts] = useState<Set<number>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const [freeHintUsed, setFreeHintUsed] = useState(false);
+  const [totemUsed, setTotemUsed] = useState(false);
+  const [streakShieldUsed, setStreakShieldUsed] = useState(false);
+  const [eliminateUsed, setEliminateUsed] = useState(false);
 
   // Memory game state
   const [memCards, setMemCards] = useState<string[]>([]);
@@ -37,11 +48,20 @@ export function GameScreen() {
   const q = questQuestions[currentQIdx] as Question | undefined;
   const theme = currentWorld?.theme || 'normal';
 
+  const effectiveDifficulty = currentWorld?.difficulty || 1;
+  const showMontessori = q?.montessori && (
+    effectiveDifficulty <= 1 ||
+    (effectiveDifficulty === 2 && hintVisible) ||
+    effects.visualHint
+  );
+
   useEffect(() => {
     setFeedback(null);
     setHintVisible(false);
     setInputVal('');
     setDisabledOpts(false);
+    setEliminatedOpts(new Set());
+    setEliminateUsed(false);
 
     if (q?.isSpecial && q.type === 'memory') {
       initMemory();
@@ -59,6 +79,20 @@ export function GameScreen() {
     setMemMatched(new Set());
     setMemMoves(0);
     setMemLock(false);
+  };
+
+  const eliminateWrongOptions = () => {
+    if (!q?.options || eliminateUsed) return;
+    setEliminateUsed(true);
+    const correctAnswer = q.correctIdx !== undefined ? q.correctIdx : null;
+    const wrongIdxs = q.options
+      .map((opt, i) => {
+        if (correctAnswer !== null) return i !== correctAnswer ? i : -1;
+        return String(opt) !== String(q.answer) ? i : -1;
+      })
+      .filter(i => i !== -1);
+    const toEliminate = shuffle(wrongIdxs).slice(0, effects.revealWrong);
+    setEliminatedOpts(new Set(toEliminate));
   };
 
   const handleAnswer = (selected: number | string, optIdx?: number) => {
@@ -86,7 +120,8 @@ export function GameScreen() {
     const newQ = { ...q, _wasCorrect: true };
     setQuestion(currentQIdx, newQ);
 
-    const xpGain = 10 + (streak + 1) * 2;
+    let xpGain = 10 + (streak + 1) * 2;
+    if (effects.xpBoost > 0) xpGain = Math.round(xpGain * (1 + effects.xpBoost));
     gainXP(xpGain);
     gainCurrency(1, 'emeralds');
     if (streak + 1 >= 5) gainCurrency(1, 'emeralds');
@@ -111,18 +146,37 @@ export function GameScreen() {
 
   const handleWrongAnswer = () => {
     if (!q) return;
+
+    if (effects.secondChance && !totemUsed) {
+      setTotemUsed(true);
+      playClick();
+      setFeedback({ type: 'try-again', msg: '🗿 Totem tě zachránil!', sub: 'Zkus to znovu — tenhle pokus se nepočítá.' });
+      setDisabledOpts(false);
+      setInputVal('');
+      return;
+    }
+
+    if (effects.streakShield && !streakShieldUsed && streak > 0) {
+      setStreakShieldUsed(true);
+    } else {
+      resetStreak();
+    }
+
     playWrong();
     addQuestError();
     addEffortPoints(2);
-    resetStreak();
 
     const effort = getEffortPraise();
-
     particles.emitWrong(window.innerWidth / 2, window.innerHeight / 2);
 
     if (!q._secondTry) {
       setQuestion(currentQIdx, { ...q, _secondTry: true });
       setFeedback({ type: 'try-again', msg: effort, sub: '+2 body za úsilí 💪' });
+      setDisabledOpts(false);
+      setInputVal('');
+    } else if (effects.extraTry && !q._thirdTry) {
+      setQuestion(currentQIdx, { ...q, _thirdTry: true });
+      setFeedback({ type: 'try-again', msg: '🦎 Axolotl ti dává extra šanci!', sub: effort });
       setDisabledOpts(false);
       setInputVal('');
     } else {
@@ -148,8 +202,23 @@ export function GameScreen() {
 
   const handleHint = () => {
     if (!q?.hint) return;
+    if (effects.freeHint && !freeHintUsed) {
+      setFreeHintUsed(true);
+      setHintVisible(true);
+      return;
+    }
     useHint();
     setHintVisible(true);
+  };
+
+  const handleSkipQuestion = () => {
+    if (!useConsumable('ender_pearl')) return;
+    setQuestion(currentQIdx, { ...q!, _skipped: true });
+    showToast('🟣 Ender perla — otázka přeskočena!');
+    setTimeout(() => {
+      if (currentQIdx + 1 >= questQuestions.length) finishQuest();
+      else setCurrentQIdx(currentQIdx + 1);
+    }, 800);
   };
 
   const handleRetry = () => {
@@ -185,7 +254,9 @@ export function GameScreen() {
           setTimeout(() => {
             setQuestion(currentQIdx, { ...q!, _wasCorrect: true });
             const bonus = Math.max(0, 20 - (memMoves + 1));
-            gainXP(15 + bonus);
+            let xp = 15 + bonus;
+            if (effects.xpBoost > 0) xp = Math.round(xp * (1 + effects.xpBoost));
+            gainXP(xp);
             gainCurrency(2, 'emeralds');
             showToast(`🧠 Paměťová hra hotová!\n${memMoves + 1} tahů — bonus ${bonus} bodů!`);
             particles.emitCorrect(window.innerWidth / 2, window.innerHeight / 2);
@@ -213,9 +284,10 @@ export function GameScreen() {
     completeQuest(perfect);
     if (currentWorld) setWorldProgress(currentWorld.id);
 
-    const xpBonus = perfect ? 30 : correct >= totalQ * 0.7 ? 15 : 5;
-    const emeraldBonus = perfect ? 5 : correct >= totalQ * 0.7 ? 3 : 1;
-    const goldBonus = elapsed < 60 ? 5 : elapsed < 120 ? 3 : 1;
+    let xpBonus = perfect ? 30 : correct >= totalQ * 0.7 ? 15 : 5;
+    if (effects.xpBoost > 0) xpBonus = Math.round(xpBonus * (1 + effects.xpBoost));
+    const emeraldBonus = (perfect ? 5 : correct >= totalQ * 0.7 ? 3 : 1) + effects.bonusEmeralds;
+    const goldBonus = (elapsed < 60 ? 5 : elapsed < 120 ? 3 : 1) + effects.bonusGold;
 
     gainXP(xpBonus);
     gainCurrency(emeraldBonus, 'emeralds');
@@ -223,11 +295,22 @@ export function GameScreen() {
 
     if (currentWorld?.id === 'daily') completeDailyChallenge();
 
+    if (currentWorld?.id === 'dragon') {
+      gainCurrency(15, 'emeralds');
+      gainCurrency(8, 'gold');
+    }
+
     particles.emitLevelUp(window.innerWidth / 2, window.innerHeight / 3);
     checkAchievements();
 
+    const bonusParts: string[] = [];
+    if (effects.bonusEmeralds > 0) bonusParts.push(`💎+${effects.bonusEmeralds} maják`);
+    if (effects.bonusGold > 0) bonusParts.push(`🪙+${effects.bonusGold} meč`);
+    if (effects.xpBoost > 0) bonusParts.push(`✨+${Math.round(effects.xpBoost * 100)}% XP`);
+    const bonusLine = bonusParts.length > 0 ? `\n🎒 ${bonusParts.join(' ')}` : '';
+
     showToast(
-      `⚔️ Výprava dokončena!\n${correct}/${totalQ} správně${perfect ? ' ⭐ PERFEKTNÍ!' : ''}\n+${xpBonus} bodů  +${emeraldBonus}💎  +${goldBonus}🪙`
+      `⚔️ Výprava dokončena!\n${correct}/${totalQ} správně${perfect ? ' ⭐ PERFEKTNÍ!' : ''}\n+${xpBonus} bodů  +${emeraldBonus}💎  +${goldBonus}🪙${bonusLine}`
     );
 
     setTimeout(() => setScreen('hub'), 4000);
@@ -296,7 +379,11 @@ export function GameScreen() {
                 </div>
               )}
 
-              {q.visual && !q.patternSeq && (
+              {q.montessori && (showMontessori || feedback?.type === 'fail') && (
+                <MontessoriVisual data={q.montessori} showAnswer={feedback?.type === 'fail'} />
+              )}
+
+              {q.visual && !q.patternSeq && !q.montessori && (
                 <div className="q-visual">{q.visual}</div>
               )}
 
@@ -331,23 +418,35 @@ export function GameScreen() {
                     {(q.options || []).map((opt, idx) => (
                       <button
                         key={idx}
-                        className="answer-option mc-btn mc-btn-stone"
+                        className={`answer-option mc-btn mc-btn-stone ${eliminatedOpts.has(idx) ? 'eliminated' : ''}`}
                         onClick={() => { playClick(); handleAnswer(opt, idx); }}
-                        disabled={disabledOpts}
+                        disabled={disabledOpts || eliminatedOpts.has(idx)}
                       >
-                        {opt}
+                        {eliminatedOpts.has(idx) ? '✕' : opt}
                       </button>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Hint */}
-              {q.hint && !hintVisible && (
-                <button className="mc-btn mc-btn-purple hint-btn" onClick={handleHint}>
-                  💡 Nápověda
-                </button>
-              )}
+              {/* Item action buttons */}
+              <div className="item-actions">
+                {q.hint && !hintVisible && (
+                  <button className="mc-btn mc-btn-purple hint-btn" onClick={handleHint}>
+                    {effects.freeHint && !freeHintUsed ? '🐱 Kočka šeptá...' : '💡 Nápověda'}
+                  </button>
+                )}
+                {effects.revealWrong > 0 && !eliminateUsed && q.options && q.inputMode !== 'input' && (
+                  <button className="mc-btn mc-btn-stone hint-btn" onClick={eliminateWrongOptions}>
+                    ⛏️ Škrtni špatné
+                  </button>
+                )}
+                {(store.consumables?.ender_pearl || 0) > 0 && !disabledOpts && (
+                  <button className="mc-btn mc-btn-stone hint-btn" onClick={handleSkipQuestion}>
+                    🟣 Přeskočit
+                  </button>
+                )}
+              </div>
               {hintVisible && q.hint && (
                 <div className="hint-text body-text animate-slideUp">💡 {q.hint}</div>
               )}

@@ -40,6 +40,8 @@ const PATTERN_TYPES: PatternGen[] = [
 ];
 
 export function genPattern(d: number): Question {
+  if (Math.random() < 0.3) return genHundredBoard(d);
+
   const p = pick(PATTERN_TYPES)();
   return {
     type: 'patterns',
@@ -50,5 +52,35 @@ export function genPattern(d: number): Question {
     hint: p.hint,
     inputMode: 'options',
     patternSeq: p.seq,
+  };
+}
+
+function genHundredBoard(d: number): Question {
+  const grid: (number | null)[] = Array.from({ length: 100 }, (_, i) => i + 1);
+  const blankCount = d <= 1 ? 1 : d <= 2 ? 2 : 3;
+
+  const blanks: number[] = [];
+  for (let i = 0; i < blankCount; i++) {
+    let idx: number;
+    do { idx = randInt(0, 99); } while (blanks.includes(idx));
+    blanks.push(idx);
+  }
+
+  const targetIdx = blanks[0];
+  const answer = targetIdx + 1;
+
+  for (const idx of blanks) {
+    grid[idx] = null;
+  }
+
+  return {
+    type: 'patterns',
+    category: '📊 Stovková tabulka',
+    text: `Které číslo chybí na pozici označené "?"?`,
+    answer,
+    options: generateOptions(answer, d),
+    hint: `Řádky jdou po desítkách: 1-10, 11-20, 21-30...`,
+    inputMode: 'options',
+    montessori: { type: 'hundred_board', grid },
   };
 }

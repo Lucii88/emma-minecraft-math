@@ -29,6 +29,7 @@ export function defaultState(): GameState {
     achievements: {},
     inventory: {},
     shopPurchases: {},
+    consumables: {},
     worldProgress: {},
     dailyDate: null,
     dailyDone: false,

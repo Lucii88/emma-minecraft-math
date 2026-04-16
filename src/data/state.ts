@@ -29,7 +29,9 @@ interface GameStore extends GameState {
   incrementSession: () => void;
   setWorldProgress: (worldId: string) => void;
   completeDailyChallenge: () => void;
-  purchaseItem: (itemId: string, price: number) => void;
+  purchaseItem: (itemId: string, price: number, currency?: 'emeralds' | 'gold') => void;
+  purchaseConsumable: (itemId: string, price: number) => void;
+  useConsumable: (itemId: string) => boolean;
   useHint: () => void;
   checkAchievements: () => string[];
   showToast: (msg: string) => void;
@@ -74,7 +76,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       totalEffortPoints: s.totalEffortPoints,
       questsCompleted: s.questsCompleted, perfectQuests: s.perfectQuests,
       achievements: s.achievements, inventory: s.inventory,
-      shopPurchases: s.shopPurchases, worldProgress: s.worldProgress,
+      shopPurchases: s.shopPurchases, consumables: s.consumables,
+      worldProgress: s.worldProgress,
       dailyDate: s.dailyDate, dailyDone: s.dailyDone,
       hintsUsed: s.hintsUsed, sessionsPlayed: s.sessionsPlayed,
     };
@@ -155,13 +158,31 @@ export const useGameStore = create<GameStore>((set, get) => ({
     get().save();
   },
 
-  purchaseItem: (itemId, price) => {
+  purchaseItem: (itemId, price, currency = 'emeralds') => {
     set(s => ({
-      emeralds: s.emeralds - price,
+      [currency]: s[currency] - price,
       shopPurchases: { ...s.shopPurchases, [itemId]: true },
       inventory: { ...s.inventory, [itemId]: true },
     }));
     get().save();
+  },
+
+  purchaseConsumable: (itemId, price) => {
+    set(s => ({
+      gold: s.gold - price,
+      consumables: { ...s.consumables, [itemId]: (s.consumables[itemId] || 0) + 1 },
+    }));
+    get().save();
+  },
+
+  useConsumable: (itemId) => {
+    const s = get();
+    if ((s.consumables[itemId] || 0) <= 0) return false;
+    set(s => ({
+      consumables: { ...s.consumables, [itemId]: (s.consumables[itemId] || 0) - 1 },
+    }));
+    get().save();
+    return true;
   },
 
   useHint: () => {

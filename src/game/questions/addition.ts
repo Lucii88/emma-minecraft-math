@@ -3,7 +3,7 @@ import { randInt, generateOptions } from './helpers';
 
 export function genAddition(d: number): Question {
   let a: number, b: number;
-  if (d <= 1) { a = randInt(1, 20); b = randInt(1, 20); }
+  if (d <= 1) { a = randInt(1, 18); b = randInt(1, 18 - a); }
   else if (d <= 2) { a = randInt(10, 50); b = randInt(10, 50); }
   else { a = randInt(20, 60); b = randInt(20, 40); }
 
@@ -21,5 +21,6 @@ export function genAddition(d: number): Question {
     visual,
     hint: `Rozlož si to: ${a} = ${Math.floor(a / 10) * 10} + ${a % 10}, pak přičti ${b}`,
     inputMode: d >= 2 ? 'input' : 'options',
+    montessori: { type: 'strip_add', a, b },
   };
 }

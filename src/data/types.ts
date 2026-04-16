@@ -14,11 +14,22 @@ export interface GameState {
   achievements: Record<string, boolean>;
   inventory: Record<string, boolean>;
   shopPurchases: Record<string, boolean>;
+  consumables: Record<string, number>;
   worldProgress: Record<string, { completed: number }>;
   dailyDate: string | null;
   dailyDone: boolean;
   hintsUsed: number;
   sessionsPlayed: number;
+}
+
+export interface MontessoriData {
+  type: 'strip_add' | 'strip_sub' | 'golden_beads' | 'hundred_board' | 'decomposition' | 'snake';
+  a?: number;
+  b?: number;
+  values?: number[];
+  grid?: (number | null)[];
+  parts?: number[];
+  whole?: number;
 }
 
 export interface Question {
@@ -34,8 +45,11 @@ export interface Question {
   isSpecial?: boolean;
   correctIdx?: number;
   hintUsed?: boolean;
+  montessori?: MontessoriData;
   _wasCorrect?: boolean;
   _secondTry?: boolean;
+  _thirdTry?: boolean;
+  _skipped?: boolean;
 }
 
 export interface WorldDef {

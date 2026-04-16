@@ -2,7 +2,7 @@ import { useGameStore } from '../../data/state';
 import { TopBar } from '../components/TopBar';
 import { PixelCanvas } from '../../engine/PixelCanvas';
 import { ACHIEVEMENTS } from '../../data/achievements';
-import { SHOP_ITEMS } from '../../data/shopItems';
+import { SHOP_ITEMS, GOLD_SHOP_ITEMS } from '../../data/shopItems';
 import { exportSave, importSave } from '../../data/persistence';
 
 export function InventoryScreen() {
@@ -26,7 +26,8 @@ export function InventoryScreen() {
       totalEffortPoints: s.totalEffortPoints,
       questsCompleted: s.questsCompleted, perfectQuests: s.perfectQuests,
       achievements: s.achievements, inventory: s.inventory,
-      shopPurchases: s.shopPurchases, worldProgress: s.worldProgress,
+      shopPurchases: s.shopPurchases, consumables: s.consumables,
+      worldProgress: s.worldProgress,
       dailyDate: s.dailyDate, dailyDone: s.dailyDone,
       hintsUsed: s.hintsUsed, sessionsPlayed: s.sessionsPlayed,
     });
@@ -51,7 +52,12 @@ export function InventoryScreen() {
     input.click();
   };
 
-  const purchased = Object.keys(shopPurchases);
+  const { consumables } = store;
+  const purchasedItems = Object.keys(shopPurchases)
+    .map(id => SHOP_ITEMS.find(s => s.id === id))
+    .filter(Boolean) as typeof SHOP_ITEMS;
+
+  const activeConsumables = Object.entries(consumables || {}).filter(([, count]) => count > 0);
 
   return (
     <div className="screen inventory-screen">
@@ -86,20 +92,47 @@ export function InventoryScreen() {
             </div>
           </div>
 
-          {/* Inventory */}
+          {/* Inventory with effects */}
           <div className="inv-section">
             <h3 className="inv-title pixel-text">🎒 Inventář</h3>
-            <div className="inv-slots">
-              {Array.from({ length: 18 }).map((_, i) => {
-                const item = purchased[i] ? SHOP_ITEMS.find(s => s.id === purchased[i]) : null;
-                return (
-                  <div key={i} className="inv-slot">
-                    {item && <span className="inv-item-icon">{item.icon}</span>}
+            {purchasedItems.length > 0 ? (
+              <div className="inv-items-list">
+                {purchasedItems.map(item => (
+                  <div key={item.id} className="inv-item-row mc-panel">
+                    <span className="inv-item-icon">{item.icon}</span>
+                    <div className="inv-item-info">
+                      <div className="inv-item-name pixel-text">{item.name}</div>
+                      {item.effectDesc && <div className="inv-item-effect body-text">{item.effectDesc}</div>}
+                    </div>
                   </div>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="inv-empty body-text">Zatím prázdný — nakupuj v obchodě!</div>
+            )}
           </div>
+
+          {/* Consumables */}
+          {activeConsumables.length > 0 && (
+            <div className="inv-section">
+              <h3 className="inv-title pixel-text">🧪 Spotřební předměty</h3>
+              <div className="inv-items-list">
+                {activeConsumables.map(([id, count]) => {
+                  const item = GOLD_SHOP_ITEMS.find(g => g.id === id);
+                  if (!item) return null;
+                  return (
+                    <div key={id} className="inv-item-row mc-panel">
+                      <span className="inv-item-icon">{item.icon}</span>
+                      <div className="inv-item-info">
+                        <div className="inv-item-name pixel-text">{item.name} ×{count}</div>
+                        {item.effectDesc && <div className="inv-item-effect body-text">{item.effectDesc}</div>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Stats */}
           <div className="inv-section">

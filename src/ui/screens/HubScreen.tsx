@@ -10,7 +10,9 @@ import { generateQuestion } from '../../game/questions';
 
 export function HubScreen() {
   const store = useGameStore();
-  const { level, worldProgress, dailyDone, startQuest, dailyDate, setState } = store;
+  const { level, worldProgress, dailyDone, startQuest, dailyDate, setState, inventory } = store;
+
+  const hasDragonEgg = !!inventory?.dragon_egg;
 
   const today = new Date().toDateString();
   if (dailyDate !== today) {
@@ -41,6 +43,19 @@ export function HubScreen() {
     );
   };
 
+  const handleDragonQuest = () => {
+    playClick();
+    const questions = [];
+    for (let i = 0; i < 10; i++) {
+      questions.push(generateQuestion('mixed', 3));
+    }
+    startQuest(
+      { id: 'dragon', name: 'Dračí výprava', desc: '', icon: '🐉', type: 'mixed', difficulty: 3, unlockLevel: 1, quests: ['Dračí výprava'], color: '#FFD700', theme: 'end' },
+      'Dračí výprava',
+      questions
+    );
+  };
+
   return (
     <div className="screen hub-screen">
       <PixelCanvas theme="normal" />
@@ -53,6 +68,13 @@ export function HubScreen() {
             <div className="daily-banner" onClick={handleDaily}>
               <div className="daily-title pixel-text">⚡ DENNÍ VÝZVA ⚡</div>
               <div className="daily-desc body-text">Vyřeš 5 záhad Endermana a získej extra diamanty!</div>
+            </div>
+          )}
+
+          {hasDragonEgg && (
+            <div className="daily-banner" onClick={handleDragonQuest} style={{ borderColor: '#FFD700' }}>
+              <div className="daily-title pixel-text" style={{ color: '#FFD700' }}>🐉 DRAČÍ VÝPRAVA 🐉</div>
+              <div className="daily-desc body-text">10 nejtěžších výzev! Odměna: 20💎 + 10🪙</div>
             </div>
           )}
 

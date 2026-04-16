@@ -6,6 +6,9 @@ import { genPuzzle } from './puzzles';
 import { genPattern } from './patterns';
 import { genMemory } from './memory';
 import { genLogic } from './logic';
+import { genPlaceValue } from './placeValue';
+import { genDecomposition } from './decomposition';
+import { genSnake } from './snake';
 import { pick } from './helpers';
 
 export function generateQuestion(type: string, difficulty: number): Question {
@@ -17,9 +20,14 @@ export function generateQuestion(type: string, difficulty: number): Question {
     case 'patterns': return genPattern(difficulty);
     case 'memory': return genMemory(difficulty);
     case 'logic': return genLogic(difficulty);
+    case 'place_value': return genPlaceValue(difficulty);
+    case 'decomposition': return genDecomposition(difficulty);
+    case 'snake': return genSnake(difficulty);
+    case 'beads_mixed':
+      return generateQuestion(pick(['place_value', 'decomposition']), difficulty);
     case 'mixed':
       return generateQuestion(
-        pick(['addition', 'subtraction', 'word_problems', 'puzzles', 'patterns', 'logic']),
+        pick(['addition', 'subtraction', 'word_problems', 'puzzles', 'patterns', 'logic', 'place_value', 'decomposition']),
         difficulty
       );
     default: return genAddition(difficulty);
