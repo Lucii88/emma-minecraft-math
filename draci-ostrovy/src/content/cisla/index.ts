@@ -24,3 +24,5 @@ export const skills: SkillDef[] = [
   vahy,
   ctverce,
 ];
+export { cards } from './karty';
+export { missions } from './mise';

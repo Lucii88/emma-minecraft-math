@@ -52,7 +52,7 @@ export const ISLANDS: IslandDef[] = [
     from: 'z Ostrova světa',
     tagline: 'Příroda, mapy a hvězdy',
     species: { name: 'Mapovec větrný', description: 'Létá tak vysoko, že vidí celou zemi jako mapu.' },
-    available: false,
+    available: true,
   },
   {
     id: 'zahady',
@@ -61,7 +61,7 @@ export const ISLANDS: IslandDef[] = [
     from: 'z Ostrova záhad',
     tagline: 'Logika a otázka „Jak to víme?“',
     species: { name: 'Hádankář mlžný', description: 'Schovává se v mlze a na každou odpověď se zeptá: „A jak to víš?“' },
-    available: false,
+    available: true,
   },
   {
     id: 'trh',
@@ -70,7 +70,7 @@ export const ISLANDS: IslandDef[] = [
     from: 'z Vikingského trhu',
     tagline: 'Peníze, spoření a chytrá rozhodnutí',
     species: { name: 'Šupinka obchodní', description: 'Sbírá lesklé mince, ale ví, že nejcennější je dobrý nápad.' },
-    available: false,
+    available: true,
   },
   {
     id: 'dilna',
@@ -79,11 +79,11 @@ export const ISLANDS: IslandDef[] = [
     from: 'z Vynálezecké dílny',
     tagline: 'Postupy, roboti a stroje, které se učí',
     species: { name: 'Ozubenec', description: 'Napůl drak, napůl stroj. Rád se nechá opravovat.' },
-    available: false,
+    available: true,
   },
 ];
 
-// Ostrov je dostupný, jen pokud má obsah.
+// Ostrov je dostupný, jen pokud má obsah (bez dovedností zůstává v mlze).
 for (const island of ISLANDS) island.available = island.available && skillsFor(island.id).length > 0;
 
 export const SKILLS: SkillDef[] = ISLANDS.flatMap((i) => skillsFor(i.id));

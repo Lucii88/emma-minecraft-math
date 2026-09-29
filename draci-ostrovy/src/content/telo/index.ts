@@ -14,3 +14,5 @@ export const skills: SkillDef[] = [mapa, organy, smysly, kostra, zdravi, bezpeci
 
 /** Výčet všech úloh dovednosti a úrovně (pro testy a přehled pro rodiče). */
 export { enumerateItems } from './common';
+export { cards } from './karty';
+export { missions } from './mise';

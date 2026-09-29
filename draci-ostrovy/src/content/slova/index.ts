@@ -25,3 +25,5 @@ export const skills: SkillDef[] = [
   protiklady,
   tvoreni,
 ];
+export { cards } from './karty';
+export { missions } from './mise';
