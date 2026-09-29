@@ -2262,6 +2262,12 @@ h3 {
   letter-spacing: -0.05em;
 }
 
+.choices.pictures.many .choice {
+  font-size: 1.35rem;
+  letter-spacing: -0.1em;
+  padding: 12px 8px;
+}
+
 .vtable.sm .vcell {
   font-size: 1.05rem;
 }

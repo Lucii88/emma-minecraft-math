@@ -36,8 +36,10 @@ export function ChoiceAnswer({
   const long = options.some((o) => o.label.length > 18);
   // Samé obrázky (sudoku, matice, řady) chtějí větší písmo.
   const pictures = options.every((o) => !/[\p{L}\p{N}]/u.test(o.label));
+  // Víc obrázků v jedné možnosti (🔥🔥🔥🔥) se na telefonu musí vejít na řádek.
+  const many = pictures && options.some((o) => [...o.label].length > 3);
   return (
-    <div className={`choices${long && !pictures ? ' long' : ''}${options.length === 2 ? ' two' : ''}${pictures ? ' pictures' : ''}`}>
+    <div className={`choices${long && !pictures ? ' long' : ''}${options.length === 2 ? ' two' : ''}${pictures ? ' pictures' : ''}${many ? ' many' : ''}`}>
       {options.map((o, i) => {
         const isWrong = wrong.includes(i);
         const isOk = correctShown === i;
