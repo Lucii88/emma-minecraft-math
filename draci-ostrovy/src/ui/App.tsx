@@ -1,0 +1,47 @@
+import { lazy, Suspense } from 'react';
+import { useGame } from '../core/game';
+import { Hatch } from './screens/Hatch';
+import { MapScreen } from './screens/MapScreen';
+import { Play } from './screens/Play';
+import { Atlas, DayEnd, IslandScreen, Journal, MissionEnd } from './screens/Screens';
+
+// Rodičovská část se načte, až když je potřeba.
+const Parent = lazy(() => import('./parent/Parent').then((m) => ({ default: m.Parent })));
+
+export function App() {
+  const screen = useGame((s) => s.screen);
+  const island = useGame((s) => s.island);
+
+  const view = (() => {
+    switch (screen) {
+      case 'hatch':
+        return <Hatch />;
+      case 'map':
+        return <MapScreen />;
+      case 'island':
+        return <IslandScreen />;
+      case 'play':
+        return <Play />;
+      case 'missionEnd':
+        return <MissionEnd />;
+      case 'dayEnd':
+        return <DayEnd />;
+      case 'atlas':
+        return <Atlas />;
+      case 'journal':
+        return <Journal />;
+      case 'parent':
+        return (
+          <Suspense fallback={<p className="center">Načítám…</p>}>
+            <Parent />
+          </Suspense>
+        );
+    }
+  })();
+
+  return (
+    <div key={screen + (screen === 'island' ? island : '')} className="app screen-enter">
+      {view}
+    </div>
+  );
+}
