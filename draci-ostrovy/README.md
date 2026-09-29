@@ -16,7 +16,7 @@ ACCESS_CODE=... npm start   # server s přihlášením (server.mjs) nad dist/
 
 ## Nasazení (Railway)
 
-- Služba s kořenovým adresářem `draci-ostrovy`, konfigurace v `railway.json` (sestavení `npm run build`, spuštění `node server.mjs`, kontrola `/zdravi`).
+- Služba v Railway (projekt `draci-ostrovy`) má nastavené: kořenový adresář `/draci-ostrovy`, sestavení `npm run build`, spuštění `node server.mjs`, kontrolu zdraví `/zdravi` a sledované cesty `/draci-ostrovy/**`.
 - Proměnné: `ACCESS_CODE` (rodinný kód – bez něj server nenastartuje) a `SESSION_SECRET` (náhodný řetězec pro podpis přihlášení). Změna kterékoli z nich odhlásí všechna zařízení.
 - `server.mjs` je bez závislostí: kdo nezná kód, uvidí jen přihlašovací stránku. Přihlášení platí na zařízení 400 dní, po deseti chybných pokusech z jedné adresy se přihlašování na čtvrt hodiny zablokuje. Vyhledávače mají přístup zakázaný (`noindex`, `robots.txt`).
 - Server nic neukládá; data hry zůstávají v prohlížeči.
