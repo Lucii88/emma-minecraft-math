@@ -248,7 +248,7 @@ export const useGame = create<GameState>((set, get) => ({
     if (!profile.species.includes(mission.island) && ISLANDS.find((i) => i.id === mission.island)?.available) {
       const isl = islandOf(mission.island);
       profile = { ...profile, species: [...profile.species, mission.island] };
-      profile = journal(profile, 'species', `Nový přítel z ostrova ${isl.name}: ${isl.species.name}.`);
+      profile = journal(profile, 'species', `Nový přítel ${isl.from}: ${isl.species.name}.`);
       endGains.push({ kind: 'species', text: `Nový dračí přítel: ${isl.species.name}` });
     }
     if (brave) {

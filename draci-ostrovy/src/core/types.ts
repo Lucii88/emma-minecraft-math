@@ -182,6 +182,10 @@ export interface SkillDef {
 export interface IslandDef {
   id: IslandId;
   name: string;
+  /** Kde: „na Ostrově čísel“, „ve Vynálezecké dílně“. */
+  where: string;
+  /** Odkud: „z Ostrova čísel“. */
+  from: string;
   tagline: string;
   /** Dračí druh, se kterým se hráčka na ostrově spřátelí. */
   species: { name: string; description: string };

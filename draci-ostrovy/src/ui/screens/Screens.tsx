@@ -243,7 +243,7 @@ export function Atlas() {
             <div key={i.id} className={`card species-card${has ? '' : ' locked'}`}>
               <IslandArt id={i.id} size={110} locked={!has} />
               <strong>{has ? i.species.name : '???'}</strong>
-              <span className="muted small">{has ? i.species.description : i.available ? `Žije na ostrově ${i.name}.` : 'Ostrov je zatím v mlze.'}</span>
+              <span className="muted small">{has ? i.species.description : i.available ? `Žije ${i.where}.` : 'Ostrov je zatím v mlze.'}</span>
             </div>
           );
         })}
