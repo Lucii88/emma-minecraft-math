@@ -66,9 +66,12 @@ function PathLine({ grid, path, tone }: { grid: GridVisual; path: Move[]; tone: 
     const next = { x: pos.x + d.x, y: pos.y + d.y };
     const from = center(pos);
     if (!insideGrid(grid, next)) {
+      // Krok, který vyletí z mapy: čára končí na okraji s ✖ a číslem kroku,
+      // ať je vidět, který krok to byl.
       const edge = { x: from.x + (d.x * CELL) / 2, y: from.y + (d.y * CELL) / 2 };
       pts.push(edge);
       crashes.push(edge);
+      labels.push({ x: from.x + (d.x * CELL) / 4 + (d.y ? 16 : 0), y: from.y + (d.y * CELL) / 4 - (d.x ? 16 : 0), n: i + 1 });
       break;
     }
     const to = center(next);
