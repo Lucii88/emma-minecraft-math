@@ -5,10 +5,13 @@ import { sfx } from '../../core/sound';
 import type { BodyRegion, Confidence, Item } from '../../core/types';
 import { capitalize, count, formatNumber } from '../../core/czech';
 import { Dragon, type DragonMood } from '../components/Dragon';
-import { ChoiceAnswer, LettersAnswer, NumberLineAnswer, NumberPad, OpenAnswer } from '../components/Answers';
+import { ChoiceAnswer, LettersAnswer, NumberLineAnswer, NumberPad, OpenAnswer, OrderAnswer } from '../components/Answers';
 import { ConfidencePicker, Icon, Progress, SpeakButton } from '../components/Bits';
+import { ProgramAnswer } from '../components/ProgramAnswer';
 import { renderMathVisual } from '../visuals/MathVisuals';
+import { renderWorldVisual, visualSpeech } from '../visuals/WorldVisuals';
 import { BodyMap, labelOf } from '../visuals/BodyMap';
+import { arrows, shortestProgram } from '../../core/grid';
 import { IslandArt } from './MapScreen';
 
 const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)];
@@ -157,8 +160,16 @@ function ItemView({ item }: { item: Item }) {
     if (!item.visual) return null;
     if (item.visual.type === 'body') return null; // mapa těla se vykreslí v odpovědi
     if (a.kind === 'numberline' && item.visual.type === 'numberline') return null;
-    return renderMathVisual(item.visual);
+    if (a.kind === 'program') return null; // mřížka s letícím drakem je součástí odpovědi
+    return renderMathVisual(item.visual) ?? renderWorldVisual(item.visual);
   }, [item, a.kind]);
+
+  // Nejkratší let pro ukázku řešení (úlohy s programem).
+  const solutionMoves = useMemo(() => {
+    if (a.kind !== 'program' || item.visual?.type !== 'grid' || !item.visual.dragon || !item.visual.goal) return null;
+    const g = item.visual;
+    return shortestProgram({ cols: g.cols, rows: g.rows, dragon: g.dragon!, goal: g.goal!, rocks: g.rocks }, a.collect ?? []);
+  }, [item, a]);
 
   const correctChoice = a.kind === 'choice' && (phase === 'feedback' || phase === 'solution') ? a.correct : null;
   const solutionText =
@@ -172,7 +183,11 @@ function ItemView({ item }: { item: Item }) {
             ? formatNumber(a.correct)
             : a.kind === 'tap'
               ? labelOf(a.correct as BodyRegion)
-              : '';
+              : a.kind === 'program'
+                ? `například ${arrows(solutionMoves ?? [])}`
+                : a.kind === 'order'
+                  ? a.correct.join(' → ')
+                  : '';
 
   const reading = item.visual?.type === 'reading';
 
@@ -182,7 +197,7 @@ function ItemView({ item }: { item: Item }) {
         {reading && visual}
         <div className="prompt-row">
           <p className="prompt">{item.prompt}</p>
-          <SpeakButton text={[item.visual?.type === 'reading' ? `${item.visual.title}. ${item.visual.text}` : '', item.speak ?? item.prompt].filter(Boolean).join(' ')} />
+          <SpeakButton text={[item.visual?.type === 'reading' ? `${item.visual.title}. ${item.visual.text}` : '', item.speak ?? item.prompt, visualSpeech(item.visual)].filter(Boolean).join(' ')} />
         </div>
         {!reading && visual && <div className="visual">{visual}</div>}
 
@@ -221,6 +236,17 @@ function ItemView({ item }: { item: Item }) {
             />
           )}
           {a.kind === 'choice' && item.visual?.type === 'body' && <BodyMap mode={item.visual.mode} highlight={item.visual.highlight} />}
+          {a.kind === 'program' && item.visual?.type === 'grid' && (
+            <ProgramAnswer
+              grid={item.visual}
+              maxSteps={a.maxSteps}
+              collect={a.collect ?? []}
+              disabled={locked}
+              solution={phase === 'solution' ? solutionMoves : null}
+              onResult={submit}
+            />
+          )}
+          {a.kind === 'order' && <OrderAnswer items={a.items} disabled={locked} onSubmit={(order) => submit(order.every((x, i) => x === a.correct[i]))} />}
           {a.kind === 'open' && phase === 'answer' && (
             <OpenAnswer
               countIdeas={a.countIdeas}

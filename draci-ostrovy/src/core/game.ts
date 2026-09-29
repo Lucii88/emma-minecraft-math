@@ -1,19 +1,19 @@
 // Stav hry (Zustand): profil, navigace a průběh právě hraného letu.
 
 import { create } from 'zustand';
-import { ISLANDS, SKILL_BY_ID, TRICKS, islandOf } from '../content';
+import { CARDS, ISLANDS, MISSIONS, SKILL_BY_ID, TRICKS, islandOf } from '../content';
 import { masteredLevels, scoreOf, updateState } from './model';
 import { MISSION_LENGTH, missionForSkill, nextItem, pickGrowthSkill, planDay, stateOf, type Mission } from './planner';
 import { appendEvent, loadProfile, saveProfile, type DragonLook, type JournalEntry, type Profile } from './storage';
 import { setMuted } from './sound';
 import type { AnswerEvent, Confidence, IslandId, Item } from './types';
 
-export type Screen = 'hatch' | 'map' | 'island' | 'play' | 'missionEnd' | 'dayEnd' | 'atlas' | 'journal' | 'parent';
+export type Screen = 'hatch' | 'map' | 'island' | 'play' | 'missionEnd' | 'dayEnd' | 'book' | 'journal' | 'parent';
 
 export type Outcome = AnswerEvent['outcome'];
 
 export interface Gain {
-  kind: 'level' | 'trick' | 'species' | 'brave';
+  kind: 'level' | 'trick' | 'species' | 'brave' | 'card';
   text: string;
   trickId?: string;
 }
@@ -58,6 +58,9 @@ interface GameState {
   completeItem: (outcome: Outcome, extra?: { confidence?: Confidence; text?: string; ideas?: number }) => void;
   continueRun: () => void;
   quitRun: () => void;
+  /** Společná mise s rodičem: odškrtnout, nebo (rodič) zrušit odškrtnutí. */
+  completeMission: (id: string) => void;
+  undoMission: (id: string) => void;
 }
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -78,6 +81,17 @@ function unlockNextTrick(p: Profile): { profile: Profile; gain: Gain | null } {
   let profile: Profile = { ...p, tricks: [...p.tricks, next.id] };
   profile = journal(profile, 'trick', `Nový kousek pro ${name}: ${next.name}.`);
   return { profile, gain: { kind: 'trick', text: `Nový kousek: ${next.name}!`, trickId: next.id } };
+}
+
+/** Karty z Knihy draků, které se odemknou, když stupeň dovednosti vzroste
+ *  z `from` na `to`. Oznámíme je jedním ziskem, ať konec mise nezahltí. */
+function unlockCards(p: Profile, skillId: string, from: number, to: number): { profile: Profile; gain: Gain | null } {
+  const cards = CARDS.filter((c) => c.skillId === skillId && c.level > from && c.level <= to);
+  if (!cards.length) return { profile: p, gain: null };
+  const titles = cards.map((c) => c.title).join(', ');
+  const profile = journal(p, 'card', `${cards.length === 1 ? 'Nová stránka' : 'Nové stránky'} v Knize draků: ${titles}.`);
+  const text = cards.length === 1 ? `Nová stránka v Knize draků: ${cards[0].title}` : `${cards.length} nové stránky v Knize draků`;
+  return { profile, gain: { kind: 'card', text: cards.length > 4 ? `${cards.length} nových stránek v Knize draků` : text } };
 }
 
 const initialProfile = loadProfile();
@@ -224,6 +238,9 @@ export const useGame = create<GameState>((set, get) => ({
         const t = unlockNextTrick(profile);
         profile = t.profile;
         if (t.gain) gains.push(t.gain);
+        const c = unlockCards(profile, skill.id, best, lvAfter);
+        profile = c.profile;
+        if (c.gain) gains.push(c.gain);
       }
     } else if (extra.text) {
       profile = journal(profile, 'story', `Tvůj text: „${extra.text.slice(0, 80)}${extra.text.length > 80 ? '…' : ''}“`);
@@ -286,6 +303,22 @@ export const useGame = create<GameState>((set, get) => ({
   },
 
   quitRun: () => set({ run: null, screen: 'map', choosingIsland: false }),
+
+  completeMission: (id) => {
+    const mission = MISSIONS.find((m) => m.id === id);
+    let profile = get().profile;
+    if (!mission || profile.missionsDone[id]) return;
+    profile = { ...profile, missionsDone: { ...profile.missionsDone, [id]: Date.now() } };
+    profile = journal(profile, 'mission', `Společná mise splněna: ${mission.title}.`);
+    set({ profile: persist(profile) });
+  },
+
+  undoMission: (id) => {
+    const profile = get().profile;
+    if (!profile.missionsDone[id]) return;
+    const { [id]: _, ...rest } = profile.missionsDone;
+    set({ profile: persist({ ...profile, missionsDone: rest }) });
+  },
 }));
 
 export { MISSION_LENGTH };

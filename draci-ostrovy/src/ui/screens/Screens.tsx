@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ISLANDS, TRICKS, islandOf, skillsOf } from '../../content';
+import { TRICKS, islandOf, missionsOf, skillsOf } from '../../content';
 import { useGame, type Gain } from '../../core/game';
 import { masteredLevels } from '../../core/model';
 import { stateOf } from '../../core/planner';
@@ -7,6 +7,7 @@ import { sfx } from '../../core/sound';
 import { Dragon } from '../components/Dragon';
 import { Icon, Sparkles } from '../components/Bits';
 import { IslandArt } from './MapScreen';
+import { MissionCard, islandBookProgress } from './Book';
 import { count } from '../../core/czech';
 
 const ULOHA_ACC = ['úlohu', 'úlohy', 'úloh'] as const;
@@ -23,6 +24,8 @@ export function IslandScreen() {
   const def = islandOf(island);
   const skills = skillsOf(island);
   const friend = profile.species.includes(island);
+  const missions = missionsOf(island);
+  const pages = islandBookProgress(island, profile.best);
 
   return (
     <div className="screen island-screen">
@@ -79,6 +82,21 @@ export function IslandScreen() {
           );
         })}
       </div>
+      {pages.total > 0 && (
+        <button className="card book-hint" onClick={() => go('book')}>
+          <span aria-hidden>📖</span> V Knize draků máš z tohoto ostrova {pages.open} z {pages.total} stránek.
+        </button>
+      )}
+      {missions.length > 0 && (
+        <>
+          <h2 className="section-title">Společné mise s rodiči</h2>
+          <div className="missions">
+            {missions.map((m) => (
+              <MissionCard key={m.id} mission={m} />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -93,7 +111,7 @@ function GainList({ gains }: { gains: Gain[] }) {
       {gains.map((g, i) => (
         <li key={i} className={`gain gain-${g.kind}`}>
           <span className="gain-icon" aria-hidden>
-            {g.kind === 'trick' ? '✨' : g.kind === 'level' ? '★' : g.kind === 'species' ? '🐉' : '⚡'}
+            {g.kind === 'trick' ? '✨' : g.kind === 'level' ? '★' : g.kind === 'species' ? '🐉' : g.kind === 'card' ? '📖' : '⚡'}
           </span>
           {g.text}
         </li>
@@ -205,52 +223,7 @@ export function DayEnd() {
 }
 
 // ---------------------------------------------------------------------------
-// Dračí atlas a deník
-
-export function Atlas() {
-  const profile = useGame((s) => s.profile);
-  const go = useGame((s) => s.go);
-  const [playing, setPlaying] = useState<string | null>(null);
-  return (
-    <div className="screen atlas">
-      <div className="topbar">
-        <button className="btn btn-round btn-ghost" onClick={() => go('map')} aria-label="Zpět">
-          <Icon name="back" />
-        </button>
-        <h1>Dračí atlas</h1>
-      </div>
-      <h2 className="section-title">Kousky, které umí {profile.dragonName || 'tvůj drak'}</h2>
-      <div className="trick-row">
-        <div className={playing ? `trick-${TRICKS.find((t) => t.id === playing)?.anim === 'fire' ? 'hop' : TRICKS.find((t) => t.id === playing)?.anim}` : ''} key={playing ?? 'none'}>
-          {profile.dragon && <Dragon look={profile.dragon} size={160} mood={playing ? 'happy' : 'idle'} />}
-        </div>
-        <div className="tricks">
-          {TRICKS.map((t) => {
-            const has = profile.tricks.includes(t.id);
-            return (
-              <button key={t.id} className={`chip trick-chip${has ? ' active' : ' locked'}`} disabled={!has} onClick={() => setPlaying(t.id)}>
-                {has ? t.name : '?'}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      <h2 className="section-title">Dračí druhy ze souostroví</h2>
-      <div className="species-grid">
-        {ISLANDS.map((i) => {
-          const has = profile.species.includes(i.id);
-          return (
-            <div key={i.id} className={`card species-card${has ? '' : ' locked'}`}>
-              <IslandArt id={i.id} size={110} locked={!has} />
-              <strong>{has ? i.species.name : '???'}</strong>
-              <span className="muted small">{has ? i.species.description : i.available ? `Žije ${i.where}.` : 'Ostrov je zatím v mlze.'}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+// Deník
 
 export function Journal() {
   const profile = useGame((s) => s.profile);

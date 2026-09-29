@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ISLANDS } from '../../content';
+import { ISLANDS, MISSIONS, missionsOf } from '../../content';
 import { useGame } from '../../core/game';
 import { buildRadar, type Radar } from '../../core/radar';
 import { levelLabel } from '../../core/planner';
@@ -21,7 +21,7 @@ function rangeLabel(l: { low: number; mid: number; high: number }): string {
 }
 import { DragonEditor } from '../screens/Hatch';
 
-type Tab = 'radar' | 'ppp' | 'portfolio' | 'settings';
+type Tab = 'radar' | 'ppp' | 'mise' | 'portfolio' | 'settings';
 
 const pct = (x: number | null) => (x === null ? '–' : `${Math.round(x * 100)} %`);
 const date = (t: number) => new Date(t).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' });
@@ -54,6 +54,7 @@ export function Parent() {
             [
               ['radar', 'Radar'],
               ['ppp', 'Trénink pro PPP'],
+              ['mise', 'Společné mise'],
               ['portfolio', 'Portfolio'],
               ['settings', 'Nastavení'],
             ] as const
@@ -67,6 +68,7 @@ export function Parent() {
       {!radar && <p>Načítám…</p>}
       {radar && tab === 'radar' && <RadarView radar={radar} />}
       {radar && tab === 'ppp' && <PppView radar={radar} />}
+      {tab === 'mise' && <MissionsView />}
       {radar && tab === 'portfolio' && <Portfolio radar={radar} />}
       {tab === 'settings' && <SettingsView />}
     </div>
@@ -311,6 +313,50 @@ function PppView({ radar }: { radar: Radar }) {
   );
 }
 
+function MissionsView() {
+  const done = useGame((s) => s.profile.missionsDone);
+  const undo = useGame((s) => s.undoMission);
+  const islands = ISLANDS.filter((i) => i.available && missionsOf(i.id).length > 0);
+  return (
+    <div className="parent-missions">
+      <p className="lead">
+        Úkoly do skutečného světa na 10–20 minut. Nejde o doučování: hrajte si, ptejte se a chvalte postup („zkusila jsi to jinak“), ne talent. Dítě si splněnou misi odškrtne samo v Knize draků nebo na ostrově.
+      </p>
+      {islands.map((island) => (
+        <section key={island.id}>
+          <h2 className="section-title">{island.name}</h2>
+          <div className="pm-list">
+            {missionsOf(island.id).map((m) => (
+              <article key={m.id} className={`card pm${done[m.id] ? ' done' : ''}`}>
+                <h3>
+                  <span aria-hidden>{m.emoji}</span> {m.title}
+                  <span className="muted small"> · od {levelLabel(m.level)}</span>
+                </h3>
+                <p>
+                  <strong>Pro dítě:</strong> {m.text}
+                </p>
+                <p>
+                  <strong>Tip:</strong> {m.parentTip}
+                </p>
+                {done[m.id] ? (
+                  <p className="small">
+                    ✓ Splněno {date(done[m.id])}{' '}
+                    <button className="btn btn-ghost btn-small" onClick={() => undo(m.id)}>
+                      Zrušit odškrtnutí
+                    </button>
+                  </p>
+                ) : (
+                  <p className="muted small">Zatím nesplněno.</p>
+                )}
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 function Portfolio({ radar }: { radar: Radar }) {
   const profile = useGame((s) => s.profile);
   const update = useGame((s) => s.updateSettings);
@@ -358,6 +404,16 @@ function Portfolio({ radar }: { radar: Radar }) {
           <>
             <h3>Trénované formáty podobné subtestům</h3>
             <p className="small">{radar.testLike.map((t) => `${t.label} (${t.count}×, ${date(t.first)}–${date(t.last)})`).join('; ')}</p>
+          </>
+        )}
+        {MISSIONS.some((m) => profile.missionsDone[m.id]) && (
+          <>
+            <h3>Splněné společné mise s rodičem</h3>
+            <p className="small">
+              {MISSIONS.filter((m) => profile.missionsDone[m.id])
+                .map((m) => `${m.title} (${date(profile.missionsDone[m.id])})`)
+                .join('; ')}
+            </p>
           </>
         )}
         {radar.creativity.samples.length > 0 && (

@@ -82,6 +82,7 @@ export function validateVisual(v: Visual, where: string): string[] {
       const rows = v.cells.length / v.cols;
       if (v.cols < 2 || v.cols > 6 || !Number.isInteger(rows) || rows < 1 || rows > 6) errors.push(`${where}: tabulka ${v.cols} sloupců × ${rows} řádků`);
       if (v.ask !== undefined && (v.ask < 0 || v.ask >= v.cells.length || v.cells[v.ask] !== null)) errors.push(`${where}: políčko s otazníkem musí být prázdné`);
+      if (v.boxes && (v.cols % v.boxes[0] !== 0 || rows % v.boxes[1] !== 0)) errors.push(`${where}: bloky ${v.boxes.join('×')} nedělí tabulku`);
       break;
     }
   }

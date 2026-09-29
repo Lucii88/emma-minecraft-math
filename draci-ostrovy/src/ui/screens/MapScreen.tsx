@@ -90,8 +90,8 @@ export function MapScreen() {
       <div className="map-top topbar">
         <h1 className="logo">Dračí ostrovy</h1>
         <span className="spacer" />
-        <button className="btn btn-ghost" onClick={() => go('atlas')}>
-          <Icon name="book" /> Dračí atlas
+        <button className="btn btn-ghost" onClick={() => go('book')}>
+          <Icon name="book" /> Kniha draků
         </button>
         <button className="btn btn-ghost" onClick={() => go('journal')}>
           <Icon name="scroll" /> Deník

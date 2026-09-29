@@ -15,7 +15,7 @@ export interface DragonLook {
 
 export interface JournalEntry {
   t: number;
-  kind: 'level' | 'brave' | 'trick' | 'species' | 'first' | 'story';
+  kind: 'level' | 'brave' | 'trick' | 'species' | 'first' | 'story' | 'card' | 'mission';
   text: string;
 }
 
@@ -45,8 +45,11 @@ export interface Profile {
   journal: JournalEntry[];
   /** Nedávné úlohy podle dovednosti (proti opakování). */
   recent: Record<string, string[]>;
-  /** Nejvyšší dosažený stupeň v dovednosti (oslavujeme jen nové maximum). */
+  /** Nejvyšší dosažený stupeň v dovednosti (oslavujeme jen nové maximum).
+   *  Podle něj se odemykají i karty v Knize draků. */
   best: Record<string, number>;
+  /** Splněné společné mise s rodičem: id mise → kdy. */
+  missionsDone: Record<string, number>;
   sessions: number;
   totalAnswers: number;
 }
@@ -67,18 +70,23 @@ export function defaultProfile(): Profile {
     journal: [],
     recent: {},
     best: {},
+    missionsDone: {},
     sessions: 0,
     totalAnswers: 0,
   };
+}
+
+/** Doplní chybějící pole ze starší verze profilu (nebo ze zálohy). */
+export function normalizeProfile(data: Partial<Profile>): Profile {
+  const base = defaultProfile();
+  return { ...base, ...data, settings: { ...base.settings, ...(data.settings ?? {}) } };
 }
 
 export function loadProfile(): Profile {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return defaultProfile();
-    const data = JSON.parse(raw) as Partial<Profile>;
-    const base = defaultProfile();
-    return { ...base, ...data, settings: { ...base.settings, ...(data.settings ?? {}) } };
+    return normalizeProfile(JSON.parse(raw) as Partial<Profile>);
   } catch {
     return defaultProfile();
   }
@@ -150,8 +158,9 @@ export async function importAll(json: string): Promise<Profile> {
       /* záznam zůstane jen v paměti */
     }
   }
-  saveProfile(data.profile);
-  return data.profile;
+  const profile = normalizeProfile(data.profile);
+  saveProfile(profile);
+  return profile;
 }
 
 export async function wipeAll() {

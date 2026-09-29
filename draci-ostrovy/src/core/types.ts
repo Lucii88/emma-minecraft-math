@@ -180,8 +180,17 @@ export type Visual =
   /** Očíslovaný postup (algoritmus, recept). `highlight` = index zvýrazněného kroku. */
   | { type: 'steps'; title?: string; steps: string[]; highlight?: number }
   /** Tabulka (sudoku 4 × 4, matice obrázků): buňky po řádcích, null =
-   *  prázdné políčko, `ask` = index políčka s otazníkem. */
-  | { type: 'table'; cols: number; cells: (number | string | null)[]; ask?: number };
+   *  prázdné políčko, `ask` = index políčka s otazníkem. `boxes` = rozměry
+   *  bloku sudoku [šířka, výška] – hranice bloků se nakreslí silněji.
+   *  `head: 'row'` = první řádek je záhlaví (klíč šifry, popisky sloupců). */
+  | {
+      type: 'table';
+      cols: number;
+      cells: (number | string | null)[];
+      ask?: number;
+      boxes?: [number, number];
+      head?: 'row';
+    };
 
 export interface Item {
   /** Stabilní identifikátor: `${skillId}:${level}:${klíč}`. Stejná úloha =

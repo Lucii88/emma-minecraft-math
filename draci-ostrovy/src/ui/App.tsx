@@ -3,7 +3,8 @@ import { useGame } from '../core/game';
 import { Hatch } from './screens/Hatch';
 import { MapScreen } from './screens/MapScreen';
 import { Play } from './screens/Play';
-import { Atlas, DayEnd, IslandScreen, Journal, MissionEnd } from './screens/Screens';
+import { DayEnd, IslandScreen, Journal, MissionEnd } from './screens/Screens';
+import { Book } from './screens/Book';
 
 // Rodičovská část se načte, až když je potřeba.
 const Parent = lazy(() => import('./parent/Parent').then((m) => ({ default: m.Parent })));
@@ -26,8 +27,8 @@ export function App() {
         return <MissionEnd />;
       case 'dayEnd':
         return <DayEnd />;
-      case 'atlas':
-        return <Atlas />;
+      case 'book':
+        return <Book />;
       case 'journal':
         return <Journal />;
       case 'parent':

@@ -34,8 +34,10 @@ export function ChoiceAnswer({
   onPick: (index: number) => void;
 }) {
   const long = options.some((o) => o.label.length > 18);
+  // Samé obrázky (sudoku, matice, řady) chtějí větší písmo.
+  const pictures = options.every((o) => !/[\p{L}\p{N}]/u.test(o.label));
   return (
-    <div className={`choices${long ? ' long' : ''}${options.length === 2 ? ' two' : ''}`}>
+    <div className={`choices${long && !pictures ? ' long' : ''}${options.length === 2 ? ' two' : ''}${pictures ? ' pictures' : ''}`}>
       {options.map((o, i) => {
         const isWrong = wrong.includes(i);
         const isOk = correctShown === i;
@@ -292,6 +294,54 @@ export function OpenAnswer({ countIdeas, minLength = 3, onSubmit }: { countIdeas
           Hotovo
         </button>
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Seřazení
+
+export function OrderAnswer({ items, disabled, onSubmit }: { items: string[]; disabled: boolean; onSubmit: (order: string[]) => void }) {
+  // Po chybném pokusu pořadí zůstane – stačí opravit, co nesedí.
+  const [picked, setPicked] = useState<number[]>([]);
+  const long = items.some((x) => x.length > 14);
+  const full = picked.length === items.length;
+  return (
+    <div className={`order${long ? ' long' : ''}`}>
+      <ol className="order-slots">
+        {items.map((_, i) => (
+          <li key={i}>
+            <span className="order-num" aria-hidden>
+              {i + 1}.
+            </span>
+            {picked[i] !== undefined ? (
+              <button className="order-slot filled" disabled={disabled} onClick={() => setPicked((p) => p.filter((_, j) => j !== i))} aria-label={`${i + 1}. ${items[picked[i]]} – vrátit zpět`}>
+                {items[picked[i]]}
+              </button>
+            ) : (
+              <span className="order-slot" />
+            )}
+          </li>
+        ))}
+      </ol>
+      <div className="order-tiles">
+        {items.map((x, i) => (
+          <button
+            key={i}
+            className="order-tile"
+            disabled={disabled || picked.includes(i)}
+            onClick={() => {
+              sfx.tap();
+              setPicked((p) => [...p, i]);
+            }}
+          >
+            {x}
+          </button>
+        ))}
+      </div>
+      <button className="btn btn-primary" disabled={disabled || !full} onClick={() => onSubmit(picked.map((i) => items[i]))}>
+        Hotovo
+      </button>
     </div>
   );
 }
