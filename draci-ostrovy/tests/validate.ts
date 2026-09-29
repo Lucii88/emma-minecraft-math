@@ -93,6 +93,12 @@ export function validateItem(item: Item, skill: SkillDef, level: Level): string[
   const errors: string[] = [];
   const where = `${item.id}`;
   if (!item.id.startsWith(`${skill.id}:${level}:`)) errors.push(`${where}: id musí začínat „${skill.id}:${level}:“`);
+  // Klíč za úrovní: u ostrovů 2. fáze tisknutelné ASCII bez mezer. Ostrovy
+  // 1. fáze mají v klíčích i diakritiku – jejich id už jsou uložená v profilu.
+  const PHASE_1 = ['cisla', 'slova', 'telo'];
+  if (!PHASE_1.includes(skill.island) && !/^[\x21-\x7e]+$/.test(item.id.slice(`${skill.id}:${level}:`.length))) {
+    errors.push(`${where}: klíč obsahuje mezeru nebo diakritiku`);
+  }
   if (item.skillId !== skill.id) errors.push(`${where}: skillId nesedí`);
   if (item.level !== level) errors.push(`${where}: level nesedí`);
   if (!item.prompt.trim()) errors.push(`${where}: prázdné zadání`);

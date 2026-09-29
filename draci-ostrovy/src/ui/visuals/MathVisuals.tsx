@@ -125,15 +125,20 @@ export function FractionView({ parts, filled, shape }: { parts: number; filled: 
   );
 }
 
+/** Řada (čísla nebo obrázky). Dlaždice se na úzkém displeji zalomí, písmo
+ *  se zmenší podle nejdelší položky (víc emoji v jednom políčku). */
 export function SeriesView({ items }: { items: (number | string | null)[] }) {
-  const step = 84;
-  const w = items.length * step + 10;
+  const longest = Math.max(1, ...items.map((v) => [...String(v ?? '')].length));
+  const size = longest > 4 ? 'xs' : longest > 2 ? 'sm' : 'md';
+  const pictures = items.some((v) => typeof v === 'string' && !/^[\d\s.,−-]+$/.test(v));
   return (
-    <Frame w={w} h={80} label="Řada čísel">
+    <ol className={`vseries ${size}`} aria-label={pictures ? 'Řada obrázků' : 'Řada čísel'}>
       {items.map((v, i) => (
-        <Box key={i} x={5 + step / 2 + i * step} y={40} w={70} value={v} ask={v === null} />
+        <li key={i} className={v === null ? 'ask' : undefined}>
+          {v === null ? '?' : typeof v === 'number' ? f(v) : v}
+        </li>
       ))}
-    </Frame>
+    </ol>
   );
 }
 

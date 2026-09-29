@@ -2564,3 +2564,47 @@ h3 {
 .kpages-lock {
   font-size: 1.6rem;
 }
+
+.vseries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 680px;
+}
+
+.vseries li {
+  min-width: 64px;
+  height: 60px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  background: #fffdf6;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.8rem;
+  white-space: nowrap;
+}
+
+.vseries.sm li {
+  font-size: 1.35rem;
+  letter-spacing: -0.06em;
+}
+
+.vseries.xs li {
+  font-size: 1.05rem;
+  letter-spacing: -0.06em;
+}
+
+.vseries li.ask {
+  background: #fff2dc;
+  border-color: var(--fire);
+  color: var(--fire);
+  border-width: 4px;
+}

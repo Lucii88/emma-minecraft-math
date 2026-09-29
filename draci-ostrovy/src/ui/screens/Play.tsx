@@ -189,6 +189,14 @@ function ItemView({ item }: { item: Item }) {
                   ? a.correct.join(' → ')
                   : '';
 
+  // Vysvětlení občas začíná samotnou odpovědí („Fakt. Lékaři…“) – po „Správně
+  // je Fakt.“ by se opakovala.
+  const explanation = (() => {
+    const e = item.explanation.trim();
+    const head = `${solutionText}.`;
+    return solutionText && e.toLocaleLowerCase('cs').startsWith(head.toLocaleLowerCase('cs')) ? e.slice(head.length).trim() : e;
+  })();
+
   const reading = item.visual?.type === 'reading';
 
   return (
@@ -294,7 +302,7 @@ function ItemView({ item }: { item: Item }) {
           <p className="sheet-msg">{message}</p>
           {phase === 'solution' && (
             <p className="sheet-expl">
-              Správně je <strong>{solutionText}</strong>. {item.explanation}
+              Správně je <strong>{solutionText}</strong>. {explanation}
             </p>
           )}
           {phase === 'feedback' && outcome !== 'first' && item.explanation && <p className="sheet-expl">{item.explanation}</p>}
