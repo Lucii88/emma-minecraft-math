@@ -27,5 +27,8 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['tests/**/*.test.{ts,mjs}'],
+    // Kontroly obsahu procházejí tisíce vygenerovaných úloh; na pomalejším
+    // stroji v CI trvá jeden takový test i přes 5 s (výchozí limit).
+    testTimeout: 30_000,
   },
 });
