@@ -3,9 +3,10 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/emma-minecraft-math/draci-ostrovy/',
+  // Hra běží v kořeni vlastní domény (Railway, za přihlášením – server.mjs).
+  base: '/',
   build: {
-    outDir: '../dist/draci-ostrovy',
+    outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
       output: {
@@ -25,6 +26,6 @@ export default defineConfig({
   server: { port: 3100 },
   test: {
     environment: 'node',
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/**/*.test.{ts,mjs}'],
   },
 });

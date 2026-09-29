@@ -2,16 +2,24 @@
 
 Vzdělávací hra pro děti na 1. stupni ZŠ ve světě Vikingů a draků. Hráčka si vylíhne vlastního draka, který se učí spolu s ní, a létá po ostrovech, z nichž každý rozvíjí jinou oblast (čísla, slova, lidské tělo, později svět, logika, finance a digitální svět).
 
-Aplikace je samostatná vedle původní hry v kořeni repozitáře a nasazuje se na `/emma-minecraft-math/draci-ostrovy/`.
+Aplikace je samostatná vedle původní hry v kořeni repozitáře. Na GitHub Pages se nenasazuje – běží na Railway za přihlášením rodinným kódem.
 
 ## Spuštění
 
 ```bash
 npm ci
-npm run dev      # vývojový server na http://localhost:3100/emma-minecraft-math/draci-ostrovy/
-npm test         # testy generátorů úloh a adaptivního modelu
-npm run build    # sestavení do ../dist/draci-ostrovy
+npm run dev      # vývojový server na http://localhost:3100/
+npm test         # testy úloh, adaptivního modelu, radaru a serveru
+npm run build    # sestavení do dist/
+ACCESS_CODE=... npm start   # server s přihlášením (server.mjs) nad dist/
 ```
+
+## Nasazení (Railway)
+
+- Služba s kořenovým adresářem `draci-ostrovy`, konfigurace v `railway.json` (sestavení `npm run build`, spuštění `node server.mjs`, kontrola `/zdravi`).
+- Proměnné: `ACCESS_CODE` (rodinný kód – bez něj server nenastartuje) a `SESSION_SECRET` (náhodný řetězec pro podpis přihlášení). Změna kterékoli z nich odhlásí všechna zařízení.
+- `server.mjs` je bez závislostí: kdo nezná kód, uvidí jen přihlašovací stránku. Přihlášení platí na zařízení 400 dní, po deseti chybných pokusech z jedné adresy se přihlašování na čtvrt hodiny zablokuje. Vyhledávače mají přístup zakázaný (`noindex`, `robots.txt`).
+- Server nic neukládá; data hry zůstávají v prohlížeči.
 
 ## Jak to funguje
 
