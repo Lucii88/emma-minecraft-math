@@ -77,9 +77,10 @@ function journal(p: Profile, kind: JournalEntry['kind'], text: string): Profile 
 function unlockNextTrick(p: Profile): { profile: Profile; gain: Gain | null } {
   const next = TRICKS.find((t) => !p.tricks.includes(t.id));
   if (!next) return { profile: p, gain: null };
-  const name = p.dragonName || 'Tvůj drak';
+  // Jméno draka necháváme v 1. pádě – skloňovat vlastní jména neumíme spolehlivě.
+  const name = p.dragonName || 'tvůj drak';
   let profile: Profile = { ...p, tricks: [...p.tricks, next.id] };
-  profile = journal(profile, 'trick', `Nový kousek pro ${name}: ${next.name}.`);
+  profile = journal(profile, 'trick', `Nový kousek: ${next.name}. Umí ho ${name}.`);
   return { profile, gain: { kind: 'trick', text: `Nový kousek: ${next.name}!`, trickId: next.id } };
 }
 

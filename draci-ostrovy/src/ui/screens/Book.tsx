@@ -153,20 +153,55 @@ function KnowledgeTab() {
       {islands.map((island) => {
         const cards = cardsOf(island.id);
         const open = cards.filter((c) => isUnlocked(c, best));
+        const locked = cards.filter((c) => !isUnlocked(c, best));
         return (
           <section key={island.id} className="book-section">
             <h2 className="section-title">
               {island.name} <span className="muted small">{open.length} z {cards.length}</span>
             </h2>
-            <div className="kpages">
-              {[...open, ...cards.filter((c) => !isUnlocked(c, best))].map((c) => (
-                <KnowledgePage key={c.id} card={c} unlocked={isUnlocked(c, best)} />
-              ))}
-            </div>
+            {open.length > 0 && (
+              <div className="kpages">
+                {open.map((c) => (
+                  <KnowledgePage key={c.id} card={c} unlocked />
+                ))}
+              </div>
+            )}
+            {locked.length > 0 && <NextPages island={island.id} locked={locked} best={best} />}
           </section>
         );
       })}
     </>
+  );
+}
+
+/** Zamčené stránky ostrova v jednom řádku: kolik jich zbývá a které
+ *  dovednosti je odemknou nejdřív (nejmenší chybějící stupeň). */
+function NextPages({ island, locked, best }: { island: IslandId; locked: KnowledgeCard[]; best: Record<string, number> }) {
+  const where = ISLANDS.find((i) => i.id === island)?.where ?? '';
+  const nearest = new Map<string, number>();
+  for (const c of locked) {
+    const prev = nearest.get(c.skillId);
+    if (prev === undefined || c.level < prev) nearest.set(c.skillId, c.level);
+  }
+  const next = [...nearest.entries()]
+    .sort((a, b) => a[1] - (best[a[0]] ?? 0) - (b[1] - (best[b[0]] ?? 0)) || a[1] - b[1])
+    .slice(0, 3);
+  return (
+    <div className="kpages-locked">
+      <span className="kpages-lock" aria-hidden>
+        🔒
+      </span>
+      <p>
+        Ještě {locked.length} {locked.length === 1 ? 'stránka čeká' : locked.length < 5 ? 'stránky čekají' : 'stránek čeká'} {where}. Nejblíž máš:{' '}
+        {next.map(([skillId, level], i) => (
+          <span key={skillId}>
+            {i > 0 && ', '}
+            <strong>{SKILL_BY_ID[skillId]?.name}</strong> {'★'.repeat(level)}
+          </span>
+        ))}
+        .
+      </p>
+    </div>
   );
 }
 

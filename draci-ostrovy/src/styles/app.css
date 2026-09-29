@@ -2544,3 +2544,23 @@ h3 {
 .pm.done {
   border-color: var(--ok);
 }
+
+.kpages-locked {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+  padding: 10px 16px;
+  border: 3px dashed var(--parchment-edge);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.kpages-locked p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.kpages-lock {
+  font-size: 1.6rem;
+}
