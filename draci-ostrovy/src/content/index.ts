@@ -1,11 +1,21 @@
 // Registr ostrovů, dovedností, dračích kousků a druhů.
 
-import type { IslandDef, IslandId, SkillDef } from '../core/types';
+import type { IslandDef, IslandId, JointMission, KnowledgeCard, SkillDef } from '../core/types';
 
-// Každý ostrov má složku s index.ts, který exportuje `skills`. Registr je
-// načte automaticky – nový ostrov stačí přidat jako složku.
-const modules = import.meta.glob<{ skills: SkillDef[] }>('./*/index.ts', { eager: true });
-const skillsFor = (id: IslandId): SkillDef[] => modules[`./${id}/index.ts`]?.skills ?? [];
+interface IslandModule {
+  skills: SkillDef[];
+  /** Karty znalostí do Knihy draků. */
+  cards?: KnowledgeCard[];
+  /** Společné mise s rodičem. */
+  missions?: JointMission[];
+}
+
+// Každý ostrov má složku s index.ts, který exportuje `skills` (a případně
+// `cards` a `missions`). Registr je načte automaticky – nový ostrov stačí
+// přidat jako složku.
+const modules = import.meta.glob<IslandModule>('./*/index.ts', { eager: true });
+const moduleOf = (id: IslandId): IslandModule | undefined => modules[`./${id}/index.ts`];
+const skillsFor = (id: IslandId): SkillDef[] => moduleOf(id)?.skills ?? [];
 
 export const ISLANDS: IslandDef[] = [
   {
@@ -83,6 +93,18 @@ export const SKILL_BY_ID: Record<string, SkillDef> = Object.fromEntries(SKILLS.m
 export const skillsOf = (island: IslandId) => SKILLS.filter((s) => s.island === island);
 
 export const islandOf = (id: IslandId) => ISLANDS.find((i) => i.id === id)!;
+
+const AVAILABLE = ISLANDS.filter((i) => i.available);
+
+/** Karty znalostí dostupných ostrovů (v pořadí ostrovů). */
+export const CARDS: KnowledgeCard[] = AVAILABLE.flatMap((i) => moduleOf(i.id)?.cards ?? []);
+
+/** Společné mise dostupných ostrovů. */
+export const MISSIONS: JointMission[] = AVAILABLE.flatMap((i) => moduleOf(i.id)?.missions ?? []);
+
+export const cardsOf = (island: IslandId) => CARDS.filter((c) => SKILL_BY_ID[c.skillId]?.island === island);
+
+export const missionsOf = (island: IslandId) => MISSIONS.filter((m) => m.island === island);
 
 export interface Trick {
   id: string;

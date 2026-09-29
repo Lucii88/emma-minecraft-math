@@ -95,6 +95,19 @@ export interface ChoiceOption {
   speak?: string;
 }
 
+// ---------------------------------------------------------------------------
+// Mřížka (Vynálezecká dílna, mapy)
+
+/** Krok letu po mřížce: nahoru, dolů, doleva, doprava. Na mapě je sever
+ *  nahoře, takže U = na sever, D = na jih, L = na západ, R = na východ. */
+export type Move = 'U' | 'D' | 'L' | 'R';
+
+/** Políčko mřížky: x zleva od 0, y shora od 0. */
+export interface Cell {
+  x: number;
+  y: number;
+}
+
 export type AnswerSpec =
   /** Výběr z 2–4 možností, právě jedna správná. */
   | { kind: 'choice'; options: ChoiceOption[]; correct: number }
@@ -107,7 +120,15 @@ export type AnswerSpec =
   /** Umístění na číselné ose (odhad), tolerance v jednotkách osy. */
   | { kind: 'numberline'; min: number; max: number; correct: number; tolerance: number }
   /** Otevřená odpověď bez správně/špatně (tvořivé úlohy, příběhy). */
-  | { kind: 'open'; minLength?: number; countIdeas?: boolean };
+  | { kind: 'open'; minLength?: number; countIdeas?: boolean }
+  /** Program letu: dítě skládá šipky a drak podle nich letí po mřížce
+   *  (vizuál 'grid'). Správně je KAŽDÝ program, který doletí do cíle, cestou
+   *  nenarazí na skálu ani nevyletí z mapy, sebere všechna `collect` a má
+   *  nejvýš `maxSteps` kroků. */
+  | { kind: 'program'; maxSteps: number; collect?: Cell[] }
+  /** Seřazení: dítě klepe na položky ve správném pořadí. `items` jsou už
+   *  zamíchané, `correct` je správné pořadí týchž (navzájem různých) položek. */
+  | { kind: 'order'; items: string[]; correct: string[] };
 
 export type Visual =
   | { type: 'clock'; h: number; m: number }
@@ -133,7 +154,34 @@ export type Visual =
    *  BODY_REGIONS. `highlight` zvýrazní oblast (u otázek „co je tohle?“). */
   | { type: 'body'; mode: 'outside' | 'inside'; highlight?: BodyRegion }
   | { type: 'reading'; title: string; text: string }
-  | { type: 'big'; text: string };
+  | { type: 'big'; text: string }
+  /** Mřížka (mapa moře, dílna): drak, cíl, skály, pojmenovaná místa, případně
+   *  nakreslená cesta a růžice světových stran. */
+  | {
+      type: 'grid';
+      cols: number;
+      rows: number;
+      dragon?: Cell;
+      goal?: Cell;
+      rocks?: Cell[];
+      /** Věci k sebrání cestou (vajíčka) – u odpovědi 'program' viz collect. */
+      eggs?: Cell[];
+      places?: (Cell & { emoji: string; name: string })[];
+      /** Nakreslený program od draka s očíslovanými kroky (u „najdi chybu
+       *  v programu“). U odpovědi 'program' smí být jen chybný, k opravě. */
+      path?: Move[];
+      compass?: boolean;
+    }
+  /** Karty vedle sebe (zvířata, zboží s cenou, draci s vlastnostmi).
+   *  `tag` = štítek na kartě (cena, skupina), `mark` = zvýrazněná karta. */
+  | { type: 'cards'; cards: { emoji: string; title: string; lines?: string[]; tag?: string; mark?: boolean }[] }
+  /** Sloupcový graf (sbírání dat, počasí, útrata). */
+  | { type: 'bars'; title?: string; unit?: string; bars: { label: string; value: number; emoji?: string }[] }
+  /** Očíslovaný postup (algoritmus, recept). `highlight` = index zvýrazněného kroku. */
+  | { type: 'steps'; title?: string; steps: string[]; highlight?: number }
+  /** Tabulka (sudoku 4 × 4, matice obrázků): buňky po řádcích, null =
+   *  prázdné políčko, `ask` = index políčka s otazníkem. */
+  | { type: 'table'; cols: number; cells: (number | string | null)[]; ask?: number };
 
 export interface Item {
   /** Stabilní identifikátor: `${skillId}:${level}:${klíč}`. Stejná úloha =
@@ -177,6 +225,37 @@ export interface SkillDef {
   open?: boolean;
   /** Vygeneruje úlohu dané úrovně. Musí být deterministická pro dané rng. */
   generate: (level: Level, rng: Rng) => Item;
+}
+
+/** Karta znalostí do Knihy draků. Odemkne se, když hráčka v dovednosti
+ *  `skillId` zvládne úroveň `level`. `fix` = stránka „opravená podle
+ *  důkazů“: co se dřív tvrdilo a jak se na to přišlo. */
+export interface KnowledgeCard {
+  /** Unikátní v celé hře, např. 'svet.vesmir.mesic'. */
+  id: string;
+  skillId: string;
+  level: Level;
+  emoji: string;
+  title: string;
+  /** 1–3 krátké věty. */
+  text: string;
+  fix?: { before: string; evidence: string };
+}
+
+/** Společná mise s rodičem – úkol do skutečného světa (změř si tep,
+ *  zaplať v obchodě, sleduj Měsíc). Hráčka ji odškrtne, až ji splní. */
+export interface JointMission {
+  /** Unikátní v celé hře, např. 'trh.nakup'. */
+  id: string;
+  island: IslandId;
+  emoji: string;
+  title: string;
+  /** Zadání pro dítě (1–3 věty, předčítá se). */
+  text: string;
+  /** Tip pro rodiče: jak misi vést a na co se ptát. */
+  parentTip: string;
+  /** Orientačně od které úrovně mise dává smysl (1 = hned). */
+  level: Level;
 }
 
 export interface IslandDef {

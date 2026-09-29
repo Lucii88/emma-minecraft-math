@@ -3,13 +3,13 @@
 // obsah do hloubky, tady jde o to, aby do sebe všechno zapadalo.
 
 import { describe, expect, it } from 'vitest';
-import { ISLANDS, SKILLS, SKILL_BY_ID } from '../src/content';
+import { CARDS, ISLANDS, MISSIONS, SKILLS, SKILL_BY_ID } from '../src/content';
 import { ABILITY_LABELS, buildRadar } from '../src/core/radar';
 import { createRng } from '../src/core/rng';
 import { missionForSkill, nextItem, planDay } from '../src/core/planner';
 import { defaultProfile } from '../src/core/storage';
 import { TEST_LIKE_LABELS } from '../src/core/types';
-import { sweepSkill } from './validate';
+import { sweepSkill, validateCards, validateMissions } from './validate';
 
 const RVP_CODE = /^[A-ZČŠŽ]{1,4}-[35]-\d-\d{2}$/;
 
@@ -58,6 +58,15 @@ describe('registr ostrovů a dovedností', () => {
   it('všechny úlohy všech ostrovů projdou společnou kontrolou', () => {
     const errors = SKILLS.flatMap((s) => sweepSkill(s, 120).errors);
     expect(errors).toEqual([]);
+  });
+
+  it('karty znalostí a společné mise projdou kontrolou a jejich id se neopakují', () => {
+    expect(validateCards(CARDS, SKILLS)).toEqual([]);
+    for (const island of ISLANDS) {
+      expect(validateMissions(MISSIONS.filter((m) => m.island === island.id), island.id)).toEqual([]);
+    }
+    const ids = [...CARDS.map((c) => c.id), ...MISSIONS.map((m) => m.id)];
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
   it('stejné semínko dá u každé dovednosti stejnou úlohu', () => {
