@@ -8,7 +8,7 @@ import { Dragon, type DragonMood } from '../components/Dragon';
 import { ChoiceAnswer, LettersAnswer, NumberLineAnswer, NumberPad, OpenAnswer } from '../components/Answers';
 import { ConfidencePicker, Icon, Progress, SpeakButton } from '../components/Bits';
 import { renderMathVisual } from '../visuals/MathVisuals';
-import { BodyMap } from '../visuals/BodyMap';
+import { BodyMap, labelOf } from '../visuals/BodyMap';
 import { IslandArt } from './MapScreen';
 
 const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)];
@@ -170,7 +170,9 @@ function ItemView({ item }: { item: Item }) {
           ? a.correct
           : a.kind === 'numberline'
             ? formatNumber(a.correct)
-            : '';
+            : a.kind === 'tap'
+              ? labelOf(a.correct as BodyRegion)
+              : '';
 
   const reading = item.visual?.type === 'reading';
 
@@ -247,7 +249,7 @@ function ItemView({ item }: { item: Item }) {
               <span>{item.hints[hintsShown - 1]}</span>
             </div>
           )}
-          {phase === 'answer' && hintsShown < item.hints.length && a.kind !== 'open' && (
+          {phase === 'answer' && hintsShown < item.hints.length && (
             <button className="btn btn-ghost hint-btn" onClick={showHint}>
               <Icon name="lamp" size={22} /> Nápověda
             </button>

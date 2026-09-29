@@ -396,6 +396,7 @@ function SettingsView() {
   const [look, setLook] = useState(profile.dragon);
   const [name, setName] = useState(profile.dragonName);
   const [msg, setMsg] = useState('');
+  const [confirmWipe, setConfirmWipe] = useState(false);
   const s = profile.settings;
 
   const download = async () => {
@@ -488,17 +489,31 @@ function SettingsView() {
               }}
             />
           </label>
-          <button
-            className="btn btn-ghost danger"
-            onClick={async () => {
-              if (!confirm('Opravdu smazat všechna data hry v tomto zařízení? Nejde to vrátit.')) return;
-              await wipeAll();
-              location.reload();
-            }}
-          >
-            Smazat vše
-          </button>
+          {!confirmWipe && (
+            <button className="btn btn-ghost danger" onClick={() => setConfirmWipe(true)}>
+              Smazat vše
+            </button>
+          )}
         </div>
+        {confirmWipe && (
+          <div className="wipe-confirm">
+            <p>Opravdu smazat všechna data hry v tomto zařízení? Nejde to vrátit.</p>
+            <div className="row-actions">
+              <button
+                className="btn btn-ghost danger"
+                onClick={async () => {
+                  await wipeAll();
+                  location.reload();
+                }}
+              >
+                Ano, smazat
+              </button>
+              <button className="btn btn-ghost" onClick={() => setConfirmWipe(false)}>
+                Nechat být
+              </button>
+            </div>
+          </div>
+        )}
         {msg && <p>{msg}</p>}
       </div>
       <div className="card">

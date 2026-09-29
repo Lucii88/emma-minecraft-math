@@ -95,7 +95,16 @@ export function saveProfile(p: Profile) {
 // ---------------------------------------------------------------------------
 // Záznam odpovědí
 
-const store = typeof indexedDB !== 'undefined' ? createStore('draci-ostrovy', 'data') : null;
+// Otevření databáze může selhat hned při startu (anonymní okno, zablokovaná
+// data webu, vložený rámec) – hra pak běží dál jen bez záznamu odpovědí.
+function openStore() {
+  try {
+    return typeof indexedDB !== 'undefined' ? createStore('draci-ostrovy', 'data') : null;
+  } catch {
+    return null;
+  }
+}
+const store = openStore();
 let cache: AnswerEvent[] | null = null;
 let writing: Promise<void> = Promise.resolve();
 
@@ -134,7 +143,13 @@ export async function importAll(json: string): Promise<Profile> {
   const data = JSON.parse(json) as { profile: Profile; events: AnswerEvent[] };
   if (!data.profile || !Array.isArray(data.events)) throw new Error('Neplatný soubor');
   cache = data.events;
-  if (store) await set('events', data.events, store);
+  if (store) {
+    try {
+      await set('events', data.events, store);
+    } catch {
+      /* záznam zůstane jen v paměti */
+    }
+  }
   saveProfile(data.profile);
   return data.profile;
 }
@@ -146,5 +161,11 @@ export async function wipeAll() {
   } catch {
     /* nic */
   }
-  if (store) await del('events', store);
+  if (store) {
+    try {
+      await del('events', store);
+    } catch {
+      /* nic */
+    }
+  }
 }

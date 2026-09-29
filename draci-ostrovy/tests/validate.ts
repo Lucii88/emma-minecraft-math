@@ -27,7 +27,9 @@ export function validateItem(item: Item, skill: SkillDef, level: Level): string[
     case 'choice': {
       if (a.options.length < 2 || a.options.length > 4) errors.push(`${where}: počet možností ${a.options.length}`);
       if (a.correct < 0 || a.correct >= a.options.length) errors.push(`${where}: index správné odpovědi mimo rozsah`);
-      const labels = a.options.map((o) => o.label.trim().toLocaleLowerCase('cs'));
+      // Velikost písmen se počítá: u úloh na velká písmena se možnosti liší
+      // právě jen jí („Ingrid má psa.“ × „ingrid má psa.“).
+      const labels = a.options.map((o) => o.label.trim().replace(/\s+/g, ' '));
       if (new Set(labels).size !== labels.length) errors.push(`${where}: duplicitní možnosti ${labels.join(' | ')}`);
       if (labels.some((l) => !l)) errors.push(`${where}: prázdná možnost`);
       break;

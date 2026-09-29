@@ -8,6 +8,22 @@ const SKIN = '#f6d5b8';
 const SKIN_LINE = '#c98e6a';
 const HAIR = '#6b4226';
 const SHIRT = '#8ecae6';
+const SHORTS = '#5a67d8';
+
+/** Dlaň s palcem; `dir` = na kterou stranu míří palec (1 doprava, −1 doleva). */
+function Hand({ x, y, dir }: { x: number; y: number; dir: 1 | -1 }) {
+  return (
+    <g fill={SKIN} stroke={SKIN_LINE} strokeWidth="3" strokeLinejoin="round">
+      <ellipse cx={x + dir * 9} cy={y - 4} rx="4.5" ry="8" transform={`rotate(${dir * -25} ${x + dir * 9} ${y - 4})`} />
+      <ellipse cx={x} cy={y} rx="11" ry="14" />
+    </g>
+  );
+}
+
+/** Chodidlo mířící do strany (`dir`). */
+function Foot({ x, y, dir }: { x: number; y: number; dir: 1 | -1 }) {
+  return <ellipse cx={x + dir * 6} cy={y} rx="21" ry="9" fill={SKIN} stroke={SKIN_LINE} strokeWidth="3" />;
+}
 
 interface Props {
   mode: 'outside' | 'inside';
@@ -45,7 +61,20 @@ export function BodyMap({ mode, highlight, onTap, selected, correct, disabled }:
       {/* silueta */}
       <g opacity={mode === 'inside' ? 0.55 : 1}>
         <path d="M84,112 L60,120 C48,124 42,136 40,150 L30,250 C28,262 44,266 48,254 L62,176 L66,250 L70,258 L74,380 C74,396 100,398 102,382 L110,264 L130,264 L138,382 C140,398 166,396 166,380 L170,258 L174,250 L178,176 L192,254 C196,266 212,262 210,250 L200,150 C198,136 192,124 180,120 L156,112 Z" fill={SKIN} stroke={SKIN_LINE} strokeWidth="3" strokeLinejoin="round" />
-        {mode === 'outside' && <path d="M84,112 L156,112 L176,122 L174,200 L170,256 L70,256 L66,200 L64,122 Z" fill={SHIRT} opacity="0.55" />}
+        <Hand x={38} y={264} dir={-1} />
+        <Hand x={202} y={264} dir={1} />
+        <Foot x={82} y={393} dir={-1} />
+        <Foot x={158} y={393} dir={1} />
+        {mode === 'outside' && (
+          <>
+            {/* tílko kryje hrudník, břicho s pupíkem zůstává vidět, pak kraťasy */}
+            <path d="M84,112 L156,112 L178,124 L178,178 L62,178 L62,124 Z" fill={SHIRT} opacity="0.85" />
+            <path d="M66,246 L174,246 L169,292 L133,292 L130,266 L110,266 L107,292 L71,292 Z" fill={SHORTS} opacity="0.85" />
+            <circle cx="120" cy="222" r="2.6" fill="none" stroke={SKIN_LINE} strokeWidth="2" />
+            {/* záhyby v loktech a kolenou */}
+            <path d="M43,186 Q49,190 55,186 M185,186 Q191,190 197,186 M82,322 Q89,327 96,322 M144,322 Q151,327 158,322" fill="none" stroke={SKIN_LINE} strokeWidth="2.5" strokeLinecap="round" />
+          </>
+        )}
         <rect x="104" y="92" width="32" height="26" rx="8" fill={SKIN} stroke={SKIN_LINE} strokeWidth="3" />
         <ellipse cx="120" cy="58" rx="40" ry="44" fill={SKIN} stroke={SKIN_LINE} strokeWidth="3" />
         {mode === 'outside' && (
@@ -81,8 +110,8 @@ export function BodyMap({ mode, highlight, onTap, selected, correct, disabled }:
           {region(
             'dlan',
             <>
-              <circle cx="38" cy="252" r="15" className="hit" />
-              <circle cx="202" cy="252" r="15" className="hit" />
+              <circle cx="38" cy="264" r="16" className="hit" />
+              <circle cx="202" cy="264" r="16" className="hit" />
             </>,
           )}
           {region(
@@ -104,8 +133,8 @@ export function BodyMap({ mode, highlight, onTap, selected, correct, disabled }:
           {region(
             'chodidlo',
             <>
-              <ellipse cx="86" cy="388" rx="20" ry="11" className="hit" />
-              <ellipse cx="154" cy="388" rx="20" ry="11" className="hit" />
+              <ellipse cx="76" cy="393" rx="23" ry="12" className="hit" />
+              <ellipse cx="164" cy="393" rx="23" ry="12" className="hit" />
             </>,
           )}
         </g>
