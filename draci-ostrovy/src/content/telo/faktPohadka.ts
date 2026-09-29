@@ -252,7 +252,7 @@ const L3: Spec[] = [
     'Pohádka – je to jen rčení. Kočky jsou mrštné a často dopadnou na nohy, ale život mají jeden.'),
   fact('rybka-pamet', 'Zlatá rybka si pamatuje jen tři vteřiny.', false,
     ['Vědci s rybkami dělali pokusy.'],
-    'Je to jen povídačka. Vědci naučili zlaté rybky stisknout páčku, aby dostaly jídlo, a rybky si to pamatovaly aspoň tři měsíce.'),
+    'Pohádka. Vědci naučili zlaté rybky stisknout páčku, aby dostaly jídlo, a rybky si to pamatovaly aspoň tři měsíce.'),
 ];
 
 export const faktPohadka = bankSkill({
