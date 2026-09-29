@@ -6,11 +6,18 @@ import { arrows, shortestProgram } from '../src/core/grid';
 import { createRng } from '../src/core/rng';
 import type { Item, JointMission, KnowledgeCard, SkillDef, Visual } from '../src/core/types';
 
+// Ostrov („svet“), nebo jen jeho část („dilna/digitalni“ – exporty končící
+// na Skills, Cards a Missions).
 const [island, outPath] = process.argv.slice(2).filter((a) => a !== '--');
-const mod = (await import(`../src/content/${island}/index.ts`)) as {
-  skills: SkillDef[];
-  cards?: KnowledgeCard[];
-  missions?: JointMission[];
+const loaders = import.meta.glob<Record<string, unknown>>('../src/content/*/*.ts');
+const loader = loaders[island.includes('/') ? `../src/content/${island}.ts` : `../src/content/${island}/index.ts`];
+if (!loader) throw new Error(`Neznámý ostrov nebo soubor: ${island}`);
+const raw = await loader();
+const pick = <T,>(suffix: string): T | undefined => raw[suffix.toLowerCase()] as T | undefined ?? (Object.entries(raw).find(([k]) => k.endsWith(suffix))?.[1] as T | undefined);
+const mod = {
+  skills: pick<SkillDef[]>('Skills') ?? [],
+  cards: pick<KnowledgeCard[]>('Cards'),
+  missions: pick<JointMission[]>('Missions'),
 };
 
 function visual(v?: Visual): string {
