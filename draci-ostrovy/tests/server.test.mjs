@@ -134,6 +134,16 @@ describe('server s přístupovým kódem', () => {
     expect((await get(plain, '/', { cookie: family })).status).toBe(200);
   });
 
+  it('přihlášeného pošle z přihlašovací stránky rovnou do hry (ikona na ploše)', async () => {
+    const base = await start({ guestCodes: ['DRACI'] });
+    const cookie = cookieFrom(await login(base, 'draci'));
+    const again = await get(base, '/prihlaseni', { cookie });
+    expect(again.status).toBe(303);
+    expect(again.headers.get('location')).toBe('/');
+    expect((await get(base, '/prihlaseni')).status).toBe(200);
+    expect((await get(base, '/prihlaseni', { cookie: 'draci_ostrovy=cizi' })).status).toBe(200);
+  });
+
   it('seznam kódů z proměnné prostředí', () => {
     expect(parseCodes(' drak, ,Kamaradi ,')).toEqual(['drak', 'Kamaradi']);
     expect(parseCodes(undefined)).toEqual([]);

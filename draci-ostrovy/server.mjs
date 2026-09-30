@@ -267,6 +267,9 @@ export function createApp({ root, accessCode, guestCodes = [], secret, now = Dat
       if (path === '/robots.txt' && read) return send(res, 200, { 'Content-Type': TYPES['.txt'] }, 'User-agent: *\nDisallow: /\n');
 
       if (path === LOGIN) {
+        // Kdo už je přihlášený, jde rovnou do hry – třeba z ikony na ploše,
+        // která se uložila na přihlašovací stránce.
+        if (read && authed(req)) return send(res, 303, { Location: '/', 'Cache-Control': 'no-store' }, '');
         if (read) return html(res, 200, loginPage());
         if (method !== 'POST') return send(res, 405, { Allow: 'GET, HEAD, POST' }, '');
         const ip = clientIp(req);
