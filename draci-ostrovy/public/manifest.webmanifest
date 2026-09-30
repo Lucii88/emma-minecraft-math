@@ -1,0 +1,15 @@
+{
+  "name": "Dračí ostrovy",
+  "short_name": "Dračí ostrovy",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#9fd3ee",
+  "theme_color": "#1d4e73",
+  "lang": "cs",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
