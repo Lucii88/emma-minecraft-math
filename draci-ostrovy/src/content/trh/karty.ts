@@ -107,7 +107,7 @@ export const cards: KnowledgeCard[] = [
     level: 4,
     emoji: '📺',
     title: 'Reklama budí přání',
-    text: 'Reklamy platí firmy, aby v nás vzbudily přání něco mít. Proto ukazují jen to nejlepší. Než si něco koupíš, zeptej se sama sebe, jestli to potřebuješ, nebo to jen chceš.',
+    text: 'Reklamy platí firmy, aby v nás vzbudily přání něco mít. Proto ukazují jen to nejlepší. Než si něco koupíš, zeptej se {sama|sám} sebe, jestli to potřebuješ, nebo to jen chceš.',
   },
 
   // --- Spoření na cíl --------------------------------------------------------

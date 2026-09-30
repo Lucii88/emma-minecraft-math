@@ -28,6 +28,7 @@ import {
   pkey,
   priceOf,
   q,
+  sum,
   type Attempt,
   type Piece,
 } from './common';
@@ -47,47 +48,47 @@ const L2: Spec[] = [
   q('neda-se-koupit', 'Co se nedá koupit za peníze?', 'Přátelství',
     ['Rohlík', 'Míč', 'Pastelky', 'Zmrzlina'],
     ['Co by šlo dát do nákupního košíku?'],
-    'Přátelství se nedá koupit v žádném obchodě. Kamarádky získáš tím, jak se k nim chováš.'),
-  q('obrazek-babicka', 'Babička si schovává obrázek, který jsi jí nakreslila. Proč je pro ni tak cenný?', 'Protože je od tebe',
+    'Přátelství se nedá koupit v žádném obchodě – vzniká z času, který spolu kamarádi tráví. Vědci spočítali, že z nového známého se stane kamarád asi po 50 hodinách společného času.'),
+  q('obrazek-babicka', 'Babička si schovává obrázek, který jsi jí {nakreslila|nakreslil}. Proč je pro ni tak cenný?', 'Protože je od tebe',
     ['Protože byl drahý', 'Protože je ze zlata', 'Protože ho prodá'],
     ['Kolik asi stál papír a pastelky?'],
-    'Obrázek nestál skoro nic, ale babička ho má ráda, protože ho kreslila její vnučka. Hodnota věci není jen její cena.'),
+    'Obrázek nestál skoro nic, ale babičce připomíná tebe. Hodnota věci není jen její cena – patří k ní i vzpomínky a to, kdo nám ji dal.'),
   q('micek-obrazek', 'Dva míčky jsou úplně stejné, jen jeden má obrázek draka. Obyčejný stojí 60 Kč, ten s drakem 90 Kč. Za co platíš těch 30 Kč navíc?', 'Za obrázek draka',
     ['Za lepší skákání', 'Za větší míček', 'Za víc vzduchu'],
     ['V čem se míčky liší?'],
-    'Míčky jsou stejné, takže 30 Kč navíc platíš jen za obrázek. Než zaplatíš víc, zeptej se sama sebe, jestli ti obrázek za to stojí.'),
+    'Míčky jsou stejné, takže 30 Kč navíc platíš jen za obrázek. Když jde o známou postavičku z filmu, výrobce často platí jejímu majiteli, aby ji na míček směl dát – a to se promítne do ceny.'),
   q('cas-s-tatou', 'Táta si s tebou celé odpoledne hraje. Co ti tím dává?', 'Svůj čas',
     ['Peníze', 'Novou hračku', 'Bonbony'],
     ['Co táta při hře „utrácí“, i když za nic neplatí?'],
-    'Táta ti dává svůj čas. Čas s rodinou se nedá koupit, a proto má velkou hodnotu.'),
+    'Táta ti dává svůj čas. Čas s rodinou se nedá koupit ani vrátit, a proto má velkou hodnotu.'),
   q('voda-zizen', 'Jsi na dlouhém výletě a máš velkou žízeň. Co má pro tebe teď největší hodnotu?', 'Láhev vody',
     ['Zlatý prstýnek', 'Nová hračka', 'Třpytivá samolepka'],
     ['Co tvé tělo teď nejvíc potřebuje?'],
-    'Když máš žízeň, voda je nejcennější věc, i když stojí jen pár korun. Hodnota věci záleží i na tom, jak moc ji zrovna potřebuješ.'),
+    'Když máš žízeň, voda je nejcennější věc, i když stojí jen pár korun. Hodnota věci záleží na tom, jak moc ji zrovna potřebuješ – doma přitom litr vody z kohoutku stojí méně než korunu.'),
   q('drazsi-vzdy', 'Je dražší věc vždycky lepší?', 'Ne, ne vždycky',
     ['Ano, vždycky', 'Ano, pozná se to podle ceny', 'Ano, levné je vždycky špatné'],
     ['Za co všechno se v ceně platí? Jen za věc samotnou?'],
-    'Cena záleží i na obalu, značce a reklamě. Jestli je věc dobrá, poznáš, až ji vyzkoušíš nebo porovnáš s jinými.'),
+    'Cena záleží i na obalu, značce a reklamě. Jestli je věc dobrá, poznáš, až ji vyzkoušíš nebo porovnáš s jinými – levnější věc někdy vyhraje.'),
   q('naramek', 'Kamarádka ti vyrobila náramek z korálků. Co je na něm nejcennější?', 'Že ho dělala pro tebe',
     ['Kolik stály korálky', 'Že je z obchodu', 'Že je nejdražší'],
     ['Co do náramku kamarádka dala kromě korálků?'],
-    'Vlastnoručně vyrobený dárek má velkou hodnotu, protože do něj kamarádka dala svůj čas a péči.'),
+    'Vlastnoručně vyrobený dárek má velkou hodnotu, protože do něj kamarádka dala svůj čas a péči. Takový náramek se nikde jinde koupit nedá.'),
   q('zdrazeni', 'Jablko stálo loni 5 Kč a letos stojí 6 Kč. Co se stalo s cenou?', 'Zvýšila se',
     ['Snížila se', 'Zůstala stejná', 'Zmizela'],
     ['Je 6 víc, nebo míň než 5?'],
-    'Ceny se mění. Když něco zdraží, zaplatíš za stejnou věc víc peněz.'),
+    'Ceny se mění. Když něco zdraží, zaplatíš za stejnou věc víc peněz – o korunu dražší jablko je u deseti jablek o 10 Kč víc.'),
   q('porovnat', 'Chceš koupit pastelky. Co je chytré udělat předtím?', 'Porovnat ceny',
     ['Koupit ty první', 'Koupit ty nejdražší', 'Koupit dvoje'],
     ['Stojí stejné pastelky všude stejně?'],
-    'Stejné pastelky mohou v různých obchodech stát různě. Když porovnáš ceny, zaplatíš méně.'),
+    'Stejné pastelky mohou v různých obchodech stát různě. Když porovnáš ceny, zaplatíš méně a ušetřené peníze můžeš dát na něco jiného.'),
   q('svicka-krabicka', 'V obchodě jsou dvě stejné svíčky. Jedna je ve zlaté krabičce a stojí víc. Která bude svítit déle?', 'Obě stejně dlouho',
-    ['Ta ve zlaté krabičce', 'Ta levnější', 'Žádná'],
+    ['Ta ve zlaté krabičce', 'Ta levnější'],
     ['Liší se svíčky, nebo jen krabičky?'],
-    'Svíčky jsou stejné, jen krabička je jiná. Za hezký obal se platí, ale svítit déle nepomáhá.'),
-  q('hodnota-pomoc', 'Pomohla jsi sousedce odnést nákup a nedostala jsi za to žádné peníze. Měla ta pomoc hodnotu?', 'Ano, velkou',
+    'Svíčky jsou stejné, jen krabička je jiná. Jak dlouho svíčka svítí, záleží na vosku a knotu – krabička na tom nic nezmění.'),
+  q('hodnota-pomoc', '{Pomohla|Pomohl} jsi sousedce odnést nákup a {nedostala|nedostal} jsi za to žádné peníze. Měla ta pomoc hodnotu?', 'Ano, velkou',
     ['Ne, nic to nestálo', 'Ne, nikdo nezaplatil', 'Jen kdyby zaplatila'],
     ['Je něco cenné, i když se za to neplatí?'],
-    'Pomoc má velkou hodnotu, i když se za ni neplatí. Sousedce jsi ušetřila námahu a udělala radost.'),
+    'Pomoc má velkou hodnotu, i když se za ni neplatí. Kdyby si sousedka na nošení nákupu musela někoho najmout, musela by mu zaplatit.'),
 ];
 
 // ---------------------------------------------------------------------------
@@ -97,39 +98,39 @@ const L3: Spec[] = [
   q('devitky', 'Proč obchody často píšou ceny jako 99 Kč, a ne 100 Kč?', 'Aby cena vypadala nižší',
     ['Protože 99 je víc než 100', 'Protože stokoruny neplatí', 'Protože to nařizuje zákon'],
     ['Kterou číslici si na cenovce všimneš nejdřív?'],
-    'Oči si všimnou hlavně první číslice. 99 Kč tak působí levněji než 100 Kč, i když je to jen o korunu méně. Vědci to ověřili pokusy s nakupováním.'),
+    'Oči si všimnou hlavně první číslice, a tak 99 Kč působí levněji než 100 Kč. V jednom pokusu se dokonce šaty za 39 dolarů prodávaly líp než stejné šaty za 34 dolarů.'),
   q('o-kolik-399', 'Hračka stojí 399 Kč. O kolik je to méně než 400 Kč?', 'O 1 Kč',
     ['O 100 Kč', 'O 10 Kč', 'O 99 Kč'],
     ['Kolik chybí od 399 do 400?'],
-    '400 − 399 = 1. Cena 399 Kč vypadá jako „tři sta něco“, ale je to skoro 400 Kč.'),
+    '400 − 399 = 1. Cena 399 Kč vypadá jako „tři sta něco“, ale je to skoro 400 Kč – proto se vyplatí ceny v duchu zaokrouhlit.'),
   q('znacka-tricko', 'Dvě trička jsou ze stejné látky a šila je stejná dílna. Jedno má logo známé značky a stojí třikrát víc. Za co platíš navíc?', 'Za logo značky',
     ['Za lepší látku', 'Za delší rukávy', 'Za pevnější švy'],
     ['V čem se trička liší?'],
-    'Trička jsou stejná, liší se jen logem. Za známou značku se často platí víc, i když věc sama lepší není.'),
+    'Trička jsou stejná, liší se jen logem. Za známou značku se platí víc, protože firma utrácí za reklamu a lidé značku rádi nosí – tričko samo ale lepší není.'),
   q('zlato', 'Proč je zlato drahé?', 'Je vzácné a lidé ho chtějí',
-    ['Dá se jíst', 'Je ho všude plno', 'Roste na stromech'],
+    ['Je lehké jako peříčko', 'Je ho všude plno', 'Roste na stromech'],
     ['Je zlata na světě hodně, nebo málo?'],
-    'Zlata je na světě málo a lidé ho chtějí na šperky i do přístrojů. Co je vzácné a žádané, bývá drahé.'),
+    'Zlata je na světě málo a lidé ho chtějí na šperky i do přístrojů. Všechno zlato, které lidé kdy vytěžili, by se vešlo do kostky o hraně asi 22 metrů.'),
   q('vikingove-vaha', 'Vikingové často platili kousky stříbra. Jak poznali, kolik stříbra dávají?', 'Zvážili ho',
     ['Změřili ho pravítkem', 'Podívali se na obrázek', 'Hodili si kostkou'],
     ['Kousky stříbra byly různě velké.'],
-    'Vikingové nosili malé skládací váhy a stříbro vážili. Archeologové takové váhy i kousky stříbra nacházejí v místech, kde Vikingové žili a obchodovali.'),
+    'Vikingové nosili malé skládací váhy a stříbro vážili. Do kousků stříbra navíc často dělali nožem malé zářezy, aby poznali, jestli je stříbro pravé i uvnitř.'),
   q('svicka-a-b', 'Jedna svíčka stojí 40 Kč, druhá 80 Kč. Vypadají stejně, stejně voní a hoří stejně dlouho. Která je výhodnější?', 'Ta za 40 Kč',
     ['Ta za 80 Kč', 'Obě stejně', 'Nedá se to poznat'],
     ['Co dostaneš za své peníze u každé svíčky?'],
-    'Obě svíčky dělají totéž, ale jedna stojí polovinu. Když jsou věci stejně dobré, vyplatí se ta levnější.'),
-  q('sacky-bonbonu', 'Dva sáčky bonbonů stojí stejně. V jednom je 10 bonbonů, ve druhém 15. Který je výhodnější?', 'Ten s 15 bonbony',
+    'Obě svíčky dělají totéž, ale jedna stojí polovinu. Za cenu té dražší se dají koupit hned dvě levnější.'),
+  q('sacky-bonbonu', 'Dva sáčky stejných bonbonů stojí stejně. V jednom je 10 bonbonů, ve druhém 15. Který je výhodnější?', 'Ten s 15 bonbony',
     ['Ten s 10 bonbony', 'Oba stejně', 'Ten s hezčím obalem'],
     ['Kde dostaneš za stejné peníze víc?'],
-    'Za stejnou cenu dostaneš ve druhém sáčku o 5 bonbonů víc. Vyplatí se dívat nejen na cenu, ale i na to, kolik v balení je.'),
+    'Za stejnou cenu dostaneš ve druhém sáčku o 5 bonbonů víc. Vyplatí se dívat nejen na cenu, ale i na to, kolik v balení je – proto bývá na cenovkách i cena za kilogram.'),
   q('pastelky-vyber', 'Na co je nejlepší se dívat, když vybíráš pastelky na malování?', 'Jak dobře malují',
     ['Jak lesklou mají krabičku', 'Kolik reklam na ně je', 'Jakou barvu má krabička'],
     ['K čemu pastelky potřebuješ?'],
-    'Pastelky kupuješ na malování, takže nejdůležitější je, jak malují. Lesklá krabička ani reklama malovat nepomůže.'),
-  q('destnik-vydrz', 'Levný deštník se rozbije při prvním větru, dražší vydrží roky. Co vyjde nakonec levněji?', 'Dražší, který vydrží',
+    'Pastelky kupuješ na malování, takže nejdůležitější je, jak malují. Lesklá krabička ani reklama malovat nepomůže – nejlíp je pastelky vyzkoušet.'),
+  q('destnik-vydrz', 'Levný deštník stojí 100 Kč a rozbije se při prvním větru. Dražší stojí 300 Kč a vydrží roky. Co vyjde nakonec levněji?', 'Dražší, který vydrží',
     ['Levný, protože je levný', 'Kupovat každý měsíc nový', 'Dva levné najednou'],
     ['Kolik deštníků koupíš, když se levný pořád rozbíjí?'],
-    'Když se levná věc rychle rozbije, musíš kupovat znovu a znovu. Nakonec zaplatíš víc než za jednu věc, která vydrží.'),
+    'Levný deštník by se musel kupovat znovu a znovu – a už čtyři levné stojí 400 Kč, víc než jeden dražší. Věc, která dlouho vydrží, se často vyplatí.'),
 ];
 
 // ---------------------------------------------------------------------------
@@ -139,7 +140,7 @@ const L4: Spec[] = [
   q('ochutnavka', 'Proč se při ochutnávce naslepo schovávají obaly?', 'Aby obal ani cena nikoho neovlivnily',
     ['Aby se jídlo nezkazilo', 'Aby ochutnávka trvala déle', 'Aby nikdo nic nesnědl'],
     ['Co se stane, když víš, že něco bylo drahé?'],
-    'Když lidé vidí drahý obal nebo vysokou cenu, často jim věc chutná víc. Naslepo se pozná, co opravdu chutná líp.'),
+    'Když lidé vidí drahý obal nebo vysokou cenu, často jim věc chutná víc. V jednom pokusu dospělým chutnal stejný nápoj víc, když si mysleli, že je drahý.'),
   q('dzus-naslepo', 'Při ochutnávce naslepo vyhrál levný džus nad drahým. Co to ukazuje?', 'Dražší nemusí chutnat líp',
     ['Levné je vždycky lepší', 'Ochutnávka se nepovedla', 'Drahý džus byl zkažený'],
     ['Věděli ochutnávači, který džus je drahý?'],
@@ -151,23 +152,23 @@ const L4: Spec[] = [
   q('zbytecna-sleva', 'Obchod má slevu na obří plyšáky. Ty žádného nechceš ani nepotřebuješ. Ušetříš, když ho koupíš?', 'Ne, utratím peníze navíc',
     ['Ano, sleva je vždycky úspora', 'Ano, čím víc koupím, tím víc ušetřím', 'Ano, protože je obří'],
     ['Utratily by se ty peníze, kdyby sleva nebyla?'],
-    'Sleva ušetří peníze jen tehdy, když věc opravdu potřebuješ nebo chceš. Jinak utratíš peníze za něco, co by sis vůbec nekoupila.'),
+    'Sleva ušetří peníze jen tehdy, když věc opravdu potřebuješ nebo chceš. Jinak utratíš peníze za něco, co by sis vůbec {nekoupila|nekoupil} – i se slevou je to výdaj navíc.'),
   q('velke-baleni', 'Velké balení jogurtů je levnější za kus. Kdy se ho nevyplatí koupit?', 'Když je nestihneš sníst',
-    ['Když máš jogurty ráda', 'Když je lednička prázdná', 'Když máte velkou rodinu'],
+    ['Když máš jogurty {ráda|rád}', 'Když je lednička prázdná', 'Když máte velkou rodinu'],
     ['Co se stane s jogurtem, který dlouho leží?'],
-    'Levnější za kus se vyplatí, jen když všechno spotřebuješ. Jogurty, které se zkazí a vyhodí, jsou vyhozené peníze.'),
+    'Levnější za kus se vyplatí, jen když všechno spotřebuješ. Jogurty, které se zkazí a vyhodí, jsou vyhozené peníze – proto se vyplatí hlídat datum spotřeby.'),
   q('mensi-cokolada', 'Čokoláda stojí pořád 30 Kč, ale místo 100 g má teď jen 80 g. Co se stalo?', 'Vlastně zdražila',
     ['Zlevnila', 'Nic se nezměnilo', 'Je jí teď víc'],
     ['Dostaneš za 30 Kč stejně čokolády jako dřív?'],
-    'Za stejné peníze dostaneš méně čokolády, takže vlastně zdražila. Menšího balení si lidé všimnou hůř než vyšší ceny.'),
+    'Za stejné peníze dostaneš méně čokolády, takže vlastně zdražila. Tomu triku se říká smrskflace – menšího balení si lidé všimnou hůř než vyšší ceny.'),
   q('reklama-cena', 'Proč bývá zboží, o kterém je hodně reklam, někdy dražší?', 'Reklamy stojí peníze',
     ['V televizi vypadá hezčí', 'Je vždycky lepší', 'Je těžší'],
     ['Kdo platí za reklamy?'],
-    'Reklamy platí firmy a peníze na ně se často vracejí v ceně zboží. Víc reklamy neznamená lepší věc.'),
+    'Reklamy platí firmy a peníze na ně se často vracejí v ceně zboží. Třeba půlminutová reklama při finále amerického fotbalu stojí přes 7 milionů dolarů.'),
   q('cesta-leif', 'Leif může jet do obchodu, kde je jeho nákup o 20 Kč levnější. Jízdenka tam a zpátky ale stojí 30 Kč. Vyplatí se mu to?', 'Ne, jízda stojí víc',
     ['Ano, ušetří 20 Kč', 'Ano, ušetří 50 Kč', 'Vyjde to úplně stejně'],
     ['Porovnej, kolik ušetří a kolik zaplatí za cestu.'],
-    'Ušetří 20 Kč, ale za jízdenku zaplatí 30 Kč. Celkem by tedy utratil o 10 Kč víc.'),
+    'Ušetří 20 Kč, ale za jízdenku zaplatí 30 Kč. Celkem by tedy utratil o 10 Kč víc – a ještě by strávil čas cestou.'),
 ];
 
 // ---------------------------------------------------------------------------
@@ -177,38 +178,38 @@ const L5: Spec[] = [
   q('co-je-sleva-50', 'Co znamená sleva 50 %?', 'Zaplatíš polovinu ceny',
     ['Cena klesne o 50 Kč', 'Zaplatíš 50 Kč', 'Cena se zdvojnásobí'],
     ['Kolik je 50 ze 100?'],
-    '50 % je polovina. Sleva 50 % znamená, že se z ceny odečte polovina a ty zaplatíš tu druhou polovinu.',
+    '50 % je polovina: z ceny se odečte půlka a ty zaplatíš tu druhou. Slovo procento totiž znamená „ze sta“ – a 50 ze 100 je právě polovina.',
     { speak: 'Co znamená sleva padesát procent?' }),
   q('co-je-sleva-100', 'Co by znamenala sleva 100 %?', 'Věc by byla zadarmo',
-    ['Věc by stála 100 Kč', 'Věc by byla dvakrát dražší', 'Zaplatila bys polovinu'],
+    ['Věc by stála 100 Kč', 'Věc by byla dvakrát dražší', 'Věc by stála polovinu'],
     ['100 % je celá cena.'],
-    'Kdyby se z ceny odečetla celá cena, nezbylo by nic – věc by byla zadarmo. V obchodech se to skoro nestává.',
+    'Kdyby se z ceny odečetla celá cena, nezbylo by nic – věc by byla zadarmo. 100 % znamená všechno, proto se taková sleva v obchodech skoro nevidí.',
     { speak: 'Co by znamenala sleva sto procent?' }),
   q('deset-procent', 'Sleva 10 % na bundu za 2000 Kč, nebo sleva 10 % na čepici za 200 Kč. Která ušetří víc korun?', 'Sleva na bundu',
     ['Sleva na čepici', 'Obě stejně', 'Žádná'],
     ['10 % je desetina ceny.'],
-    '10 % je desetina. Z 2000 Kč je to 200 Kč, z 200 Kč jen 20 Kč. Stejná procenta z vyšší ceny jsou víc korun.',
+    '10 % je desetina. Z 2000 Kč je to 200 Kč, z 200 Kč jen 20 Kč – stejná procenta z vyšší ceny jsou víc korun.',
     { speak: 'Sleva deset procent na bundu za 2000 korun, nebo sleva deset procent na čepici za 200 korun. Která ušetří víc korun?' }),
   q('jablek-hodne', 'Na trh přijelo deset prodavačů jablek, ale kupců je málo. Co se asi stane s cenou jablek?', 'Cena klesne',
     ['Cena stoupne', 'Jablka budou zadarmo', 'Jablka zmizí'],
     ['Co udělá prodavač, když jablka nikdo nekupuje?'],
-    'Když je zboží hodně a kupců málo, prodavači snižují ceny, aby něco prodali. Když je zboží málo a kupců hodně, ceny rostou.'),
+    'Když je zboží hodně a kupců málo, prodavači snižují ceny, aby něco prodali. Když je zboží málo a kupců hodně, ceny rostou – tomu se říká nabídka a poptávka.'),
   q('medu-malo', 'Včelaři letos mají málo medu, ale lidé ho chtějí pořád stejně. Co se asi stane s cenou medu?', 'Cena stoupne',
     ['Cena klesne', 'Med bude zadarmo', 'Lidé přestanou jíst med'],
     ['Co je vzácnější – med letos, nebo loni?'],
-    'Když je zboží málo a zájemců pořád stejně, prodávající můžou chtít víc peněz. Proto cena stoupne.'),
+    'Když je zboží málo a zájemců pořád stejně, prodávající můžou chtít víc peněz. Proto bývá med dražší po roce, kdy se včelám nedařilo.'),
   q('permanentka-kdy', 'Permanentka na 10 vstupů do bazénu je za jeden vstup levnější. Kdy se nevyplatí?', 'Když půjdeš jen dvakrát',
-    ['Když půjdeš desetkrát', 'Když ráda plaveš', 'Když chodíš každý týden'],
+    ['Když půjdeš desetkrát', 'Když {ráda|rád} plaveš', 'Když chodíš každý týden'],
     ['Kolik vstupů za cenu permanentky opravdu využiješ?'],
-    'Permanentka se vyplatí, jen když ji opravdu využiješ. Za dva vstupy bys zaplatila celou permanentku.'),
+    'Permanentka se vyplatí, jen když ji opravdu využiješ. Za dva vstupy bys {zaplatila|zaplatil} celou permanentku a osm vstupů by zůstalo nevyužitých.'),
   q('druhy-za-pul', 'Akce: druhý kus za polovinu. Chceš ale jen jeden kus. Jak utratíš nejméně?', 'Koupím jen jeden',
     ['Koupím dva, je to akce', 'Koupím tři kusy', 'Koupím dva a jeden vyhodím'],
     ['Kolik zaplatíš za jeden kus a kolik za dva?'],
-    'Za dva kusy bys zaplatila jeden a půl ceny, i když chceš jen jeden. Nejméně utratíš, když koupíš jen to, co potřebuješ.'),
+    'Za dva kusy bys {zaplatila|zaplatil} jeden a půl ceny, i když chceš jen jeden. Nejméně utratíš, když koupíš jen to, co potřebuješ.'),
   q('jen-deset-minut', 'Na obrazovce bliká: „Sleva jen dalších 10 minut!“ Proč to obchod píše?', 'Aby lidé nakoupili bez rozmýšlení',
     ['Obchod se za 10 minut navždy zavře', 'Aby lidé měli dost času', 'Musí to tam být'],
     ['Jak se nakupuje, když člověk spěchá?'],
-    'Kdo spěchá, nepřemýšlí, jestli věc opravdu potřebuje. Vyplatí se nenechat se uspěchat a chvíli počkat.'),
+    'Kdo spěchá, nepřemýšlí, jestli věc opravdu potřebuje. Takové odpočítávání je obchodní trik – vyplatí se nenechat se uspěchat a chvíli počkat.'),
 ];
 
 // ---------------------------------------------------------------------------
@@ -218,11 +219,11 @@ const L6: Spec[] = [
   q('voda-diamanty', 'Voda je k životu nezbytná, a přesto bývá levná. Diamanty k životu nepotřebujeme, a jsou drahé. Proč?', 'Vody je hodně, diamantů málo',
     ['Diamanty jsou k jídlu', 'Voda je k ničemu', 'Ceny se losují'],
     ['Co je vzácnější?'],
-    'Cena hodně záleží na tom, kolik je čeho k dispozici. Vody je většinou dost, diamanty jsou vzácné. Této hádance se říká paradox vody a diamantů.'),
+    'Cena hodně záleží na tom, kolik je čeho k dispozici. Vody je většinou dost, diamanty jsou vzácné. Této hádance se říká paradox vody a diamantů – psal o ní už před 250 lety Adam Smith.'),
   q('omyl-dvou-slev', 'Obchod zlevní bundu o 50 % a potom novou cenu ještě o 50 %. Je teď bunda zadarmo?', 'Ne, stojí čtvrtinu',
     ['Ano, 50 + 50 = 100 %', 'Ne, stojí polovinu', 'Ano, dvě slevy jsou všechno'],
     ['Z jaké ceny se počítá druhá sleva?'],
-    'Druhá sleva se počítá z nové, poloviční ceny. Polovina z poloviny je čtvrtina, takže bunda stojí čtvrtinu původní ceny.',
+    'Druhá sleva se počítá z nové, poloviční ceny. Polovina z poloviny je čtvrtina – bunda za 1000 Kč by tedy stála 250 Kč.',
     { speak: 'Obchod zlevní bundu o padesát procent a potom novou cenu ještě o padesát procent. Je teď bunda zadarmo?' }),
   q('dve-slevy-poradi', 'Je jedno, jestli obchod zlevní nejdřív o 20 % a pak o 50 %, nebo naopak?', 'Ano, vyjde to stejně',
     ['Ne, lepší je nejdřív 50 %', 'Ne, lepší je nejdřív 20 %', 'Ne, pak je to zadarmo'],
@@ -236,11 +237,11 @@ const L6: Spec[] = [
   q('syr-cesta', 'Stánek vedle domu prodává 100 g sýra za 30 Kč. Na druhém konci města stojí 100 g jen 25 Kč, ale jízdenka tam a zpátky stojí 40 Kč. Chceš 200 g. Kde to vyjde levněji?', 'U stánku vedle domu',
     ['Na druhém konci města', 'Vyjde to stejně', 'Nedá se to spočítat'],
     ['Spočítej cenu 200 g na obou místech.', 'Na druhý konec města musíš připočítat jízdenku.'],
-    'Vedle domu: 2 × 30 = 60 Kč. Na druhém konci města: 2 × 25 + 40 = 90 Kč. Levnější je stánek vedle domu.'),
+    'Vedle domu: 2 × 30 = 60 Kč. Na druhém konci města: 2 × 25 + 40 = 90 Kč. Levnější je stánek vedle domu – nižší cena za 100 g nepomůže, když se k ní musí připočítat cesta.'),
   q('hrnek-prababicka', 'Starý hrnek, ze kterého pila už prababička, by se na trhu prodal jen za 20 Kč. Pro rodinu je ale nejcennější věcí v kuchyni. Jak to jde dohromady?', 'Cena a hodnota nejsou totéž',
     ['Rodina se spletla', 'Hrnek je ze zlata', 'Na trhu se spletli'],
     ['Proč si rodina hrnku váží?'],
-    'Cena je to, kolik by za věc zaplatil někdo cizí. Hodnota je to, jak moc je věc pro někoho důležitá – třeba kvůli vzpomínkám.'),
+    'Cena je to, kolik by za věc zaplatil někdo cizí. Hodnota je to, jak moc je věc pro někoho důležitá – třeba kvůli vzpomínkám na prababičku.'),
 ];
 
 // ---------------------------------------------------------------------------
@@ -267,6 +268,8 @@ function stanky(level: 2 | 3): Attempt {
     const sellers = pickDistinct(rng, PEOPLE, n);
     const min = Math.min(...shuffled);
     const best = sellers[shuffled.indexOf(min)];
+    const max = Math.max(...shuffled);
+    const worst = sellers[shuffled.indexOf(max)];
     const head = `${NUM_WORD[n]} stánky prodávají ${good.acc} stejné kvality.`;
     const ask = `U kterého stánku je ${good.nom} nejlevnější?`;
     return q(
@@ -275,7 +278,7 @@ function stanky(level: 2 | 3): Attempt {
       `U ${best.gen}`,
       sellers.filter((s) => s !== best).map((s) => `U ${s.gen}`),
       ['Porovnej cenovky na kartách.', 'Hledáš nejmenší číslo.'],
-      `Nejlevnější je to u ${best.gen}: ${kc(min)}. Stejná věc může u různých prodejců stát různě, a proto se vyplatí ceny porovnat.`,
+      `Nejlevnější je to u ${best.gen}: ${kc(min)}. U ${worst.gen} by stejná věc stála o ${kc(max - min)} víc – proto se vyplatí ceny porovnat.`,
       {
         visual: { type: 'cards', cards: sellers.map((s, i) => ({ emoji: good.emoji, title: `U ${s.gen}`, tag: kc(shuffled[i]) })) },
         speak: `${head} ${capitalize(list(sellers.map((s, i) => `u ${s.gen} ${i === 0 ? 'stojí ' : ''}${korun(shuffled[i])}`)))}. ${ask}`,
@@ -293,12 +296,21 @@ function poradi(level: 2 | 3): Attempt {
     const prices = items.map((i) => i.price);
     if (new Set(prices).size !== prices.length) return null;
     const sorted = items.slice().sort((a, b) => a.price - b.price);
+    // Zajímavost navíc: stojí nejdražší věc víc než všechny ostatní dohromady?
+    const top = sorted[sorted.length - 1];
+    const others = sum(sorted.slice(0, -1).map((i) => i.price));
+    const compare =
+      top.price > others
+        ? `${capitalize(top.good.nom)} stojí víc než všechny ostatní věci dohromady.`
+        : top.price < others
+          ? `Všechny ostatní věci dohromady stojí víc než ${top.good.nom}.`
+          : `${capitalize(top.good.nom)} stojí stejně jako všechny ostatní věci dohromady.`;
     return ord(
       `poradi-${items.map((i) => `${i.good.key}${i.price}`).join('-')}`,
       'Seřaď věci od nejlevnější po nejdražší.',
       sorted.map((i) => capitalize(i.good.nom)),
       ['Najdi nejdřív tu nejlevnější.', level === 2 ? 'Porovnávej nejdřív desítky, potom jednotky.' : 'U delších čísel porovnávej nejdřív stovky, potom desítky.'],
-      `Od nejlevnější: ${sorted.map((i) => `${i.good.nom} ${kc(i.price)}`).join(', ')}.`,
+      `Od nejlevnější: ${sorted.map((i) => `${i.good.nom} ${kc(i.price)}`).join(', ')}. ${compare}`,
       {
         visual: offer(items),
         speak: `Seřaď věci od nejlevnější po nejdražší. Na kartách ${isOffer(items)}.`,
@@ -307,6 +319,9 @@ function poradi(level: 2 | 3): Attempt {
     );
   };
 }
+
+/** Zboží, které se kupuje každý týden (u něj se dá spočítat úspora za rok). */
+const WEEKLY = new Set(['chleb', 'mleko', 'syr', 'pernicek']);
 
 /** O kolik je to jinde levnější? */
 function okolik(rng: Rng): Spec | null {
@@ -320,7 +335,7 @@ function okolik(rng: Rng): Spec | null {
     `${capitalize(good.nom)} stojí na trhu ${kc(a)} a v obchodě ${kc(b)}. O kolik korun ušetříš, když nakoupíš tam, kde je to levnější?`,
     diff,
     ['Kde je to levnější?', 'Od vyšší ceny odečti nižší.'],
-    `${f(Math.max(a, b))} − ${f(Math.min(a, b))} = ${f(diff)}. ${a < b ? 'Na trhu' : 'V obchodě'} ušetříš ${kc(diff)}.`,
+    `${f(Math.max(a, b))} − ${f(Math.min(a, b))} = ${f(diff)}. ${a < b ? 'Na trhu' : 'V obchodě'} ušetříš ${kc(diff)}. ${WEEKLY.has(good.key) ? `Kdo ho tam kupuje každý týden, ušetří za rok ${kc(diff * 52)}.` : 'Stejná věc může na různých místech stát různě, proto se vyplatí ceny porovnat.'}`,
     { unit: 'Kč', difficulty: 0.1 },
   );
 }
@@ -362,7 +377,7 @@ function akce(rng: Rng): Spec | null {
     need === 1 ? 0 : 1,
     ['Spočítej, kolik zaplatíš v akci a kolik bez ní.', 'V akci platíš za dva kusy.'],
     need === 1
-      ? `Bez akce zaplatíš ${kc(u)}. V akci bys zaplatila 2 × ${u} = ${kc(2 * u)}, i když potřebuješ jen ${one}. Akce se vyplatí, jen když využiješ všechny kusy.`
+      ? `Bez akce zaplatíš ${kc(u)}. V akci bys {zaplatila|zaplatil} 2 × ${u} = ${kc(2 * u)}, i když potřebuješ jen ${one}. Akce se vyplatí, jen když využiješ všechny kusy.`
       : `Tři zvlášť stojí 3 × ${u} = ${kc(3 * u)}, v akci jen 2 × ${u} = ${kc(2 * u)}. Když potřebuješ všechny tři, akce se vyplatí.`,
     { difficulty: need === 1 ? 0.1 : -0.1 },
   );
@@ -379,7 +394,7 @@ function akceVic(rng: Rng): Spec | null {
     `${oneNom(p)} stojí ${kc(u)}. V akci jsou 3 ${p.nom[1]} za cenu dvou. Kolik zaplatíš za ${count(n, p.acc)} v akci?`,
     pay,
     ['Kolik trojic koupíš?', 'Za každou trojici platíš jen dva kusy.'],
-    `Koupíš ${triples} trojice. Za každou platíš 2 × ${u} = ${kc(2 * u)}, celkem ${triples} × ${2 * u} = ${kc(pay)}.`,
+    `Koupíš ${triples} trojice. Za každou platíš 2 × ${u} = ${kc(2 * u)}, celkem ${triples} × ${2 * u} = ${kc(pay)}. Bez akce by to stálo ${kc(n * u)} – akce 3 za 2 je vlastně sleva o třetinu.`,
     { unit: 'Kč', difficulty: 0.2 },
   );
 }
@@ -395,7 +410,7 @@ function sleva(rng: Rng): Spec | null {
       `Po slevě ${kc(off)} stojí ${good.nom} ${kc(after)}. Jaká byla cena před slevou?`,
       price,
       ['Byla cena před slevou vyšší, nebo nižší?', 'Slevu k dnešní ceně přičti.'],
-      `Před slevou to bylo o ${kc(off)} víc: ${f(after)} + ${f(off)} = ${kc(price)}.`,
+      `Před slevou to bylo o ${kc(off)} víc: ${f(after)} + ${f(off)} = ${kc(price)}. Původní cenu je dobré znát – jen tak poznáš, jestli je sleva opravdu velká.`,
       { unit: 'Kč', difficulty: 0.2 },
     );
   }
@@ -404,7 +419,7 @@ function sleva(rng: Rng): Spec | null {
     `${capitalize(good.nom)} stojí ${kc(price)}. Obchod dává slevu ${kc(off)}. Kolik zaplatíš?`,
     after,
     ['Sleva se od ceny odečítá.'],
-    `${f(price)} − ${f(off)} = ${kc(after)}.`,
+    `${f(price)} − ${f(off)} = ${kc(after)}. Obchod musí u slevy uvést i nejnižší cenu za posledních 30 dní, aby sleva nebyla jen naoko.`,
     { unit: 'Kč', difficulty: -0.1 },
   );
 }
@@ -432,8 +447,8 @@ function zakus(level: 4 | 5): Attempt {
     const cheaperIsSmaller = (correct === 0 && p1.n < p2.n) || (correct === 1 && p2.n < p1.n);
     const verdict =
       correct === 2
-        ? `Za kus stojí obě balení stejně.`
-        : `Za kus je levnější ${correct === 0 ? 'první' : 'druhé'} balení.${cheaperIsSmaller ? ' Větší balení nemusí být za kus levnější – vyplatí se to spočítat.' : ''}`;
+        ? 'Za kus stojí obě balení stejně – stačí vybrat to, které spotřebuješ.'
+        : `Za kus je levnější ${correct === 0 ? 'první' : 'druhé'} balení.${cheaperIsSmaller ? ' Větší balení nemusí být za kus levnější – vyplatí se to spočítat.' : ' Větší balení se ale vyplatí, jen když všechno spotřebuješ.'}`;
     return fx(
       `zakus-${p.key}-${p1.n}x${p1.unit}-${p2.n}x${p2.unit}`,
       `${capitalize(p.nom[1])} se prodávají ve dvou baleních. Ve kterém je ${ONE_NOM[p.rod]} ${p.nom[0]} levnější?`,
@@ -500,7 +515,7 @@ function za100g(rng: Rng): Spec | null {
     [`${w.nom} ${g1} g za ${kc(p1)}`, `${w.nom} ${g2} g za ${kc(p2)}`, 'Vyjde to stejně'],
     correct,
     ['Spočítej, kolik stojí 100 g v každém balení.', [g1, g2].some((g) => g % 100 !== 0) ? `U ${[g1, g2].find((g) => g % 100 !== 0)} g pomůže spočítat nejdřív cenu 50 g.` : 'Cenu balení vyděl počtem stovek gramů.'],
-    `První balení: ${per100(g1, p1)}. Druhé: ${per100(g2, p2)}. ${correct === 2 ? 'Za 100 g stojí obě balení stejně.' : `Za 100 g je levnější ${correct === 0 ? 'první' : 'druhé'} balení.`}`,
+    `První balení: ${per100(g1, p1)}. Druhé: ${per100(g2, p2)}. ${correct === 2 ? 'Za 100 g stojí obě balení stejně.' : `Za 100 g je levnější ${correct === 0 ? 'první' : 'druhé'} balení.`} Proto bývá na cenovkách v obchodě i cena za kilogram.`,
     {
       visual: { type: 'cards', cards: [{ emoji: w.emoji, title: `${w.nom} ${g1} g`, tag: kc(p1) }, { emoji: w.emoji, title: `${w.nom} ${g2} g`, tag: kc(p2) }] },
       speak: `${w.nom} ${sold} ve dvou baleních. První má ${g1} gramů a stojí ${korun(p1)}. Druhé má ${g2} gramů a stojí ${korun(p2)}. ${w.which} levnější, když porovnáš cenu za 100 gramů?`,
@@ -540,7 +555,7 @@ function pulka(rng: Rng): Spec | null {
     prompt,
     price / 2,
     ['Kolik je 50 % z celé ceny?'],
-    `Sleva 50 % je polovina ceny: ${f(price)} : 2 = ${kc(price / 2)}.`,
+    `Sleva 50 % je polovina ceny: ${f(price)} : 2 = ${kc(price / 2)}. Procento znamená „ze sta“ – a 50 ze 100 je právě polovina.`,
     { unit: 'Kč', speak: speakPct(prompt), difficulty: -0.1 },
   );
 }
@@ -560,7 +575,7 @@ function slevy(rng: Rng): Spec | null {
     [`U ${a.gen}`, `U ${b.gen}`, 'Všude stejně'],
     correct,
     ['Kolik korun je sleva 50 % z této ceny?', 'Porovnej obě slevy v korunách.'],
-    `Sleva 50 % je polovina: u ${a.gen} zaplatíš ${f(price)} : 2 = ${kc(half)}. U ${b.gen} zaplatíš ${f(price)} − ${f(off)} = ${kc(price - off)}. ${correct === 2 ? 'Vyjde to stejně.' : `Méně zaplatíš u ${correct === 0 ? a.gen : b.gen}.`}`,
+    `Sleva 50 % je polovina: u ${a.gen} zaplatíš ${f(price)} : 2 = ${kc(half)}. U ${b.gen} zaplatíš ${f(price)} − ${f(off)} = ${kc(price - off)}. ${correct === 2 ? 'Vyjde to stejně.' : `Méně zaplatíš u ${correct === 0 ? a.gen : b.gen}.`} Slevy v procentech a v korunách se dají porovnat, až když obě převedeš na koruny.`,
     { speak: speakPct(prompt), difficulty: 0.2 },
   );
 }
@@ -584,7 +599,7 @@ function perm(rng: Rng): Spec | null {
     ['Permanentka', 'Platit každý vstup'],
     permCheaper ? 0 : 1,
     ['Kolik by stály všechny vstupy zvlášť?', 'Porovnej to s cenou permanentky.'],
-    `Bez permanentky: ${n} × ${s} = ${kc(n * s)}. Permanentka stojí ${kc(price)}. ${permCheaper ? 'Levněji vyjde permanentka.' : 'Levněji vyjde platit každý vstup – permanentka se vyplatí, jen když ji dost využiješ.'}`,
+    `Bez permanentky: ${n} × ${s} = ${kc(n * s)}. Permanentka stojí ${kc(price)}. ${permCheaper ? 'Levněji vyjde permanentka – vyplatí se tomu, kdo chodí často.' : 'Levněji vyjde platit každý vstup – permanentka se vyplatí, jen když ji dost využiješ.'}`,
     { difficulty: 0.1 },
   );
 }
@@ -601,7 +616,7 @@ function permOd(rng: Rng): Spec | null {
     `${a.entry} stojí ${kc(s)}, permanentka na 10 vstupů ${kc(price)}. Od kolika vstupů je permanentka levnější než platit každý vstup?`,
     n,
     ['Zkus spočítat, kolik by stálo několik vstupů zvlášť.', 'Hledáš první počet vstupů, kdy placení zvlášť stojí víc než permanentka.'],
-    `${count(n - 1, VSTUP)} zvlášť stojí ${n - 1} × ${s} = ${kc((n - 1) * s)}, to je méně než permanentka. ${count(n, VSTUP)} stojí ${kc(n * s)}, a to už je víc než ${kc(price)}.`,
+    `${count(n - 1, VSTUP)} zvlášť stojí ${n - 1} × ${s} = ${kc((n - 1) * s)}, to je méně než permanentka. ${count(n, VSTUP)} stojí ${kc(n * s)}, a to už je víc než ${kc(price)}. Kdo půjde aspoň ${n}krát, ušetří s permanentkou.`,
     { difficulty: 0.2 },
   );
 }
@@ -676,6 +691,7 @@ export const hodnota = bankSkill({
   description: 'Porovnávání cen, cena za kus a za 100 g, akce a slevy a rozdíl mezi cenou a hodnotou – dražší neznamená automaticky lepší.',
   rvp: { 2: ['ČJS-5-2-03'], 3: ['ČJS-5-2-03'], 4: ['ČJS-5-2-03', 'M-5-1-04'], 5: ['ČJS-5-2-03', 'M-5-1-04'] },
   ability: 'usuzovani',
+  showFact: true,
   banks: { 2: L2, 3: L3, 4: L4, 5: L5, 6: L6 },
   gen: {
     2: mix(ID, [[2, stanky(2)], [1.5, okolik], [1.5, poradi(2)]]),

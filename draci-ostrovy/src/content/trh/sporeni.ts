@@ -48,7 +48,7 @@ const toJe = (n: number) => `to ${n >= 2 && n <= 4 ? 'jsou' : 'je'} ${count(n, T
 // L2 – proč spořit
 
 const L2: Spec[] = [
-  q('proc-sporit', 'Proč je dobré šetřit peníze?', 'Abych si mohla koupit dražší věc',
+  q('proc-sporit', 'Proč je dobré šetřit peníze?', 'Abych si {mohla|mohl} koupit dražší věc',
     ['Aby peníze zmizely', 'Aby se nemusely počítat', 'Protože utrácet se nesmí'],
     ['Na co by ti nestačilo kapesné z jednoho týdne?'],
     'Když šetříš, peníze se sčítají. Časem si můžeš koupit i věc, na kterou by ti jedno kapesné nestačilo.'),
@@ -64,7 +64,7 @@ const L2: Spec[] = [
     ['Peníze pak rostou samy', 'Nemusíš nic počítat', 'Prodavač ti dá slevu'],
     ['Na co myslíš, když chceš něco utratit?'],
     'Když víš, na co šetříš, snáz odoláš jiným lákadlům. Pomáhá si cíl nakreslit a pověsit na viditelné místo.'),
-  q('kdy-odlozit', 'Dostala jsi kapesné. Kdy se šetří nejsnáz?', 'Když část odložím hned',
+  q('kdy-odlozit', '{Dostala|Dostal} jsi kapesné. Kdy se šetří nejsnáz?', 'Když část odložím hned',
     ['Až všechno utratím', 'Až mi zbude po nákupech', 'Až bude prasátko plné'],
     ['Co se často stane s penězi, které jen tak nosíš v kapse?'],
     'Když část odložíš hned, jak peníze dostaneš, nelákají tě k utracení. Je to jeden z dobrých nápadů, jak šetřit.'),
@@ -119,7 +119,7 @@ const L4: Spec[] = [
   q('ucet-deti', 'Kdo může malému dítěti založit účet v bance?', 'Rodič',
     ['Kdokoli z ulice', 'Jen paní učitelka', 'Dítě úplně samo'],
     ['Kdo se o tebe stará?'],
-    'Malému dítěti zakládá účet rodič nebo jiný zákonný zástupce. Spolu pak můžou sledovat, jak úspory rostou. Samo si dítě může spořicí účet založit nejdřív od 15 let.'),
+    'Malému dítěti zakládá účet rodič nebo jiný zákonný zástupce. Spolu pak můžou sledovat, jak úspory rostou.'),
   q('uspory-rostou', 'Kde úspory rostou samy o sobě, i když nic nepřidáš?', 'Na spořicím účtu s úrokem',
     ['V prasátku', 'V krabici od bot', 'V peněžence'],
     ['Kdo ti může k penězům něco přidat?'],
@@ -131,7 +131,7 @@ const L4: Spec[] = [
 
 const L5: Spec[] = [
   q('proc-urok', 'Proč ti banka platí úrok?', 'Tvoje peníze půjčuje dalším lidem',
-    ['Protože je hodná', 'Protože musí rozdávat', 'Protože jsi šikovná'],
+    ['Protože je hodná', 'Protože musí rozdávat', 'Protože jsi {šikovná|šikovný}'],
     ['Co banka dělá s uloženými penězi?'],
     'Banka uložené peníze půjčuje a za půjčky dostává úrok. Část z něj pak přidá tobě.'),
   q('pojisteni', 'Co se stane s úsporami na účtu, kdyby banka zkrachovala?', 'Lidé dostanou úspory zpátky',
@@ -139,7 +139,7 @@ const L5: Spec[] = [
     ['Víš, co znamená, když je něco pojištěné?'],
     'Vklady v bankách jsou v Česku ze zákona pojištěné. Kdyby banka zkrachovala, každý dostane úspory zpátky až do částky 100 000 eur, což je přes dva miliony korun.'),
   q('plan', 'Co je spořicí plán?', 'Kolik a jak dlouho budu šetřit',
-    ['Seznam věcí, které si koupím', 'Přehled, kolik jsem utratila', 'Smlouva o půjčce'],
+    ['Seznam věcí, které si koupím', 'Přehled, kolik jsem {utratila|utratil}', 'Smlouva o půjčce'],
     ['Co potřebuješ vědět, když šetříš na cíl?'],
     'Spořicí plán říká, kolik budeš odkládat a jak dlouho. Pak víš, kdy budeš mít na svůj cíl dost.'),
   q('rezerva-rodina', 'Rodina má stranou peníze na nečekané výdaje. Kdy je použije?', 'Když se rozbije pračka',

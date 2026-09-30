@@ -495,6 +495,8 @@ describe('Vikingský trh – potřeby a přání: výběr v rozpočtu', () => {
         const rest = budget - first;
         const hits = cardsOf(item).filter((c) => (prefix === 'zbude' ? tagValue(c.tag) <= rest : tagValue(c.tag) > rest));
         expect(hits.map((c) => c.title), item.id).toEqual([correctLabel(item)]);
+        // „Už nezbude“: bez prvního nákupu by peníze na tu věc stačily.
+        if (prefix === 'nezbude') expect(tagValue(hits[0].tag), item.id).toBeLessThanOrEqual(budget);
       }
     }
     for (const item of byPrefix('trh.potreby', 'naprani')) {

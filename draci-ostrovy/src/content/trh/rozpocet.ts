@@ -47,7 +47,7 @@ const L3: Spec[] = [
     ['Peníze, které dostaneš', 'Úspory', 'Kapesné'],
     ['Peníze přibudou, nebo ubudou?'],
     'Výdaj jsou peníze, které odcházejí: za jídlo, hračky nebo lístek do kina.'),
-  q('zapisovat', 'Proč si zapisovat, za co utrácíš?', 'Abys věděla, kam peníze mizí',
+  q('zapisovat', 'Proč si zapisovat, za co utrácíš?', 'Abys {věděla|věděl}, kam peníze mizí',
     ['Aby peníze přibyly', 'Aby ti obchod dal slevu', 'Není to k ničemu'],
     ['Pamatuješ si každý nákup za celý měsíc?'],
     'Když si výdaje zapisuješ, uvidíš, za co utrácíš nejvíc. Pak se dá lépe plánovat.'),
@@ -145,10 +145,10 @@ function zbude(rng: Rng): Spec | null {
   if (left < 0) return null;
   return nm(
     `zbude-${pocket}-${items.map((i) => `${i.key}${i.amount}`).join('-')}`,
-    `Dostala jsi ${kc(pocket)} kapesného. Utratila jsi ${list(items.map((i) => `${kc(i.amount)} za ${i.acc}`))}. Kolik ti zbylo?`,
+    `{Dostala|Dostal} jsi ${kc(pocket)} kapesného. {Utratila|Utratil} jsi ${list(items.map((i) => `${kc(i.amount)} za ${i.acc}`))}. Kolik ti zbylo?`,
     left,
     ['Nejdřív sečti všechny útraty.', 'Součet odečti od kapesného.'],
-    `Utratila jsi ${plus(items.map((i) => i.amount))} = ${kc(spent)}. Zbylo ti ${f(pocket)} − ${f(spent)} = ${kc(left)}.`,
+    `{Utratila|Utratil} jsi ${plus(items.map((i) => i.amount))} = ${kc(spent)}. Zbylo ti ${f(pocket)} − ${f(spent)} = ${kc(left)}.`,
     { unit: 'Kč', difficulty: items.length === 3 ? 0.1 : -0.1 },
   );
 }
