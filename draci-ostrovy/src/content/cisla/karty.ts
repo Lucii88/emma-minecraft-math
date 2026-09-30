@@ -145,7 +145,7 @@ export const cards: KnowledgeCard[] = [
     level: 3,
     emoji: '🏛️',
     title: 'IIII na ciferníku',
-    text: 'Na mnoha hodinách s římskými číslicemi je čtyřka zapsaná jako IIII, i když se ve škole učíme IV. Římské číslice ale nemají žádný znak pro nulu.',
+    text: 'Na mnoha hodinách s římskými číslicemi je čtyřka zapsaná jako IIII, i když se ve škole učíme IV. Tak ji ale často psali i staří Římané: nad jedním vchodem do Kolosea je dodnes vytesané číslo LIIII, tedy 54.',
   },
   {
     id: 'cisla.cas.orloj',

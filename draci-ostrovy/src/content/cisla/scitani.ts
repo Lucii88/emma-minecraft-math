@@ -44,7 +44,7 @@ function minusCross(a: number, b: number): [string[], string] {
   const rest = b - toTen;
   const ten = a - toTen;
   return [
-    [`Odečti nejdřív tolik, abys byla na ${f(ten)}.`, `${f(a)} − ${toTen} = ${f(ten)}. Zbývá odečíst ${rest}.`],
+    [`Odečti nejdřív tolik, abys {byla|byl} na ${f(ten)}.`, `${f(a)} − ${toTen} = ${f(ten)}. Zbývá odečíst ${rest}.`],
     `${f(a)} − ${toTen} = ${f(ten)} a ${f(ten)} − ${rest} = ${f(a - b)}.`,
   ];
 }
@@ -117,7 +117,12 @@ function attempt(level: Level, rng: Rng): ItemParts | null {
     const a = notRound(rng, 11, 89);
     const nextTen = Math.ceil(a / 10) * 10;
     const c = rng.pick([nextTen, nextTen + 10, 100].filter((x) => x <= 100 && x > a));
-    return missing(a, c, [`Doplň nejdřív ${a} do ${nextTen}.`, `${a} + ${nextTen - a} = ${nextTen}. Kolik ještě chybí do ${c}?`], 0.3);
+    // Doplnění jen do nejbližší desítky: nápověda „doplň do desítky“ by
+    // prozradila výsledek, proto se počítá dál po jedné.
+    const hints = c === nextTen
+      ? [`Kolik ti chybí od ${a} do ${c}?`, `Počítej od ${a} dál po jedné až do ${c}. Kolik kroků to je?`]
+      : [`Doplň nejdřív ${a} do ${nextTen}.`, `${a} + ${nextTen - a} = ${nextTen}. Kolik ještě chybí do ${c}?`];
+    return missing(a, c, hints, 0.3);
   }
 
   if (level === 3) {
@@ -137,15 +142,27 @@ function attempt(level: Level, rng: Rng): ItemParts | null {
       const a = rng.int(101, 899);
       const b = rng.pick([10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300]);
       if (a + b >= 1000) return null;
-      const what = b >= 100 ? 'stovky' : 'desítky';
-      return plus(a, b, [`Přičítáš jen ${what}. Které místo v čísle ${a} se změní?`, `Jednotky zůstanou stejné: ${a % 10}.`], `${a} + ${b} = ${a + b}.`, -0.2);
+      // Při přechodu (195 + 10) se mění víc míst, proto nápověda neříká
+      // „které místo se změní“, ale co zůstane a co sečíst.
+      const hints = b >= 100
+        ? [`Přičítáš jen stovky – desítky a jednotky zůstanou stejné.`, `Kolik je ${a - (a % 100)} + ${b}?`]
+        : [`Přičítáš jen desítky – jednotky zůstanou stejné: ${a % 10}.`, `Kolik je ${a - (a % 10)} + ${b}?`];
+      return plus(a, b, hints, `${a} + ${b} = ${a + b}.`, -0.2);
     }
     if (pick < 85) {
       const c = rng.pick([100, 200, 500, 1000]);
       const a = rng.int(Math.floor(c / 20), Math.floor(c / 10) - 1) * 10 - rng.int(0, 1) * 5;
       if (a <= 0 || a >= c || a % 100 === 0) return null;
       const nextHundred = Math.ceil(a / 100) * 100;
-      return missing(a, c, [`Doplň nejdřív do ${nextHundred}.`, `${a} + ${nextHundred - a} = ${nextHundred}. Kolik ještě chybí do ${c}?`]);
+      const nextTen = Math.ceil(a / 10) * 10;
+      // Když je nejbližší stovka přímo cíl, nápověda „doplň do stovky“ by
+      // prozradila výsledek – doplňuje se tedy po desítkách.
+      const hints = nextHundred !== c
+        ? [`Doplň nejdřív do ${nextHundred}.`, `${a} + ${nextHundred - a} = ${nextHundred}. Kolik ještě chybí do ${c}?`]
+        : nextTen !== a
+          ? [`Doplň nejdřív ${a} do ${nextTen}.`, `${a} + ${nextTen - a} = ${nextTen}. Kolik desítek ještě chybí do ${c}?`]
+          : [`Počítej po desítkách od ${a} do ${c}.`, `Kolik desítek chybí od ${a} do ${c}?`];
+      return missing(a, c, hints);
     }
     const a = rng.int(20, 99) * 10;
     const b = rng.int(1, 9) + rng.int(1, 9) * 10;

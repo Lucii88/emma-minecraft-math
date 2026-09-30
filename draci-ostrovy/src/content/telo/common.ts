@@ -144,6 +144,8 @@ export interface BankSkillDef {
   rvp: Partial<Record<Level, string[]>>;
   ability: AbilityTag;
   testLike?: TestLikeFormat;
+  /** Vysvětlení je zajímavost: ukáže se i po správné odpovědi napoprvé. */
+  showFact?: boolean;
   banks: Banks;
 }
 
@@ -176,6 +178,7 @@ export function bankSkill(def: BankSkillDef): SkillDef {
     rvp: def.rvp,
     ability: def.ability,
     ...(def.testLike ? { testLike: def.testLike } : {}),
+    ...(def.showFact ? { showFact: true } : {}),
     generate: (level: Level, rng: Rng): Item => {
       const bank = def.banks[level] ?? def.banks[nearest(levels, level)]!;
       return buildItem(def.id, level, rng.pick(bank), rng);

@@ -244,11 +244,15 @@ const L4: Template[] = [
   (rng) => {
     const s = rng.pick([12, 15, 24, 25, 35, 40, 45]);
     const h = rng.int(2, 8);
+    const tens = Math.floor(s / 10) * 10;
     return {
       key: `t16-${s}-${h}`,
       prompt: `Drak uletí za hodinu ${s} kilometrů. Kolik kilometrů uletí za ${count(h, N.hodina.acc)}?`,
       answer: num(s * h, 'km'),
-      hints: [`Každou hodinu uletí ${s} km.`, `Rozlož ${s} na desítky a jednotky a násob ${h}.`],
+      hints: [
+        `Každou hodinu uletí ${s} km.`,
+        s === tens ? `Spočítej ${tens / 10} × ${h} a přidej nulu.` : `Rozlož ${s} na ${tens} a ${s - tens} a obě části vynásob číslem ${h}.`,
+      ],
       explanation: `${h} × ${s} = ${s * h} km.`,
     };
   },
@@ -334,7 +338,7 @@ const L6: Template[] = [
       key: `t22-${c1.name}-${c2.name}-${total}-${diff}`,
       prompt: `${c1.name} a ${c2.name} mají dohromady ${total} šupin. ${c1.name} má o ${diff} víc než ${c2.name}. Kolik šupin má ${c2.name}?`,
       answer: num(small),
-      hints: [`Co kdyby ${c1.name} ${v(c1, ['odložil', 'odložila'])} ${count(diff, N.supina.acc)} navíc?`, `Pak by oba měli stejně a dohromady ${total - diff}.`],
+      hints: [`Co kdyby ${c1.name} ${v(c1, ['odložil', 'odložila'])} ${count(diff, N.supina.acc)} navíc?`, `Pak by ${c1.female && c2.female ? 'obě měly' : 'oba měli'} stejně a dohromady ${total - diff}.`],
       explanation: `${total} − ${diff} = ${total - diff}, polovina je ${small}. ${c2.name} má ${small}, ${c1.name} ${small + diff}.`,
       difficulty: 0.3,
     };

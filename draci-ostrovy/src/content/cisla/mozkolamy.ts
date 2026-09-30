@@ -44,12 +44,12 @@ const RULES: Record<Level, Rule[]> = {
   ],
   5: [
     { key: 'fib', make: (r) => { const a = r.int(1, 4); const b = r.int(1, 5); const xs = [a, b]; for (let i = 2; i < 8; i++) xs.push(xs[i - 1] + xs[i - 2]); return xs; }, hint: 'Podívej se na dvě čísla za sebou a na to, které následuje.', explain: () => 'Každé číslo je součtem dvou předchozích.' },
-    { key: 'squares', make: (r) => { const s = r.int(1, 4); return Array.from({ length: 6 }, (_, i) => (s + i) * (s + i)); }, hint: 'Zkus na čísla použít násobilku: 3 × 3, 4 × 4…', explain: () => 'Jsou to čísla vynásobená sama sebou: 1 × 1, 2 × 2, 3 × 3…' },
-    { key: 'x2p1', make: (r) => { const s = r.int(1, 4); const xs = [s]; for (let i = 1; i < 6; i++) xs.push(xs[i - 1] * 2 + 1); return xs; }, hint: 'Zkus nejdřív násobit a pak přičíst.', explain: () => 'Každé číslo je dvakrát předchozí a ještě jedna navíc.' },
+    { key: 'squares', make: (r) => { const s = r.int(1, 4); return Array.from({ length: 6 }, (_, i) => (s + i) * (s + i)); }, hint: 'Zkus na čísla použít násobilku: 3 × 3, 4 × 4…', explain: (x) => { const s = Math.round(Math.sqrt(x[0])); return `Jsou to čísla vynásobená sama sebou: ${s} × ${s}, ${s + 1} × ${s + 1}, ${s + 2} × ${s + 2}…`; } },
+    { key: 'x2p1', make: (r) => { const s = r.int(1, 4); const xs = [s]; for (let i = 1; i < 6; i++) xs.push(xs[i - 1] * 2 + 1); return xs; }, hint: 'Zkus nejdřív násobit a pak přičíst.', explain: () => 'Předchozí číslo vynásobíme dvěma a přičteme 1.' },
   ],
   6: [
-    { key: 'interleave', make: (r) => { const a = r.int(1, 5); const b = r.int(20, 40); const da = r.int(2, 5); const db = r.int(1, 4); const xs: number[] = []; for (let i = 0; i < 4; i++) { xs.push(a + i * da, b - i * db); } return xs; }, hint: 'Nejsou to dvě řady zamíchané do sebe? Podívej se na každé druhé číslo.', explain: () => 'Na lichých místech jedna řada nahoru, na sudých druhá dolů.' },
-    { key: 'x2m1', make: (r) => { const s = r.int(2, 5); const xs = [s]; for (let i = 1; i < 6; i++) xs.push(xs[i - 1] * 2 - 1); return xs; }, hint: 'Zkus násobit a pak jedničku odečíst.', explain: () => 'Každé číslo je dvakrát předchozí mínus jedna.' },
+    { key: 'interleave', make: (r) => { const a = r.int(1, 5); const b = r.int(20, 40); const da = r.int(2, 5); const db = r.int(1, 4); const xs: number[] = []; for (let i = 0; i < 4; i++) { xs.push(a + i * da, b - i * db); } return xs; }, hint: 'Nejsou to dvě řady zamíchané do sebe? Podívej se na každé druhé číslo.', explain: (x) => `Jsou to dvě řady v jedné: na lichých místech čísla rostou o ${x[2] - x[0]}, na sudých klesají o ${x[1] - x[3]}.` },
+    { key: 'x2m1', make: (r) => { const s = r.int(2, 5); const xs = [s]; for (let i = 1; i < 6; i++) xs.push(xs[i - 1] * 2 - 1); return xs; }, hint: 'Zkus násobit a pak jedničku odečíst.', explain: () => 'Předchozí číslo vynásobíme dvěma a odečteme 1.' },
     { key: 'grow3', make: (r) => { const s = r.int(1, 5); const xs = [s]; for (let i = 1; i < 6; i++) xs.push(xs[i - 1] + i * i); return xs; }, hint: 'Rozdíly jsou 1, 4, 9… znáš ta čísla?', explain: () => 'Přičítáme 1 × 1, 2 × 2, 3 × 3, 4 × 4…' },
   ],
 };
@@ -148,7 +148,7 @@ function scalesAttempt(level: Level, rng: Rng): ItemParts | null {
       visual: { type: 'balance', left: [t2, ...rep(t1, k)], right: [String(total)] },
       answer: num(w1, 'kg'),
       hints: [`Vyměň v duchu ${THING[t2].name} za ${count(ratio, T1.nom)}.`, `Na levé misce pak leží ${count(ratio + k, T1.nom)}.`],
-      explanation: `Vlevo pak leží ${count(ratio + k, T1.nom)} a váží ${total} kg. ${total} : ${ratio + k} = ${w1} kg.`,
+      explanation: `${capital(THING[t2].name)} vyměníme za ${count(ratio, T1.nom)}. Vlevo pak leží ${count(ratio + k, T1.nom)} a váží ${total} kg. ${total} : ${ratio + k} = ${w1} kg.`,
       difficulty: 0.3,
     };
   }

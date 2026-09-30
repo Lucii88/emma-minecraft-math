@@ -43,7 +43,7 @@ function attempt(level: Level, rng: Rng): ItemParts | null {
       visual: { type: 'clock', h, m: 0 },
       answer: choice(rng, count(h, HOURS_NOM), others.map((x) => count(x, HOURS_NOM))),
       hints: ['Velká ručička ukazuje nahoru na dvanáctku – je celá hodina.', 'Podívej se, kam ukazuje malá ručička.'],
-      explanation: `Malá ručička ukazuje na ${h}, velká na 12: je ${count(h, HOURS_NOM)}.`,
+      explanation: `Malá ručička ukazuje na ${h}, velká na 12: ${h >= 2 && h <= 4 ? 'jsou' : 'je'} ${count(h, HOURS_NOM)}.`,
     };
   }
 
@@ -112,16 +112,25 @@ function attempt(level: Level, rng: Rng): ItemParts | null {
     const dur = rng.int(3, 11) * 5;
     const end = sh * 60 + sm + dur;
     if (Math.floor(end / 60) === sh && rng.chance(0.6)) return null; // častěji přes celou hodinu
+    const start = digital(sh, sm);
+    const landing = digital(Math.floor(end / 60), end % 60);
+    const toFull = 60 - sm;
+    const crosses = end >= (sh + 1) * 60;
     return {
       key: `dur${sh}:${sm}+${dur}`,
-      prompt: `Let k sousednímu ostrovu začal v ${sh}:${String(sm).padStart(2, '0')} a trval ${count(dur, N.minuta.acc)}. V kolik hodin drak přistál?`,
-      answer: choice(rng, `${Math.floor(end / 60)}:${String(end % 60).padStart(2, '0')}`, [
+      prompt: `Let k sousednímu ostrovu začal v ${start} a trval ${count(dur, N.minuta.acc)}. V kolik hodin drak přistál?`,
+      answer: choice(rng, landing, [
         `${Math.floor(end / 60) + 1}:${String(end % 60).padStart(2, '0')}`,
         `${sh}:${String((sm + dur) % 100).padStart(2, '0')}`,
         `${Math.floor((end - 10) / 60)}:${String((end - 10) % 60).padStart(2, '0')}`,
       ]),
-      hints: ['Kolik minut zbývá do celé hodiny?', `Od ${sh}:${String(sm).padStart(2, '0')} do ${sh + 1}:00 je ${60 - sm} minut.`],
-      explanation: `${sh}:${String(sm).padStart(2, '0')} + ${dur} minut = ${Math.floor(end / 60)}:${String(end % 60).padStart(2, '0')}.`,
+      // Let, který celou hodinu nepřekročí, se počítá jen přičtením minut.
+      hints: crosses
+        ? ['Kolik minut zbývá do celé hodiny?', `Od ${start} do ${sh + 1}:00 je ${toFull} minut.`]
+        : ['Kolik minut zbývá do celé hodiny? Vejde se do nich celý let?', `Stačí přičíst ${dur} minut k ${sm} minutám.`],
+      explanation: !crosses || dur === toFull
+        ? `${start} + ${dur} minut = ${landing}.`
+        : `Do ${sh + 1}:00 uběhne ${toFull} minut a zbylých ${dur - toFull} minut dá ${landing}.`,
       difficulty: 0.3,
     };
   }
@@ -131,12 +140,17 @@ function attempt(level: Level, rng: Rng): ItemParts | null {
   const em = rng.int(0, 11) * 5;
   const diff = eh * 60 + em - (sh * 60 + sm);
   if (diff <= 5 || diff >= 120) return null;
+  // Konec v celou hodinu: nápověda „od … do celé hodiny“ by byla výsledkem.
   return {
     key: `span${sh}:${sm}-${eh}:${em}`,
-    prompt: `Kolik minut uplyne od ${sh}:${String(sm).padStart(2, '0')} do ${eh}:${String(em).padStart(2, '0')}?`,
+    prompt: `Kolik minut uplyne od ${digital(sh, sm)} do ${digital(eh, em)}?`,
     answer: num(diff, 'min'),
-    hints: [`Od ${sh}:${String(sm).padStart(2, '0')} do ${eh}:00 je ${60 - sm} minut.`, `Přičti ještě ${em} minut.`],
-    explanation: `${60 - sm} + ${em} = ${diff} minut.`,
+    hints: em === 0
+      ? ['Celá hodina má 60 minut.', `Kolik minut chybí od ${sm} do 60?`]
+      : [`Od ${digital(sh, sm)} do ${eh}:00 je ${60 - sm} minut.`, `Přičti ještě ${em} minut.`],
+    explanation: em === 0
+      ? `Od ${digital(sh, sm)} do ${eh}:00 je 60 − ${sm} = ${diff} minut.`
+      : `Do ${eh}:00 uplyne ${60 - sm} minut a pak ještě ${em}: ${60 - sm} + ${em} = ${diff} minut.`,
     difficulty: 0.3,
   };
 }

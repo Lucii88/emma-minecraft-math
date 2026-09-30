@@ -30,8 +30,8 @@ function busAttempt(level: Level, rng: Rng): ItemParts | null {
   if (!askStart) {
     return {
       key: `f${start}-${stops.map((s) => `${s.off}.${s.on}`).join('-')}`,
-      prompt: `Drak veze na hřbetě ${count(start, N.viking.acc)}. Na každém ostrově někdo vystoupí a někdo nastoupí. Kolik Vikingů sedí na drakovi na konci cesty?`,
-      speak: `Drak veze na hřbetě ${count(start, N.viking.acc)}. Na každém ostrově někdo vystoupí a někdo nastoupí. ${route}. Kolik Vikingů sedí na drakovi na konci cesty?`,
+      prompt: `Drak veze na hřbetě ${count(start, N.viking.acc)}. Na ostrovech Vikingové vystupují a nastupují. Kolik Vikingů sedí na drakovi na konci cesty?`,
+      speak: `Drak veze na hřbetě ${count(start, N.viking.acc)}. Na ostrovech Vikingové vystupují a nastupují. ${route}. Kolik Vikingů sedí na drakovi na konci cesty?`,
       visual: { type: 'bus', start, stops, end: null },
       answer: num(cur),
       hints: ['Jdi ostrov po ostrově a vždy si zapamatuj, kolik jich sedí na drakovi.', `Po prvním ostrově: ${start} − ${stops[0].off} + ${stops[0].on} = ${start - stops[0].off + stops[0].on}.`],
@@ -39,10 +39,11 @@ function busAttempt(level: Level, rng: Rng): ItemParts | null {
       difficulty: level >= 3 ? -0.3 : 0,
     };
   }
+  const atEnd = cur === 0 ? 'Na konci cesty už na drakovi nesedí nikdo.' : `Na konci cesty sedí na drakovi ${count(cur, N.viking.nom)}.`;
   return {
     key: `s${cur}-${stops.map((s) => `${s.off}.${s.on}`).join('-')}`,
-    prompt: `Na konci cesty sedí na drakovi ${count(cur, N.viking.nom)}. Kolik Vikingů sedělo na drakovi na začátku?`,
-    speak: `Na konci cesty sedí na drakovi ${count(cur, N.viking.nom)}. ${route}. Kolik Vikingů sedělo na drakovi na začátku?`,
+    prompt: `${atEnd} Kolik Vikingů sedělo na drakovi na začátku?`,
+    speak: `${atEnd} ${route}. Kolik Vikingů sedělo na drakovi na začátku?`,
     visual: { type: 'bus', start: null, stops, end: cur },
     answer: num(start),
     hints: ['Jdi pozpátku od konce: kdo nastoupil, ten „vystoupí“, a kdo vystoupil, ten se „vrátí“.', `Před posledním ostrovem: ${cur} − ${stops[stopsN - 1].on} + ${stops[stopsN - 1].off}.`],
@@ -59,7 +60,7 @@ function busExplain(start: number, stops: { on: number; off: number }[]): string
     cur = next;
     return t;
   });
-  return `${parts.join(', ')}. Na konci sedí na drakovi ${cur}.`;
+  return `${parts.join(', ')}. ${cur === 0 ? 'Na konci už na drakovi nesedí nikdo' : `Na konci sedí na drakovi ${cur}`}.`;
 }
 
 function busBack(end: number, stops: { on: number; off: number }[]): string {
@@ -127,10 +128,13 @@ function snakeAttempt(level: Level, rng: Rng): ItemParts | null {
     speak: `${mode === 'end' ? `Začni na čísle ${values[0]}` : mode === 'start' ? `Na konci je ${values[len]}` : 'Doplň chybějící číslo'}. Operace v hadovi: ${chain.replace(/−/g, 'mínus').replace(/\+/g, 'plus')}.`,
     visual: { type: 'snake', values: shown, ops, ask },
     answer: num(values[ask]),
+    // U chybějícího čísla uprostřed by „první krok“ mohl být rovnou výsledek.
     hints:
       mode === 'start'
         ? ['Jdi pozpátku od ocasu k hlavě a dělej opačné operace: místo plus mínus a naopak.', `Před posledním krokem: ${values[len]} ${ops[len - 1].op === '+' ? '−' : '+'} ${ops[len - 1].n} = ${values[len - 1]}.`]
-        : ['Jdi krok za krokem a průběžná čísla si piš.', `První krok: ${values[0]} ${ops[0].op} ${ops[0].n} = ${values[1]}.`],
+        : mode === 'middle'
+          ? ['Podívej se na číslo těsně před otazníkem.', `Z čísla ${values[ask - 1]} udělej krok ${ops[ask - 1].op} ${ops[ask - 1].n}.`]
+          : ['Jdi krok za krokem a průběžná čísla si piš.', `První krok: ${values[0]} ${ops[0].op} ${ops[0].n} = ${values[1]}.`],
     explanation: `Celý had: ${values.map((x, i) => (i < len ? `${f(x)} ${ops[i].op} ${ops[i].n} → ` : f(x))).join('')}.`,
     difficulty: mode === 'start' ? 0.4 : mode === 'middle' ? 0.2 : 0,
   };

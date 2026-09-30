@@ -154,7 +154,7 @@ export const cards: KnowledgeCard[] = [
     level: 2,
     emoji: '😴',
     title: 'Mozek ve spánku pracuje',
-    text: 'Ve spánku mozek nevypíná. Třídí, co se přes den stalo, a ukládá si, co ses naučila – proto si po dobrém spánku víc pamatuješ.',
+    text: 'Ve spánku mozek nevypíná. Třídí, co se přes den stalo, a ukládá si, co ses {naučila|naučil} – proto si po dobrém spánku víc pamatuješ.',
     fix: {
       before: 'Ve spánku mozek odpočívá a skoro nepracuje.',
       evidence: 'Když vědci začali přístroji měřit mozek spících lidí, zjistili opak. V roce 1953 objevili fázi spánku, ve které se oči rychle pohybují a zdají se nám živé sny.',
@@ -204,7 +204,7 @@ export const cards: KnowledgeCard[] = [
     level: 3,
     emoji: '👶',
     title: 'Nejrychlejší růst',
-    text: 'Nejrychleji roste člověk v prvním roce života: miminko vyroste zhruba o 25 centimetrů. Dětští lékaři to vědí, protože miminka při prohlídkách měří. Kdybys tak rychle rostla pořád, měřila bys dnes přes dva metry.',
+    text: 'Nejrychleji roste člověk v prvním roce života: miminko vyroste zhruba o 25 centimetrů. Dětští lékaři to vědí, protože miminka při prohlídkách měří. Kdybys tak rychle {rostla|rostl} pořád, {měřila|měřil} bys dnes přes dva metry.',
   },
   {
     id: 'telo.zivot.schovane-zuby',

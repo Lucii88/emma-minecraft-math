@@ -17,6 +17,20 @@ function compareSign(a: number, b: number): string {
   return a < b ? '<' : a > b ? '>' : '=';
 }
 
+/** Názvy míst v čísle zprava (1. pád množného čísla). */
+const PLACES = ['jednotky', 'desítky', 'stovky', 'tisíce', 'desítky tisíců'];
+
+/** Proč je jedno číslo větší: víc číslic, nebo první rozdílná číslice zleva. */
+function compareReason(a: number, b: number): string {
+  const sign = compareSign(a, b);
+  if (sign === '=') return `${f(a)} = ${f(b)}, obě čísla jsou stejná.`;
+  if (a < 10 && b < 10) return `${a} ${sign} ${b}.`;
+  const [sa, sb] = [String(a), String(b)];
+  if (sa.length !== sb.length) return `${f(a)} ${sign} ${f(b)}: ${f(Math.max(a, b))} má víc číslic.`;
+  const i = [...sa].findIndex((d, j) => d !== sb[j]);
+  return `${f(a)} ${sign} ${f(b)}: rozhodnou ${PLACES[sa.length - 1 - i]}, ${sa[i]} ${sign} ${sb[i]}.`;
+}
+
 function signItem(rng: Rng, a: number, b: number, difficulty = 0): ItemParts {
   const correct = compareSign(a, b);
   const answer = choice(rng, { label: correct, speak: correct === '<' ? 'menší' : correct === '>' ? 'větší' : 'rovná se' }, [
@@ -24,25 +38,50 @@ function signItem(rng: Rng, a: number, b: number, difficulty = 0): ItemParts {
     { label: '>', speak: 'větší' },
     { label: '=', speak: 'rovná se' },
   ]);
+  const big = Math.max(a, b);
   return {
     key: `s${a}?${b}`,
     prompt: `Doplň znaménko: ${f(a)} ☐ ${f(b)}`,
     speak: `Které znaménko patří mezi ${f(a)} a ${f(b)}?`,
     answer,
-    hints: ['Které číslo je větší? Zobáček znaménka ukazuje vždy na menší číslo.', a >= 100 || b >= 100 ? 'Porovnej nejdřív stovky, pak desítky.' : 'Porovnej nejdřív desítky.'],
-    explanation: `${f(a)} ${correct} ${f(b)}.`,
+    hints: [
+      'Je jedno z čísel větší, nebo jsou stejná? Zobáček znaménka ukazuje vždy na menší číslo.',
+      big >= 1000
+        ? 'Číslo s víc číslicemi je větší. Když mají čísla stejně číslic, porovnávej je zleva, číslici po číslici.'
+        : big >= 100 ? 'Porovnej nejdřív stovky, pak desítky.' : 'Porovnej nejdřív desítky.',
+    ],
+    explanation: compareReason(a, b),
     difficulty,
   };
 }
 
+/** Proč je číslo největší (nejmenší) z trojmístných: rozhodne první místo
+ *  zleva, ve kterém se liší od nejbližšího soupeře. */
+function extremeReason(target: number, opts: number[], askMax: boolean): string {
+  const rest = opts.filter((n) => n !== target);
+  const rival = askMax ? Math.max(...rest) : Math.min(...rest);
+  const [st, sr] = [String(target), String(rival)];
+  const more = askMax ? 'víc' : 'méně';
+  const head = `${askMax ? 'Největší' : 'Nejmenší'} je ${target}`;
+  if (st[0] !== sr[0]) return `${head} – má ${askMax ? 'nejvíc' : 'nejméně'} stovek.`;
+  if (st[1] !== sr[1]) return `${head} – stovky má stejně jako ${rival}, ale ${more} desítek.`;
+  return `${head} – stovky i desítky má stejně jako ${rival}, ale ${more} jednotek.`;
+}
+
 function lineItem(min: number, max: number, target: number, tolerance: number, difficulty = 0): ItemParts {
+  const mid = (min + max) / 2;
+  const [t, m] = [f(target), f(mid)];
   return {
     key: `n${min}-${max}-${target}`,
-    prompt: `Kam na ose patří číslo ${f(target)}? Posuň draka.`,
+    prompt: `Kam na ose patří číslo ${t}? Posuň draka.`,
     visual: { type: 'numberline', min, max },
     answer: { kind: 'numberline', min, max, correct: target, tolerance },
-    hints: [`Kde je na ose polovina, tedy ${f((min + max) / 2)}?`, `Je ${f(target)} víc, nebo míň než ${f((min + max) / 2)}?`],
-    explanation: `Číslo ${f(target)} leží ${target < (min + max) / 2 ? 'před' : 'za'} polovinou osy (${f((min + max) / 2)}).`,
+    hints: target === mid
+      ? ['Podívej se, kde osa začíná a kde končí.', `Číslo ${t} je od ${f(min)} stejně daleko jako od ${f(max)}.`]
+      : [`Kde je na ose polovina, tedy ${m}?`, `Je ${t} víc, nebo míň než ${m}?`],
+    explanation: target === mid
+      ? `Polovina osy je ${m}, takže číslo ${t} patří přesně doprostřed.`
+      : `Polovina osy je ${m}. Číslo ${t} je ${target < mid ? 'menší, proto leží vlevo' : 'větší, proto leží vpravo'} od ní.`,
     difficulty,
   };
 }
@@ -77,9 +116,11 @@ function attempt(level: Level, rng: Rng): ItemParts | null {
       const t = rng.int(1, 9);
       const o = rng.int(0, 9);
       const askTens = rng.chance(0.5);
+      // „Kolik jednotek má číslo 47?“ by šlo chápat i jako 47 jednotek –
+      // proto se ptáme na číslici na daném místě.
       return {
         key: `pv${t}${o}-${askTens ? 't' : 'o'}`,
-        prompt: askTens ? `Kolik desítek má číslo ${t * 10 + o}?` : `Kolik jednotek má číslo ${t * 10 + o}?`,
+        prompt: `Jaká číslice je v čísle ${t * 10 + o} na místě ${askTens ? 'desítek' : 'jednotek'}?`,
         answer: num(askTens ? t : o),
         hints: ['Desítky jsou vlevo, jednotky vpravo.'],
         explanation: `${t * 10 + o} = ${count(t, DESITKA)} a ${count(o, JEDNOTKA)}.`,
@@ -125,7 +166,7 @@ function attempt(level: Level, rng: Rng): ItemParts | null {
         prompt: askMax ? 'Které číslo je největší?' : 'Které číslo je nejmenší?',
         answer: choice(rng, String(target), opts.filter((n) => n !== target).map(String)),
         hints: ['Porovnej nejdřív stovky.', 'Když jsou stovky stejné, rozhodnou desítky.'],
-        explanation: `${askMax ? 'Největší' : 'Nejmenší'} je ${target}.`,
+        explanation: extremeReason(target, opts, askMax),
         difficulty: 0.1,
       };
     }
@@ -135,7 +176,7 @@ function attempt(level: Level, rng: Rng): ItemParts | null {
       const value = place === 'stovek' ? Math.floor(n / 100) : place === 'desítek' ? Math.floor(n / 10) % 10 : n % 10;
       return {
         key: `pv${n}-${place}`,
-        prompt: `Kolik ${place} má číslo ${n}?`,
+        prompt: `Jaká číslice je v čísle ${n} na místě ${place}?`,
         answer: num(value),
         hints: ['Stovky jsou první zleva, pak desítky, pak jednotky.'],
         explanation: `${n} = ${count(Math.floor(n / 100), STOVKA)}, ${count(Math.floor(n / 10) % 10, DESITKA)} a ${count(n % 10, JEDNOTKA)}.`,

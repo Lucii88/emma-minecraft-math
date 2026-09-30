@@ -31,7 +31,27 @@ function tableHints(a: number, b: number): string[] {
   if (y % 2 === 0 && y >= 4) {
     return [`Znáš ${x} × ${y / 2}? Stačí to zdvojnásobit.`, `${x} × ${y / 2} = ${x * (y / 2)}. A dvakrát tolik je…`];
   }
-  return [`Znáš ${x} × ${y - 1}? Pak přidej ještě jedno ${x}.`, `${x} × ${y - 1} = ${x * (y - 1)}. Plus ${x} je…`];
+  return [`Znáš ${x} × ${y - 1}? Pak přidej ještě jednou ${x}.`, `${x} × ${y - 1} = ${x * (y - 1)}. Plus ${x} je…`];
+}
+
+/** Chytrý rozklad součinu: 25 × 12 = 20 × 12 + 5 × 12, 50 × 6 = 5 × 6 a nula. */
+function smartProduct(a: number, b: number): [string[], string] {
+  const round = a % 10 === 0 ? a : b % 10 === 0 ? b : 0;
+  if (round) {
+    const other = round === a ? b : a;
+    return [[`Spočítej ${round / 10} × ${other} a přidej nulu.`], `${round / 10} × ${other} = ${(round / 10) * other}, takže ${a} × ${b} = ${f(a * b)}.`];
+  }
+  // Větší číslo se rozloží na stovky (desítky) a zbytek.
+  const big = Math.max(a, b);
+  const unit = big >= 100 ? 100 : 10;
+  const part = Math.floor(big / unit) * unit;
+  const rest = big - part;
+  const other = big === a ? b : a;
+  const [p1, p2] = big === a ? [`${part} × ${other}`, `${rest} × ${other}`] : [`${other} × ${part}`, `${other} × ${rest}`];
+  return [
+    ['Hledej chytrou cestu: rozlož větší číslo na části.', `Třeba ${a} × ${b} = ${p1} + ${p2}.`],
+    `${a} × ${b} = ${p1} + ${p2} = ${f(part * other)} + ${f(rest * other)} = ${f(a * b)}.`,
+  ];
 }
 
 function attempt(level: Level, rng: Rng): ItemParts | null {
@@ -48,7 +68,8 @@ function attempt(level: Level, rng: Rng): ItemParts | null {
         prompt,
         visual: { type: 'eggs', groups: b, perGroup: a },
         answer: num(a * b),
-        hints: [`Kolik je hnízd a kolik vajec je v jednom?`, `Sčítej po ${a}: ${a}, ${a * 2}, ${a * 3}…`],
+        // Výčet 3, 6, 9… by u dvou nebo tří hnízd prozradil výsledek.
+        hints: [`Kolik je hnízd a kolik vajec je v jednom?`, b >= 4 ? `Sčítej po ${a}: ${a}, ${a * 2}, ${a * 3}…` : `Sčítej po ${a} – za každé hnízdo jednou.`],
         explanation: `${b} × ${a} = ${a * b}.`,
         difficulty: -0.2,
       };
@@ -69,6 +90,8 @@ function attempt(level: Level, rng: Rng): ItemParts | null {
       const b = rng.int(3, 9);
       const tens = Math.floor(a / 10) * 10;
       const ones = a - tens;
+      // 20 × b se nerozkládá na „20 a 0“ – stačí násobit bez nuly.
+      if (ones === 0) return times(a, b, [`Spočítej ${tens / 10} × ${b} a přidej nulu.`], `${tens / 10} × ${b} = ${(tens / 10) * b}, takže ${a} × ${b} = ${a * b}.`);
       return times(a, b, [`Rozlož ${a} na ${tens} a ${ones}.`, `${tens} × ${b} = ${tens * b} a ${ones} × ${b} = ${ones * b}. Sečti to.`], `${tens} × ${b} + ${ones} × ${b} = ${tens * b} + ${ones * b} = ${a * b}.`);
     }
     if (pick < 55) {
@@ -107,7 +130,8 @@ function attempt(level: Level, rng: Rng): ItemParts | null {
   if (pick < 55) {
     const pair = rng.pick([[25, 4], [25, 8], [125, 8], [50, 6], [15, 12], [12, 12], [25, 12], [11, 13], [14, 15], [16, 25]] as const);
     const [a, b] = rng.chance(0.5) ? pair : [pair[1], pair[0]];
-    return times(a, b, [`Hledej chytrou cestu: rozlož jedno číslo na části.`, `Třeba ${a} × ${b} = ${a} × ${Math.floor(b / 2)} + ${a} × ${b - Math.floor(b / 2)}.`], `${a} × ${b} = ${f(a * b)}.`, 0.3);
+    const [hints, explanation] = smartProduct(a, b);
+    return times(a, b, hints, explanation, 0.3);
   }
   if (pick < 80) {
     const b = rng.pick([12, 15, 20, 25, 40, 50]);

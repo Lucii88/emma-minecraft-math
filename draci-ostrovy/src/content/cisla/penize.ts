@@ -75,11 +75,11 @@ function attempt(level: Level, rng: Rng): ItemParts | null {
     const coins = fewest(amount);
     return {
       key: `few${amount}`,
-      prompt: `Kolik nejméně mincí potřebuješ, abys zaplatila přesně ${amount} Kč? (Mince: 1, 2, 5, 10, 20 a 50 Kč.)`,
-      speak: `Kolik nejméně mincí potřebuješ, abys zaplatila přesně ${amount} korun?`,
+      prompt: `Kolik nejméně mincí potřebuješ, abys {zaplatila|zaplatil} přesně ${amount} Kč? (Mince: 1, 2, 5, 10, 20 a 50 Kč.)`,
+      speak: `Kolik nejméně mincí potřebuješ, abys {zaplatila|zaplatil} přesně ${amount} korun?`,
       answer: num(coins.length),
       hints: ['Začni tou největší mincí, která se do částky vejde.', `Nejdřív ${coins[0]} Kč, zbývá ${amount - coins[0]} Kč. Pokračuj stejně.`],
-      explanation: `${coins.join(' + ')} = ${amount} Kč, to je ${count(coins.length, MINCE)}.`,
+      explanation: `${coins.join(' + ')} = ${amount} Kč, celkem ${count(coins.length, MINCE)}.`,
       difficulty: 0.3,
     };
   }

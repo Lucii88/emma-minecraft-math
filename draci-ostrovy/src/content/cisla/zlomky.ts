@@ -64,13 +64,14 @@ function attempt(level: Level, rng: Rng): ItemParts | null {
       const n = rng.int(1, d - 1);
       const shape = rng.pick(['pie', 'bar'] as const);
       const distract = [frac(d - n, d), frac(n, d + 1 > 10 ? d - 1 : d + 1), frac(Math.max(1, n - 1) === n ? n + 1 : n - 1, d)];
+      const colored = n === 1 ? 'vybarvený je 1' : n <= 4 ? `vybarvené jsou ${n}` : `vybarvených je ${n}`;
       return {
         key: `v-${n}-${d}-${shape}`,
         prompt: `Jaká část je vybarvená?`,
         visual: { type: 'fraction', parts: d, filled: n, shape },
         answer: choice(rng, frac(n, d), distract),
         hints: ['Spočítej všechny díly – to je číslo dole.', 'Spočítej vybarvené díly – to je číslo nahoře.'],
-        explanation: `Vybarveno je ${n} z ${d} dílů: ${n}/${d}, tedy ${fractionWords(n, d)}.`,
+        explanation: `Celek má ${count(d, DILY_ACC)} a ${colored}: ${n}/${d}, tedy ${fractionWords(n, d)}.`,
       };
     }
     if (pick < 75) {
@@ -91,7 +92,7 @@ function attempt(level: Level, rng: Rng): ItemParts | null {
       key: `zn-${n}-${d}-${q * d}`,
       prompt: `Kolik jsou ${fractionWords(n, d)} z ${q * d}?`,
       answer: num(n * q),
-      hints: [`Nejdřív zjisti, kolik je ${PART[d][0]} z ${q * d}.`, `${cap(PART[d][0])} je ${q}. A ${NUMERAL[n]} takové díly?`],
+      hints: [`Nejdřív zjisti, kolik je ${PART[d][0]} z ${q * d}.`, `${cap(PART[d][0])} je ${q}. A ${fractionWords(n, d)}?`],
       explanation: `${q * d} : ${d} = ${q} a ${n} × ${q} = ${n * q}.`,
       difficulty: 0.4,
     };
@@ -104,11 +105,12 @@ function attempt(level: Level, rng: Rng): ItemParts | null {
     let b = rng.int(1, d - 1);
     if (a === b) b = a === 1 ? 2 : a - 1;
     const big = Math.max(a, b);
+    // Ptáme se na zlomek, ne na „díl“ – jednotlivé díly jsou stejně velké.
     return {
       key: `c${a}-${b}-${d}`,
-      prompt: `Který díl je větší?`,
+      prompt: `Který zlomek je větší?`,
       answer: choice(rng, frac(big, d), [frac(Math.min(a, b), d)]),
-      hints: ['Oba celky jsou rozdělené na stejně velké díly.', 'Víc stejných dílů je víc.'],
+      hints: ['Oba zlomky mají dole stejné číslo, takže mluví o stejně velkých dílech.', 'Víc stejných dílů je víc.'],
       explanation: `${big}/${d} je víc než ${Math.min(a, b)}/${d}: díly jsou stejně velké a ${big} je víc než ${Math.min(a, b)}.`,
       difficulty: -0.2,
     };
