@@ -1,6 +1,9 @@
 // Země a vesmír: Slunce je hvězda, den a noc, rok, Měsíc a jeho fáze, osm
 // planet v pořadí od Slunce, Pluto jako trpasličí planeta, zatmění, sklon
 // zemské osy a roční období, rychlost světla. Vysvětlení říkají, jak to víme.
+//
+// Vysvětlení se ukazuje i po správné odpovědi jako zajímavost (showFact):
+// nejdřív hlavní důvod, pak jeden navazující detail.
 
 import { bankSkill, type Spec } from '../../core/bank';
 import type { Rng } from '../../core/rng';
@@ -14,6 +17,17 @@ export const PLANETY = ['Merkur', 'Venuše', 'Země', 'Mars', 'Jupiter', 'Saturn
 /** 7. pád: „mezi Merkurem a Zemí“. */
 const PLANETY_7 = ['Merkurem', 'Venuší', 'Zemí', 'Marsem', 'Jupiterem', 'Saturnem', 'Uranem', 'Neptunem'];
 const PORADI = ['první', 'druhá', 'třetí', 'čtvrtá', 'pátá', 'šestá', 'sedmá', 'osmá'];
+/** Zajímavost o každé planetě (v pořadí od Slunce). */
+const PLANETA_FAKT = [
+  'Merkur oběhne Slunce za pouhých 88 dní.',
+  'Venuše je nejteplejší planeta – na jejím povrchu je přes 400 °C.',
+  'Země je jediná planeta, o které víme, že na ní je život.',
+  'Mars je rudý, protože jeho povrch pokrývá rezavý prach.',
+  'Jupiter je největší planeta – vešlo by se do něj přes tisíc Zemí.',
+  'Saturn má nejnápadnější prstence z kousků ledu a kamení.',
+  'Uran obíhá Slunce skoro položený na boku.',
+  'Na Neptunu fouká nejsilnější vítr ve Sluneční soustavě.',
+];
 
 const VSECHNY = `Od Slunce jdou planety takto: ${PLANETY.join(', ')}.`;
 
@@ -22,7 +36,7 @@ function ntaPlaneta(rng: Rng): Spec {
   const wrong = [i - 1, i + 1, i + 2, i - 2].filter((j) => j >= 0 && j < 8).map((j) => PLANETY[j]);
   return q(`poradi-${i + 1}`, `Která planeta je ${PORADI[i]} od Slunce?`, PLANETY[i], wrong,
     ['Vyjmenuj planety popořadě od Slunce a počítej je na prstech.'],
-    `${VSECHNY} Na ${i + 1}. místě je ${PLANETY[i]}.`);
+    `${VSECHNY} Na ${i + 1}. místě je ${PLANETY[i]}. ${PLANETA_FAKT[i]}`);
 }
 
 function mezi(rng: Rng): Spec {
@@ -30,7 +44,7 @@ function mezi(rng: Rng): Spec {
   const wrong = pickSome(rng, PLANETY.filter((_, j) => Math.abs(j - i) > 1), 3);
   return q(`mezi-${slug(PLANETY[i])}`, `Která planeta obíhá mezi ${PLANETY_7[i - 1]} a ${PLANETY_7[i + 1]}?`, PLANETY[i], wrong,
     ['Vyjmenuj planety popořadě od Slunce.'],
-    `${VSECHNY} Mezi ${PLANETY_7[i - 1]} a ${PLANETY_7[i + 1]} je tedy ${PLANETY[i]}.`);
+    `${VSECHNY} Mezi ${PLANETY_7[i - 1]} a ${PLANETY_7[i + 1]} je tedy ${PLANETY[i]}. ${PLANETA_FAKT[i]}`);
 }
 
 function seradPlanety(n: number) {
@@ -38,7 +52,7 @@ function seradPlanety(n: number) {
     const idx = rng.shuffle([...Array(8).keys()]).slice(0, n).sort((a, b) => a - b);
     return ord(`planety-${idx.map((i) => i + 1).join('-')}`, 'Seřaď planety od Slunce.', idx.map((i) => PLANETY[i]),
       ['Která z nich je nejblíž Slunci?', 'Vyjmenuj všech osm planet popořadě.'],
-      VSECHNY);
+      `${VSECHNY} Čtyři planety nejblíž Slunci jsou kamenné, čtyři vzdálenější jsou obři z plynu a ledu.`);
   };
 }
 
@@ -57,7 +71,7 @@ const L2: Spec[] = [
   q('rok', 'Za jak dlouho oběhne Země kolem Slunce?', 'Za rok',
     ['Za den', 'Za týden', 'Za měsíc'],
     ['Mezi dvěma tvými narozeninami oběhne Země Slunce jednou.'],
-    'Země oběhne Slunce jednou za rok, tedy asi za 365 dní.'),
+    'Země oběhne Slunce jednou za rok, tedy asi za 365 dní. Letí přitom rychlostí asi 30 kilometrů za sekundu.'),
   q('otoceni', 'Za jak dlouho se Země jednou otočí kolem své osy?', 'Za den',
     ['Za hodinu', 'Za rok', 'Za týden'],
     ['Kolikrát se za tu dobu vystřídá den a noc?'],
@@ -65,7 +79,7 @@ const L2: Spec[] = [
   q('mesic-kolem', 'Kolem čeho obíhá Měsíc?', 'Kolem Země',
     ['Kolem Marsu', 'Kolem Polárky', 'Nikam, stojí na místě'],
     ['Měsíc je náš nejbližší soused ve vesmíru.'],
-    'Měsíc obíhá kolem Země. Jeden oběh mu trvá asi měsíc.'),
+    'Měsíc obíhá kolem Země a jeden oběh mu trvá asi měsíc. Právě podle Měsíce dostal jméno i měsíc v kalendáři.'),
   q('mesic-sviti', 'Proč Měsíc v noci svítí?', 'Odráží světlo Slunce',
     ['Uvnitř hoří oheň', 'Je to hvězda', 'Svítí na něj světla měst'],
     ['Svítí Měsíc sám, nebo ho něco osvětluje?'],
@@ -105,7 +119,7 @@ const L2: Spec[] = [
   q('astronaut', 'Jak se jmenuje člověk, který letí do vesmíru?', 'Astronaut',
     ['Pilot letadla', 'Potápěč', 'Horolezec'],
     ['Obléká si skafandr.'],
-    'Astronaut, u nás se říká i kosmonaut, letí do vesmíru v raketě a mimo loď nosí skafandr.'),
+    'Astronaut, u nás se říká i kosmonaut, letí do vesmíru v raketě a mimo loď nosí skafandr. První Čech ve vesmíru byl Vladimír Remek v roce 1978.'),
   q('mesic-vzduch', 'Je na Měsíci vzduch k dýchání?', 'Ne, astronauti potřebují skafandr',
     ['Ano, jako na Zemi', 'Ano, ale jen v noci', 'Ano, na vrcholcích hor'],
     ['Proč mají astronauti na Měsíci helmu?'],
@@ -236,7 +250,7 @@ const L4: Spec[] = [
   q('gagarin', 'Kdo byl první člověk ve vesmíru?', 'Jurij Gagarin',
     ['Neil Armstrong', 'Galileo Galilei', 'Mikuláš Koperník'],
     ['Letěl v roce 1961.'],
-    'Jurij Gagarin v roce 1961 jako první člověk obletěl Zemi v kosmické lodi.'),
+    'Jurij Gagarin v roce 1961 jako první člověk obletěl Zemi v kosmické lodi. Celý let trval necelé dvě hodiny.'),
   q('armstrong', 'Kdo jako první vstoupil na Měsíc?', 'Neil Armstrong',
     ['Jurij Gagarin', 'Galileo Galilei', 'Isaac Newton'],
     ['Stalo se to v roce 1969.'],
@@ -414,7 +428,7 @@ const L6: Spec[] = [
     'Dráha Měsíce je vůči dráze Země trochu skloněná. Většinou při novu projde nad Sluncem nebo pod ním a zatmění nenastane.'),
   ord('zatmeni-slunce-rada', 'Při zatmění Slunce jsou tři tělesa v řadě. Seřaď je od Slunce.', ['Slunce', 'Měsíc', 'Země'],
     ['Kdo zakrývá Slunce?'],
-    'Při zatmění Slunce je Měsíc mezi Sluncem a Zemí a vrhá na Zemi svůj stín.'),
+    'Při zatmění Slunce je Měsíc mezi Sluncem a Zemí a vrhá na Zemi svůj stín. Do Slunce se ani tehdy nesmíme dívat bez speciálních brýlí.'),
   ord('zatmeni-mesice-rada', 'Při zatmění Měsíce jsou tři tělesa v řadě. Seřaď je od Slunce.', ['Slunce', 'Země', 'Měsíc'],
     ['Čí stín dopadá na Měsíc?'],
     'Při zatmění Měsíce je Země mezi Sluncem a Měsícem a Měsíc vstoupí do zemského stínu.'),
@@ -445,6 +459,7 @@ export const vesmir = bankSkill({
   },
   ability: 'znalosti',
   testLike: 'vedomosti',
+  showFact: true,
   banks: { 2: L2, 3: L3, 4: L4, 5: L5, 6: L6 },
   gen: {
     3: (rng) => {

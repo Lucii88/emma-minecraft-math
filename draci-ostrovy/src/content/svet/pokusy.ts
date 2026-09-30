@@ -1,6 +1,9 @@
 // Pokusy a látky: skupenství vody, plave × potopí se, magnet, rozpouštění,
 // měřidla a jednotky, kroky pokusu, spravedlivý pokus (měníme jen jednu věc),
 // bezpečnost (pokusy s ohněm a horkou vodou jen s dospělým).
+//
+// Vysvětlení se ukazuje i po správné odpovědi jako zajímavost (showFact): i u
+// grafů a výpočtů nejdřív krátce výsledek, pak detail k pokusu.
 
 import { bankSkill, type Spec } from '../../core/bank';
 import type { Rng } from '../../core/rng';
@@ -19,18 +22,18 @@ const tepl = (label: string, speak: string): ChoiceOption => ({ label, speak });
 type Vec = [string, string, boolean, string];
 
 const PLAVE_L1: Vec[] = [
-  ['korek', 'korek', true, 'Korek je lehký a plný drobných vzduchových bublinek, a tak plave.'],
+  ['korek', 'korek', true, 'Korek je lehký a plný drobných vzduchových bublinek, a tak plave. Získává se z kůry korkového dubu.'],
   ['dřevěná kostka', 'dřevěnou kostku', true, 'Dřevo je lehčí než stejně velký kus vody, a proto dřevěná kostka plave.'],
   ['plastový míček', 'plastový míček', true, 'Míček je uvnitř plný vzduchu, a tak plave.'],
   ['jablko', 'jablko', true, 'Jablko plave, protože je v něm hodně vzduchu.'],
-  ['pírko', 'pírko', true, 'Pírko je velmi lehké a zůstane na hladině.'],
+  ['pírko', 'pírko', true, 'Pírko je velmi lehké, a tak zůstane na hladině. Vodní ptáci si peří navíc mažou tukem, aby nepromoklo.'],
   ['pingpongový míček', 'pingpongový míček', true, 'Pingpongový míček je dutý a plný vzduchu, a tak plave.'],
   ['gumová kachnička', 'gumovou kachničku', true, 'Gumová kachnička je dutá a plná vzduchu, a tak plave.'],
   ['kamínek', 'kamínek', false, 'Kámen je těžší než stejně velký kus vody, a tak se potopí.'],
   ['železný hřebík', 'železný hřebík', false, 'Železný hřebík je malý, ale těžký a plný, a tak se potopí.'],
   ['klíč', 'klíč', false, 'Kovový klíč se potopí, protože kov je těžší než stejně velký kus vody.'],
   ['skleněná kulička', 'skleněnou kuličku', false, 'Skleněná kulička je plná a těžká, a tak se potopí.'],
-  ['kovová lžička', 'kovovou lžičku', false, 'Kovová lžička se potopí, protože kov je těžší než voda.'],
+  ['kovová lžička', 'kovovou lžičku', false, 'Kovová lžička se potopí, protože kov je těžší než stejně velký kus vody.'],
   ['kulička z plastelíny', 'kuličku z plastelíny', false, 'Kulička z plastelíny se potopí. Když ale z plastelíny uděláš lodičku, bude plavat.'],
   ['mince', 'minci', false, 'Mince je z kovu, a tak se potopí.'],
 ];
@@ -38,13 +41,13 @@ const PLAVE_L1: Vec[] = [
 const PLAVE_L2: Vec[] = [
   ['dřevěná tužka', 'dřevěnou tužku', true, 'Dřevěná tužka plave, protože dřevo je lehčí než stejně velký kus vody.'],
   ['svíčka', 'svíčku', true, 'Vosk je o trochu lehčí než voda, a tak svíčka plave.'],
-  ['kostka ledu', 'kostku ledu', true, 'Led je lehčí než stejně velký kus vody, a tak kostka ledu plave.'],
+  ['kostka ledu', 'kostku ledu', true, 'Led je lehčí než stejně velký kus vody, a tak kostka ledu plave. Skoro celá je přitom pod hladinou – nahoru vyčuhuje jen malý kousek.'],
   // Bez vlašského ořechu: čerstvý ořech se často potopí, suchý plave.
   ['zavřená prázdná láhev', 'zavřenou prázdnou láhev', true, 'Zavřená láhev je plná vzduchu, a tak plave. Když do ní napustíš vodu, potopí se.'],
   ['kousek polystyrenu', 'kousek polystyrenu', true, 'Polystyren je skoro celý ze vzduchových bublinek, a tak plave.'],
-  ['brambora', 'bramboru', false, 'Brambora je těžší než stejně velký kus vody, a tak se potopí.'],
+  ['brambora', 'bramboru', false, 'Brambora je těžší než stejně velký kus vody, a tak se potopí. Ve velmi slané vodě by ale plavala.'],
   ['guma na gumování', 'gumu na gumování', false, 'Guma na gumování je těžší než stejně velký kus vody, a tak se potopí.'],
-  ['kulička hroznového vína', 'kuličku hroznového vína', false, 'Kulička hroznového vína se ve vodě potopí.'],
+  ['kulička hroznového vína', 'kuličku hroznového vína', false, 'Kulička hroznového vína je plná sladké šťávy a je těžší než stejně velký kus vody, a tak se potopí.'],
   ['kovový šroubek', 'kovový šroubek', false, 'Kovový šroubek je plný kov, a tak se potopí.'],
   ['kamínek', 'kamínek', false, 'Kámen je těžší než stejně velký kus vody, a tak se potopí.'],
 ];
@@ -65,29 +68,29 @@ function plaveNeboNe(pool: Vec[]) {
 type MagVec = [string, boolean, string];
 
 const MAGNET_L1: MagVec[] = [
-  ['železný hřebík', true, 'Hřebík je ze železa a magnet železo přitahuje.'],
-  ['ocelovou kancelářskou sponku', true, 'Sponka je z oceli a ocel je hlavně železo. Magnet ji přitáhne.'],
-  ['železný šroubek', true, 'Šroubek je ze železa, a tak ho magnet přitáhne.'],
-  ['ocelový špendlík', true, 'Špendlík je z oceli, a tak ho magnet přitáhne.'],
-  ['dřevěnou tužku', false, 'Dřevo magnet nepřitahuje.'],
-  ['plastové víčko', false, 'Plast magnet nepřitahuje.'],
-  ['papír', false, 'Papír magnet nepřitahuje.'],
-  ['gumu', false, 'Gumu magnet nepřitahuje.'],
-  ['skleněnou kuličku', false, 'Sklo magnet nepřitahuje.'],
-  ['korek', false, 'Korek magnet nepřitahuje.'],
+  ['železný hřebík', true, 'Hřebík je ze železa a magnet železo přitahuje. Dokud se hřebík magnetu dotýká, sám se stane magnetem a přitáhne třeba špendlík.'],
+  ['ocelovou kancelářskou sponku', true, 'Sponka je z oceli a ocel je hlavně železo, a tak ji magnet přitáhne. Sponka přitažená k magnetu pak sama přitáhne další sponku a vznikne řetízek.'],
+  ['železný šroubek', true, 'Šroubek je ze železa, a tak ho magnet přitáhne. Proto mají některé šroubováky zmagnetovaný hrot – šroubek z nich nespadne.'],
+  ['ocelový špendlík', true, 'Špendlík je z oceli, a tak ho magnet přitáhne. Rozsypané špendlíky se dají magnetem rychle posbírat ze země.'],
+  ['dřevěnou tužku', false, 'Dřevo magnet nepřitahuje. Ani tuha uvnitř tužky není ze železa – je z grafitu a jílu, a tak ji magnet také nepřitáhne.'],
+  ['plastové víčko', false, 'Plast magnet nepřitahuje. Magnet ale působí i skrz něj – přitáhne sponku i přes plastové víčko.'],
+  ['papír', false, 'Papír magnet nepřitahuje. Na lednici papír drží jen proto, že ho magnet přimáčkne k plechovým dvířkům, která přitahuje.'],
+  ['gumu', false, 'Gumu magnet nepřitahuje. Ohebné magnety na lednici jsou ale z gumy smíchané s magnetickým práškem.'],
+  ['skleněnou kuličku', false, 'Sklo magnet nepřitahuje. Magnet ale působí i přes sklo – sponku ve sklenici můžeš magnetem posouvat zvenku.'],
+  ['korek', false, 'Korek magnet nepřitahuje. Když ale do korku zapíchneš zmagnetovanou jehlu a necháš ho plavat na vodě, jehla se natočí k severu jako střelka kompasu.'],
 ];
 
 /** Bez zlatého prstýnku, stříbrné lžičky a konzervy: levné šperky bývají z pozlacené
  *  oceli, „stříbrné“ lžičky z nerezu nebo alpaky a některé konzervy z hliníku –
  *  doma by pokus mohl dopadnout jinak. */
 const MAGNET_L3: MagVec[] = [
-  ['hliníkovou plechovku od limonády', false, 'Hliník je kov, ale magnet ho nepřitahuje. Magnet přitahuje hlavně železo.'],
-  ['hliníkovou fólii', false, 'Hliníková fólie je z kovu, ale magnet ji nepřitáhne. Hliník není železo.'],
-  ['měděný drátek', false, 'Měď je kov, ale magnet ji nepřitahuje.'],
+  ['hliníkovou plechovku od limonády', false, 'Hliník je kov, ale magnet ho nepřitahuje – přitahuje hlavně železo. Při třídění odpadu proto magnet oddělí ocelové plechovky od hliníkových.'],
+  ['hliníkovou fólii', false, 'Hliníková fólie je z kovu, ale magnet ji nepřitáhne – hliník není železo. Hliníkové fólii se doma říká alobal.'],
+  ['měděný drátek', false, 'Měď je kov, ale magnet ji nepřitahuje. Měděné dráty jsou v kabelech, protože měď skvěle vede elektřinu.'],
   ['plechové víčko od sklenice s okurkami', true, 'Víčka od sklenic s okurkami nebo marmeládou jsou z ocelového plechu, a tak je magnet přitáhne.'],
-  ['železnou matičku', true, 'Matička je ze železa, a tak ji magnet přitáhne.'],
-  ['ocelovou kancelářskou sponku', true, 'Sponka je z oceli a ocel je hlavně železo. Magnet ji přitáhne.'],
-  ['ocelovou kuličku', true, 'Kulička je z oceli, a tak ji magnet přitáhne.'],
+  ['železnou matičku', true, 'Matička je ze železa, a tak ji magnet přitáhne. Když zapadne do úzké škvíry, dá se vytáhnout magnetem na provázku.'],
+  ['ocelovou kancelářskou sponku', true, 'Sponka je z oceli a ocel je hlavně železo, a tak ji magnet přitáhne. Sponka přitažená k magnetu pak sama přitáhne další sponku a vznikne řetízek.'],
+  ['ocelovou kuličku', true, 'Kulička je z oceli, a tak ji magnet přitáhne. Ocelové kuličky jsou třeba v ložiskách kol a pomáhají jim lehce se točit.'],
 ];
 
 function magnet(pool: MagVec[]) {
@@ -142,15 +145,15 @@ type Meridlo = (typeof MERIDLA)[number];
  *  nesmí být chybnou možností]. Vodu i mléko jde odměřit i vážením. */
 const CO_MERIME: [string, string, Meridlo, string, Meridlo[]?][] = [
   ['stul', 'jak dlouhý je stůl', 'Metrem', 'Délku stolu změříme metrem. Je na něm stupnice v centimetrech.'],
-  ['postava', 'jak jsi vysoká', 'Metrem', 'Výšku postavy změříme metrem, třeba u zdi nebo na dveřích.'],
-  ['voda-lavor', 'jak teplá je voda v lavoru', 'Teploměrem', 'Teplotu vody změříme teploměrem. Ukáže ji ve stupních Celsia.'],
-  ['venku', 'jak teplo je venku', 'Teploměrem', 'Teplotu vzduchu změříme teploměrem za oknem.'],
-  ['jablka', 'kolik váží jablka', 'Váhou', 'Kolik co váží, zjistíme vážením na váze.'],
-  ['batoh', 'kolik váží tvůj batoh', 'Váhou', 'Hmotnost batohu zjistíme vážením na váze.'],
+  ['postava', 'jak jsi {vysoká|vysoký}', 'Metrem', 'Výšku postavy změříme metrem, třeba u zdi nebo na dveřích. Ráno jsme o kousek vyšší než večer, protože přes den se páteř trochu stlačí.'],
+  ['voda-lavor', 'jak teplá je voda v lavoru', 'Teploměrem', 'Teplotu vody změříme teploměrem ve stupních Celsia. Voda na koupání miminka má mít kolem 37 stupňů – asi jako naše tělo.'],
+  ['venku', 'jak teplo je venku', 'Teploměrem', 'Teplotu vzduchu změříme teploměrem za oknem. Teploměr má být ve stínu, na slunci by ukazoval víc.'],
+  ['jablka', 'kolik váží jablka', 'Váhou', 'Jablka zvážíme na váze. Jedno středně velké jablko váží asi 150 až 200 gramů.'],
+  ['batoh', 'kolik váží tvůj batoh', 'Váhou', 'Hmotnost batohu zjistíme vážením na váze. Plný školní batoh by neměl vážit víc než asi desetinu toho, co váží dítě, které ho nosí.'],
   ['hrnek', 'kolik vody se vejde do hrnku', 'Odměrkou', 'Kolik vody se vejde do hrnku, zjistíme odměrkou – nádobou s čárkami.', ['Váhou']],
   ['mleko', 'kolik mléka naleješ do těsta', 'Odměrkou', 'Mléko do těsta odměříme odměrkou. Na boku má čárky s mililitry.', ['Váhou']],
-  ['noha', 'jak dlouho vydržíš stát na jedné noze', 'Stopkami', 'Jak dlouho něco trvá, změříme stopkami.'],
-  ['kolecko', 'za jak dlouho oběhneš dům', 'Stopkami', 'Čas běhu změříme stopkami.'],
+  ['noha', 'jak dlouho vydržíš stát na jedné noze', 'Stopkami', 'Jak dlouho něco trvá, změříme stopkami. Zkus to i se zavřenýma očima – na jedné noze to pak jde mnohem hůř.'],
+  ['kolecko', 'za jak dlouho oběhneš dům', 'Stopkami', 'Čas běhu změříme stopkami. Umějí měřit i desetiny sekundy, takže poznáš i malé zlepšení.'],
 ];
 
 function cimZmeris(rng: Rng): Spec {
@@ -234,13 +237,13 @@ function grafFazole(rng: Rng): Spec {
     const prompt = `Graf ukazuje výšku fazole. Jak vysoká byla fazole ${DNY_V[day]}?`;
     return num(`graf-${data}-den-${day}`, prompt, heights[day],
       ['Najdi sloupec toho dne a podívej se, kam sahá.'],
-      `Sloupec pro ${DNY_4[day]} sahá k číslu ${heights[day]}. Fazole byla vysoká ${heights[day]} cm.`,
+      `Sloupec pro ${DNY_4[day]} sahá k číslu ${heights[day]}, fazole měřila ${heights[day]} cm. Když fazole klíčí, vytáhne ze země nejdřív ohnutý stonek jako háček a teprve pak se narovná.`,
       { visual, unit: 'cm', speak: `${said} Jak vysoká byla fazole ${DNY_V[day]}?` });
   }
   const growth = heights[4] - heights[0];
   return num(`graf-${data}-rust`, 'Graf ukazuje výšku fazole. O kolik centimetrů vyrostla od pondělí do pátku?', growth,
     ['Najdi výšku v pondělí a v pátek.', 'Odečti menší číslo od většího.'],
-    `V pondělí měla fazole ${heights[0]} cm a v pátek ${heights[4]} cm. Vyrostla o ${heights[4]} − ${heights[0]} = ${growth} cm.`,
+    `V pondělí měla fazole ${heights[0]} cm a v pátek ${heights[4]} cm, vyrostla o ${heights[4]} − ${heights[0]} = ${growth} cm. Popínavé fazole se při růstu otáčejí dokola a hledají tyčku, kolem které se ovinou.`,
     { visual, unit: 'cm', speak: `${said} O kolik centimetrů vyrostla od pondělí do pátku?` });
 }
 
@@ -260,12 +263,12 @@ function grafTeplot(rng: Rng): Spec {
     const sum = t[0] + t[1] + t[2];
     return num(`teploty-${data}-prumer`, 'Graf ukazuje teplotu ve třech dnech. Jaká byla průměrná teplota?', avg,
       ['Sečti všechny tři teploty.', 'Součet vyděl počtem dní.'],
-      `${t[0]} + ${t[1]} + ${t[2]} = ${sum} a ${sum} : 3 = ${avg}. Průměrná teplota byla ${avg} °C.`,
+      `${t[0]} + ${t[1]} + ${t[2]} = ${sum} a ${sum} : 3 = ${avg}, průměrná teplota byla ${avg} °C. Meteorologové počítají průměr stejně, jen z mnohem víc měření.`,
       { visual, unit: '°C', speak: `${said} Jaká byla průměrná teplota?` });
   }
   return num(`teploty-${data}-rozdil`, 'Graf ukazuje teplotu ve třech dnech. O kolik stupňů byl nejteplejší den teplejší než nejchladnější?', hi - lo,
     ['Najdi nejvyšší a nejnižší sloupec.', 'Odečti menší číslo od většího.'],
-    `Nejtepleji bylo ${hi} °C, nejchladněji ${lo} °C. Rozdíl je ${hi} − ${lo} = ${hi - lo} °C.`,
+    `Nejtepleji bylo ${hi} °C a nejchladněji ${lo} °C, rozdíl je ${hi} − ${lo} = ${hi - lo} °C. Meteorologové měří teplotu vzduchu ve stínu, v bílé budce.`,
     { visual, unit: '°C', speak: `${said} O kolik stupňů byl nejteplejší den teplejší než nejchladnější?` });
 }
 
@@ -280,15 +283,15 @@ const L1: Spec[] = [
   q('voda-mrazak', 'Co vznikne z vody v mrazáku?', 'Led',
     ['Pára', 'Mléko', 'Písek'],
     ['V mrazáku je mráz.'],
-    'V mrazu voda zamrzne a vznikne led. Když ho vytáhneš, zase roztaje.'),
+    'V mrazu voda zamrzne a vznikne led. Led zabere víc místa než voda, a proto se plná skleněná láhev v mrazáku může rozbít.'),
   q('para', 'Co stoupá nad hrncem s vařící vodou?', 'Pára',
     ['Led', 'Písek', 'Kouř z ohně'],
     ['Voda se v horku mění v něco, co stoupá vzhůru.'],
     'Z vařící vody vzniká pára. Nad hrncem vidíme bílý obláček z drobných kapiček. K hrnci chodíme jen s dospělým.'),
   q('horka-voda', 'Chceš dělat pokus s horkou vodou. Co uděláš?', 'Požádám dospělého o pomoc',
-    ['Zkusím to sama potajmu', 'Sáhnu do vody, jestli je horká', 'Postavím hrnec na zem'],
+    ['Zkusím to {sama|sám} potajmu', 'Sáhnu do vody, jestli je horká', 'Postavím hrnec na zem'],
     ['Horká voda může opařit.'],
-    'Pokusy s horkou vodou, ohněm nebo sporákem děláme vždycky s dospělým.'),
+    'Pokusy s horkou vodou, ohněm nebo sporákem děláme vždycky s dospělým. Vroucí voda má skoro 100 °C a opaří kůži během okamžiku.'),
   q('neochutnavat', 'Smíš při pokusu ochutnat neznámou látku?', 'Ne, nikdy',
     ['Ano, trochu', 'Ano, když je bílá', 'Ano, když voní'],
     ['Poznáš cukr od prášku na praní jen podle barvy?'],
@@ -296,11 +299,11 @@ const L1: Spec[] = [
   q('teplomer', 'Co ukazuje teploměr?', 'Jak je teplo nebo zima',
     ['Kolik je hodin', 'Kolik co váží', 'Jak je co dlouhé'],
     ['Podívej se na teploměr za oknem.'],
-    'Teploměr měří teplotu. Venku ukáže, jestli je mráz, nebo teplo.'),
+    'Teploměr měří teplotu – venku ukáže, jestli je mráz, nebo teplo. Nejnižší teplotu v Česku naměřili v roce 1929 u Českých Budějovic: −42,2 °C.'),
   q('snih-doma', 'Necháš hrnek sněhu stát doma v teple. Co v něm bude za pár hodin?', 'Voda',
     ['Písek', 'Mléko', 'Kamínky'],
     ['V pokoji je teplo.'],
-    'V teple sníh roztaje a v hrnku zůstane voda. Všimni si, že vody je mnohem méně, než bylo sněhu.'),
+    'V teple sníh roztaje a v hrnku zůstane voda. Vody je mnohem méně, než bylo sněhu, protože čerstvý sníh je z velké části vzduch.'),
   q('louze', 'Kam zmizí louže, když svítí slunce?', 'Voda se vypaří do vzduchu',
     ['Odnesou ji ptáci', 'Promění se v led', 'Promění se v písek'],
     ['Co dělá sluníčko s mokrým prádlem?'],
@@ -322,14 +325,14 @@ const L1: Spec[] = [
     'Cukr se v čaji rozpustí – rozpadne se na tak malé kousky, že je nevidíme. Poznáme ho ale podle chuti.'),
   q('pisek-voda', 'Nasypeš písek do sklenice s vodou a zamícháš. Co se stane?', 'Písek klesne ke dnu',
     ['Písek se rozpustí', 'Voda zmizí', 'Písek začne plavat'],
-    ['Viděla jsi někdy písek na dně potoka?'],
+    ['{Viděla|Viděl} jsi někdy písek na dně potoka?'],
     'Písek se ve vodě nerozpustí. Po zamíchání se zvíří a pak klesne ke dnu.'),
   q('odhad-prvni', 'Chceš zjistit, jestli jablko plave. Co uděláš ještě před pokusem?', 'Odhadnu, co se stane',
     ['Rovnou napíšu závěr', 'Pokus vynechám', 'Jablko schovám'],
     ['Co si myslíš, že se stane?'],
-    'Dobrá badatelka nejdřív odhadne, co se stane, a pak to pokusem ověří. Porovnat odhad s výsledkem je zábava.'),
+    'Vědci nejdřív odhadnou, co se stane, a pak to pokusem ověří. Porovnat odhad s výsledkem je zábava, i když odhad nevyjde.'),
   q('svicka', 'Chceš vyzkoušet, co udělá svíčka pod sklenicí. Co uděláš jako první?', 'Zavolám dospělého',
-    ['Zapálím ji sama', 'Půjdu potajmu pro sirky', 'Postavím ji na postel'],
+    ['Zapálím ji {sama|sám}', 'Půjdu potajmu pro sirky', 'Postavím ji na postel'],
     ['S ohněm si děti samy nehrají.'],
     'Pokusy s ohněm děláme jen s dospělým a na bezpečném místě. Svíčka pod sklenicí po chvíli zhasne, protože už nemá dost kyslíku.'),
   q('stopky', 'Co měří stopky?', 'Čas',
@@ -347,8 +350,8 @@ const L1: Spec[] = [
 
 const L2: Spec[] = [
   ord('kroky-pokusu', 'Seřaď kroky pokusu.', ['Otázka', 'Odhad', 'Pokus', 'Pozorování výsledku', 'Závěr'],
-    ['Čím každé bádání začíná?', 'Kdy si zapíšeš, co jsi zjistila?'],
-    'Badatelka se nejdřív zeptá, pak odhadne, co se stane, udělá pokus, pozoruje a nakonec napíše závěr.'),
+    ['Čím každé bádání začíná?', 'Kdy si zapíšeš, co jsi {zjistila|zjistil}?'],
+    'Bádání začíná otázkou. Pak odhadneme, co se stane, uděláme pokus, pozorujeme a nakonec napíšeme závěr.'),
   q('odhad-co', 'Co je při pokusu odhad?', 'Co si myslím, že se stane',
     ['Co se opravdu stalo', 'Jak se pokus jmenuje', 'Co si zapíšu na konec'],
     ['Odhad děláme ještě před pokusem.'],
@@ -415,7 +418,7 @@ const L3: Spec[] = [
   q('mrznuti', 'Při jaké teplotě mrzne čistá voda?', tepl('0 °C', 'nula stupňů Celsia'),
     [tepl('10 °C', 'deset stupňů Celsia'), tepl('100 °C', 'sto stupňů Celsia'), tepl('−50 °C', 'minus padesát stupňů Celsia')],
     ['Při této teplotě začínají zamrzat louže.'],
-    'Čistá voda mrzne při 0 °C. Stupnice Celsia je podle toho nastavená: nula je bod mrazu.'),
+    'Čistá voda mrzne při 0 °C, podle toho je nastavená stupnice Celsia. Anders Celsius ji ale původně vymyslel obráceně: 0 byla u varu a 100 u mrazu.'),
   q('var', 'Při jaké teplotě se vaří voda u hladiny moře?', tepl('100 °C', 'sto stupňů Celsia'),
     [tepl('50 °C', 'padesát stupňů Celsia'), tepl('0 °C', 'nula stupňů Celsia'), tepl('200 °C', 'dvě stě stupňů Celsia')],
     ['Je to kulaté číslo, mnohem větší než teplota v pokoji.'],
@@ -454,7 +457,7 @@ const L3: Spec[] = [
     'Voda se při zamrzání roztáhne, a tak je led lehčí než stejně velký kus vody. Proto plave a rybníky zamrzají odshora.'),
   num('teplota-rozdil', 'Ráno bylo 5 °C, odpoledne 12 °C. O kolik stupňů se oteplilo?', 7,
     ['Kolik chybí od 5 do 12?'],
-    'Od 5 do 12 je to 7. Oteplilo se o 7 °C.',
+    'Od 5 do 12 je to 7, oteplilo se o 7 °C. Odpoledne bývá tepleji než ráno, protože Slunce zem i vzduch celé dopoledne ohřívá.',
     { unit: '°C', speak: 'Ráno bylo 5 stupňů Celsia, odpoledne 12 stupňů. O kolik stupňů se oteplilo?' }),
   num('teplota-mraz', 'Ráno bylo −2 °C, v poledne 4 °C. O kolik stupňů se oteplilo?', 6,
     ['Kolik stupňů je od −2 do nuly a kolik od nuly do 4?'],
@@ -489,13 +492,13 @@ const L4: Spec[] = [
     'Všechno kromě světla musí být stejné: hlína, voda, teplota i druh fazole. Jinak by Tove nevěděla, co rozdíl způsobilo.'),
   q('jedna-vec', 'Proč v pokusu měníme jen jednu věc?', 'Abychom věděli, co změnu způsobilo',
     ['Aby byl pokus rychlejší', 'Aby nás to méně bavilo', 'Protože víc věcí nemáme'],
-    ['Kdybys změnila dvě věci najednou, poznala bys, která zabrala?'],
+    ['Kdybys {změnila|změnil} dvě věci najednou, {poznala|poznal} bys, která zabrala?'],
     'Když změníme jen jednu věc a všechno ostatní necháme stejné, víme jistě, že rozdíl způsobila právě ona.'),
   q('opakovani', 'Proč je dobré pokus zopakovat vícekrát?', 'Aby výsledek nebyl náhoda',
     ['Aby se pokus zkazil', 'Aby nás to víc unavilo', 'Protože poprvé se nepočítá'],
     ['Může se jednou něco stát náhodou?'],
     'Jeden pokus může dopadnout jinak náhodou. Když ho zopakujeme a vyjde stejně, můžeme si být jistější.'),
-  q('odhad-nevysel', 'Odhadla jsi, že se jablko potopí, ale plavalo. Co uděláš?', 'Zapíšu, jak to bylo, a hledám proč',
+  q('odhad-nevysel', '{Odhadla|Odhadl} jsi, že se jablko potopí, ale plavalo. Co uděláš?', 'Zapíšu, jak to bylo, a hledám proč',
     ['Pokus vymažu', 'Napíšu, že se potopilo', 'Přestanu bádat'],
     ['Je nevydařený odhad chyba, nebo objev?'],
     'Nevydařený odhad je objev. Zapíšeme skutečný výsledek a hledáme vysvětlení. Tak postupují i vědci.'),
@@ -565,7 +568,7 @@ const L5: Spec[] = [
     'Liv mění jen velikost padáku. Zátěž i výška musí zůstat stejné, jinak by nevěděla, co rozdíl způsobilo.'),
   num('prumer', 'Liv pustila padák třikrát. Padal 4 s, 5 s a 6 s. Jaký je průměrný čas v sekundách?', 5,
     ['Sečti časy a vyděl je počtem pokusů.'],
-    '4 + 5 + 6 = 15 a 15 : 3 = 5. Průměrný čas je 5 sekund.',
+    '4 + 5 + 6 = 15 a 15 : 3 = 5, průměrný čas je 5 sekund. Průměr z více pokusů je spolehlivější než jediný pokus.',
     { unit: 's', speak: 'Liv pustila padák třikrát. Padal 4 sekundy, 5 sekund a 6 sekund. Jaký je průměrný čas v sekundách?' }),
   q('dve-veci', 'Bo zaléval jednu fazoli víc a dal ji na slunce, druhou míň a do stínu. Proč nepozná, co fazolím pomáhá?', 'Změnil dvě věci najednou',
     ['Fazole byly moc malé', 'Použil moc hlíny', 'Zaléval je vodou'],
@@ -579,7 +582,7 @@ const L5: Spec[] = [
     ['V balonu je vždy helium', 'Balon táhnou ptáci', 'Studený vzduch je lehčí'],
     ['Kde je v pokoji tepleji – u stropu, nebo u podlahy?'],
     'Hořák ohřeje vzduch v balonu. Teplý vzduch je lehčí než studený kolem, a tak balon stoupá.'),
-  q('odparovani', 'Proč je ti zima, když vylezeš mokrá z vody?', 'Odpařující se voda ti bere teplo',
+  q('odparovani', 'Proč je ti zima, když vylezeš {mokrá|mokrý} z vody?', 'Odpařující se voda ti bere teplo',
     ['Voda je studenější než led', 'Vítr v létě mrzne', 'Mokrá kůže nevidí slunce'],
     ['Co se děje s vodou na kůži?'],
     'Když se voda z kůže vypařuje, bere si teplo z tvého těla. Proto se po koupání utíráme a zabalíme do osušky.'),
@@ -591,7 +594,7 @@ const L5: Spec[] = [
     ['Ano, přivolávají ho', 'Ano, ale jen v létě', 'Nedá se to poznat'],
     ['Co bylo dřív – déšť, nebo deštník?'],
     'Dvě věci se často dějí spolu, ale to neznamená, že jedna způsobuje druhou. Deštníky nosíme, protože prší – ne naopak.'),
-  q('necekany', 'Pokus dopadl jinak, než jsi čekala. Co je na tom dobré?', 'Něco nového jsem zjistila',
+  q('necekany', 'Pokus dopadl jinak, než jsi {čekala|čekal}. Co je na tom dobré?', 'Něco nového jsem {zjistila|zjistil}',
     ['Nic, pokus se nepovedl', 'Můžu ho vymazat', 'Že je konec bádání'],
     ['Co se z nečekaného výsledku můžeš dozvědět?'],
     'Nečekaný výsledek je objev. Mnoho důležitých objevů vzniklo právě tak, že pokus dopadl jinak, než vědci čekali.'),
@@ -630,6 +633,7 @@ export const pokusy = bankSkill({
     5: ['ČJS-5-4-06'],
   },
   ability: 'usuzovani',
+  showFact: true,
   banks: { 1: L1, 2: L2, 3: L3, 4: L4, 5: L5 },
   gen: {
     1: (rng) => {

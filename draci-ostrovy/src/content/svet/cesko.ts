@@ -1,6 +1,9 @@
 // Česko a Evropa: hlavní město, sousedé, řeky, hory, kraje a krajská města,
 // státní symboly (vlajka popsaná slovy, hymna), státy a hlavní města Evropy
 // včetně severských zemí Vikingů, Alpy.
+//
+// Vysvětlení se ukazuje i po správné odpovědi jako zajímavost (showFact):
+// nejdřív odpověď, pak jeden detail o tomtéž místě.
 
 import { bankSkill, type Spec } from '../../core/bank';
 import type { Rng } from '../../core/rng';
@@ -30,29 +33,29 @@ export const STATY_L4: Stat[] = [
   s('Švédsko', 'Švédska', 'se Švédskem', 'Stockholm', false, 'Stockholm stojí na mnoha ostrovech.'),
   s('Dánsko', 'Dánska', 's Dánskem', 'Kodaň', false, 'V přístavu tam sedí socha Malé mořské víly.'),
   s('Island', 'Islandu', 's Islandem', 'Reykjavík', false, 'Je to nejsevernější hlavní město státu na světě.'),
-  s('Finsko', 'Finska', 's Finskem', 'Helsinky', false),
+  s('Finsko', 'Finska', 's Finskem', 'Helsinky', false, 'Finsku se říká země tisíců jezer.'),
   s('Francie', 'Francie', 's Francií', 'Paříž', false, 'Stojí tam Eiffelova věž.'),
   s('Itálie', 'Itálie', 's Itálií', 'Řím', false, 'Stojí tam starověké Koloseum.'),
   s('Maďarsko', 'Maďarska', 's Maďarskem', 'Budapešť', false, 'Protéká jí Dunaj.'),
-  s('Španělsko', 'Španělska', 'se Španělskem', 'Madrid', false),
+  s('Španělsko', 'Španělska', 'se Španělskem', 'Madrid', false, 'Madrid leží skoro přesně uprostřed Španělska.'),
   s('Spojené království', 'Spojeného království', 'se Spojeným královstvím', 'Londýn', false, 'Protéká jím řeka Temže.'),
 ];
 
 export const STATY_L5: Stat[] = [
   ...STATY_L4,
-  s('Portugalsko', 'Portugalska', 's Portugalskem', 'Lisabon'),
+  s('Portugalsko', 'Portugalska', 's Portugalskem', 'Lisabon', false, 'Lisabon leží u Atlantského oceánu, kde do něj ústí řeka Tejo.'),
   s('Řecko', 'Řecka', 's Řeckem', 'Atény', false, 'Nad městem stojí starověká Akropole.'),
   s('Nizozemsko', 'Nizozemska', 's Nizozemskem', 'Amsterdam', false, 'Město je plné kanálů.'),
-  s('Belgie', 'Belgie', 's Belgií', 'Brusel'),
-  s('Irsko', 'Irska', 's Irskem', 'Dublin'),
-  s('Švýcarsko', 'Švýcarska', 'se Švýcarskem', 'Bern'),
-  s('Chorvatsko', 'Chorvatska', 's Chorvatskem', 'Záhřeb'),
-  s('Slovinsko', 'Slovinska', 'se Slovinskem', 'Lublaň'),
-  s('Rumunsko', 'Rumunska', 's Rumunskem', 'Bukurešť'),
-  s('Bulharsko', 'Bulharska', 's Bulharskem', 'Sofie'),
-  s('Litva', 'Litvy', 's Litvou', 'Vilnius'),
-  s('Lotyšsko', 'Lotyšska', 's Lotyšskem', 'Riga'),
-  s('Estonsko', 'Estonska', 's Estonskem', 'Tallinn'),
+  s('Belgie', 'Belgie', 's Belgií', 'Brusel', false, 'V Bruselu sídlí hlavní úřady Evropské unie.'),
+  s('Irsko', 'Irska', 's Irskem', 'Dublin', false, 'Irsku se pro jeho zelené louky říká Smaragdový ostrov.'),
+  s('Švýcarsko', 'Švýcarska', 'se Švýcarskem', 'Bern', false, 'Bern má ve znaku medvěda.'),
+  s('Chorvatsko', 'Chorvatska', 's Chorvatskem', 'Záhřeb', false, 'Chorvatsko má u moře přes tisíc ostrovů.'),
+  s('Slovinsko', 'Slovinska', 'se Slovinskem', 'Lublaň', false, 'Symbolem Lublaně je drak – sochy draků hlídají i Dračí most.'),
+  s('Rumunsko', 'Rumunska', 's Rumunskem', 'Bukurešť', false, 'Stojí tam Palác parlamentu, jedna z největších budov na světě.'),
+  s('Bulharsko', 'Bulharska', 's Bulharskem', 'Sofie', false, 'Nad městem se zvedá hora Vitoša, na které se v zimě lyžuje.'),
+  s('Litva', 'Litvy', 's Litvou', 'Vilnius', false, 'Jméno dostal podle říčky Vilnie, která jím protéká.'),
+  s('Lotyšsko', 'Lotyšska', 's Lotyšskem', 'Riga', false, 'Leží u Baltského moře, blízko místa, kde do něj ústí řeka Daugava.'),
+  s('Estonsko', 'Estonska', 's Estonskem', 'Tallinn', false, 'Staré město Tallinnu dodnes obklopují středověké hradby s věžemi.'),
 ];
 
 function hlavniMesto(pool: Stat[]) {
@@ -75,6 +78,23 @@ function kteryStat(pool: Stat[]) {
   };
 }
 
+/** Kde leží soused Česka, nebo kudy je to k nesousednímu státu. */
+const POLOHA: Record<string, string> = {
+  Německo: 'Německo je jedním ze čtyř sousedů Česka – leží na západě a severozápadě.',
+  Polsko: 'Polsko je jedním ze čtyř sousedů Česka – leží na severu.',
+  Slovensko: 'Slovensko je jedním ze čtyř sousedů Česka – leží na východě.',
+  Rakousko: 'Rakousko je jedním ze čtyř sousedů Česka – leží na jihu.',
+  Maďarsko: 'Maďarsko leží až za Slovenskem.',
+  Itálie: 'Itálie leží až za Rakouskem, na druhé straně Alp.',
+  Francie: 'Francie leží až za Německem.',
+  Dánsko: 'Dánsko leží až na severu za Německem.',
+  Švýcarsko: 'Švýcarsko leží až za Německem a Rakouskem.',
+  Slovinsko: 'Slovinsko leží až za Rakouskem.',
+  Chorvatsko: 'Chorvatsko leží ještě dál na jih, za Slovinskem a Maďarskem.',
+  Nizozemsko: 'Nizozemsko leží až za Německem.',
+  Belgie: 'Belgie leží až za Německem.',
+};
+
 /** Sousedí Česko s…? (sousedé a státy, které se jim podobají polohou) */
 const SOUSEDI_OTAZKA: Stat[] = [
   ...STATY_L4.filter((x) => ['Německo', 'Polsko', 'Slovensko', 'Rakousko', 'Maďarsko', 'Itálie', 'Francie', 'Dánsko'].includes(x.nom)),
@@ -86,18 +106,18 @@ function sousedi(rng: Rng): Spec {
   return fixed(`soused-${slug(st.nom)}`, `Sousedí Česko ${st.ins}?`, ['Ano, sousedí', 'Ne, nesousedí'], st.neighbor ? 0 : 1,
     ['Česko má jen čtyři sousedy: na západě, na severu, na východě a na jihu.'],
     st.neighbor
-      ? `Ano. ${st.nom} je jedním ze čtyř sousedů Česka.`
-      : `Ne. Česko sousedí jen s Německem, Polskem, Slovenskem a Rakouskem.`);
+      ? POLOHA[st.nom]
+      : `Česko sousedí jen s Německem, Polskem, Slovenskem a Rakouskem. ${POLOHA[st.nom]}`);
 }
 
 /** Hory: [vrchol, pohoří v 6. pádě s předložkou]. */
 const HORY: [string, string, string][] = [
-  ['Sněžka', 'V Krkonoších', 'Sněžka je nejvyšší hora Krkonoš i celého Česka.'],
+  ['Sněžka', 'V Krkonoších', 'Sněžka je nejvyšší hora Krkonoš i celého Česka. Měří přes 1 600 metrů.'],
   ['Praděd', 'V Jeseníkách', 'Praděd je nejvyšší hora Jeseníků. Leží na pomezí Moravy a Slezska.'],
-  ['Lysá hora', 'V Beskydech', 'Lysá hora je nejvyšší hora Moravskoslezských Beskyd.'],
-  ['Radhošť', 'V Beskydech', 'Radhošť je známá hora v Beskydech.'],
-  ['Klínovec', 'V Krušných horách', 'Klínovec je nejvyšší hora Krušných hor.'],
-  ['Plechý', 'Na Šumavě', 'Plechý je nejvyšší hora české části Šumavy.'],
+  ['Lysá hora', 'V Beskydech', 'Lysá hora je nejvyšší hora Moravskoslezských Beskyd. Patří k místům, kde u nás naprší nejvíc.'],
+  ['Radhošť', 'V Beskydech', 'Radhošť je známá hora v Beskydech. Na cestě k ní stojí socha pohanského boha Radegasta.'],
+  ['Klínovec', 'V Krušných horách', 'Klínovec je nejvyšší hora Krušných hor. V zimě se na jeho svazích lyžuje.'],
+  ['Plechý', 'Na Šumavě', 'Plechý je nejvyšší hora české části Šumavy. Pod vrcholem leží Plešné jezero.'],
   ['Boubín', 'Na Šumavě', 'Boubín je hora na Šumavě s pralesem na úbočí.'],
 ];
 const POHORI = ['V Krkonoších', 'V Jeseníkách', 'V Beskydech', 'V Krušných horách', 'Na Šumavě'];
@@ -109,28 +129,28 @@ function kdeJeHora(rng: Rng): Spec {
     explain);
 }
 
-/** Krajská města (bez Středočeského kraje, jehož úřad sídlí v Praze). */
-export const KRAJE: [string, string][] = [
-  ['Jihočeského kraje', 'České Budějovice'],
-  ['Plzeňského kraje', 'Plzeň'],
-  ['Karlovarského kraje', 'Karlovy Vary'],
-  ['Ústeckého kraje', 'Ústí nad Labem'],
-  ['Libereckého kraje', 'Liberec'],
-  ['Královéhradeckého kraje', 'Hradec Králové'],
-  ['Pardubického kraje', 'Pardubice'],
-  ['kraje Vysočina', 'Jihlava'],
-  ['Jihomoravského kraje', 'Brno'],
-  ['Olomouckého kraje', 'Olomouc'],
-  ['Zlínského kraje', 'Zlín'],
-  ['Moravskoslezského kraje', 'Ostrava'],
+/** Krajská města (bez Středočeského kraje, jehož úřad sídlí v Praze) a zajímavost o nich. */
+export const KRAJE: [string, string, string][] = [
+  ['Jihočeského kraje', 'České Budějovice', 'Mají velké čtvercové náměstí se Samsonovou kašnou.'],
+  ['Plzeňského kraje', 'Plzeň', 'Věž plzeňské katedrály je nejvyšší kostelní věží v Česku.'],
+  ['Karlovarského kraje', 'Karlovy Vary', 'Jsou to slavné lázně s horkými prameny.'],
+  ['Ústeckého kraje', 'Ústí nad Labem', 'Nad Labem u města stojí na skále hrad Střekov.'],
+  ['Libereckého kraje', 'Liberec', 'Na hoře Ještěd nad městem stojí vysílač, který připomíná raketu – a uvnitř je i hotel.'],
+  ['Královéhradeckého kraje', 'Hradec Králové', 'Leží v místě, kde se do Labe vlévá Orlice.'],
+  ['Pardubického kraje', 'Pardubice', 'Pardubice jsou známé perníkem.'],
+  ['kraje Vysočina', 'Jihlava', 'Kdysi se tu těžilo stříbro.'],
+  ['Jihomoravského kraje', 'Brno', 'Brno je druhé největší město Česka.'],
+  ['Olomouckého kraje', 'Olomouc', 'Na náměstí stojí Sloup Nejsvětější Trojice, který patří mezi památky UNESCO.'],
+  ['Zlínského kraje', 'Zlín', 'Město vyrostlo kolem obuvnické firmy Baťa.'],
+  ['Moravskoslezského kraje', 'Ostrava', 'Dlouho se tu těžilo černé uhlí.'],
 ];
 
 function krajskeMesto(rng: Rng): Spec {
-  const [kraj, mesto] = rng.pick(KRAJE);
+  const [kraj, mesto, fakt] = rng.pick(KRAJE);
   const wrong = pickSome(rng, KRAJE.map(([, m]) => m), 3, [mesto]);
   return q(`kraj-${slug(mesto)}`, `Které město je krajským městem ${kraj}?`, mesto, wrong,
     ['Podívej se na mapu krajů Česka.', 'Krajské město často dalo kraji jméno.'],
-    `Krajským městem ${kraj} ${je(mesto)} ${mesto}.`);
+    `Krajským městem ${kraj} ${je(mesto)} ${mesto}. ${fakt}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -152,11 +172,11 @@ const L2: Spec[] = [
   q('snezka-hory', 'Ve kterých horách je Sněžka?', 'V Krkonoších',
     ['Na Šumavě', 'V Jeseníkách', 'V Beskydech'],
     ['Tyto hory jsou na severu Česka u hranic s Polskem.'],
-    'Sněžka je v Krkonoších, přímo na hranici s Polskem.'),
+    'Sněžka je v Krkonoších, přímo na hranici s Polskem. Na vrcholu stojí poštovna, ze které se dají poslat pohledy.'),
   q('hymna', 'Jak se jmenuje česká státní hymna?', 'Kde domov můj',
     ['Ach synku, synku', 'Holka modrooká', 'Skákal pes'],
     ['Hraje se třeba na sportovních zápasech, když vyhraje Česko.'],
-    'Česká hymna se jmenuje Kde domov můj. Když hraje, stojíme.'),
+    'Česká hymna se jmenuje Kde domov můj. Když hraje, stojíme. Původně to byla písnička z divadelní hry Fidlovačka.'),
   q('vlajka', 'Jak vypadá česká vlajka?', 'Bílý a červený pruh a modrý klín',
     ['Bílý a červený pruh bez klínu', 'Tři svislé pruhy', 'Modrý kříž na bílém'],
     ['Česká vlajka má tři barvy.'],
@@ -179,7 +199,7 @@ const L2: Spec[] = [
   q('svetadil', 'Ve kterém světadílu leží Česko?', 'V Evropě',
     ['V Asii', 'V Africe', 'V Americe'],
     ['Leží tam i Německo a Polsko.'],
-    'Česko leží ve střední Evropě.'),
+    'Česko leží ve střední Evropě. Právě kvůli poloze se mu někdy říká srdce Evropy.'),
   q('krkonose', 'Kde v Česku leží Krkonoše?', 'Na severu u hranic s Polskem',
     ['Na jihu u Rakouska', 'Uprostřed u Prahy', 'Na východě u Slovenska'],
     ['Je tam nejvyšší hora Česka.'],
@@ -403,6 +423,7 @@ export const cesko = bankSkill({
   },
   ability: 'znalosti',
   testLike: 'vedomosti',
+  showFact: true,
   banks: { 2: L2, 3: L3, 4: L4, 5: L5 },
   gen: {
     2: sousedi,

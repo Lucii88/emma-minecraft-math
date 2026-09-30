@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { cards, missions, skills } from '../src/content/svet';
 import { MAP_POOLS, MISTA } from '../src/content/svet/mapa';
 import { buildItem, enumerateItems } from '../src/core/bank';
+import { gx } from '../src/core/gender';
 import { fly } from '../src/core/grid';
 import { createRng } from '../src/core/rng';
 import type { Cell, Item, Level, Move, SkillDef, Visual } from '../src/core/types';
@@ -299,13 +300,20 @@ describe('Ostrov světa – texty', () => {
     for (const t of all) expect(t).not.toMatch(HARSH);
   });
 
-  it('hráčku oslovujeme v ženském rodě', () => {
+  it('hráče oslovujeme podle rodu: holka ani kluk nedostane tvar pro druhý rod', () => {
     const all = [...ALL.flatMap(texts), ...strings(cards), ...strings(missions)];
     for (const t of all) {
-      // „zkusil jsi“, „jsi viděl“, „jsi si jistý“ – mužský rod v oslovení
-      expect(t).not.toMatch(/(?<!\p{L})\p{L}+[^a\s]l (jsi|ses|sis)(?!\p{L})/u);
-      expect(t).not.toMatch(/(?<!\p{L})(jsi|ses|sis) \p{L}+[^a\s]l(?!\p{L})/u);
-      expect(t).not.toMatch(/(?<!\p{L})jsi (si )?(jistý|připravený|sám|hotový)(?!\p{L})/u);
+      const f = gx(t, 'f');
+      const m = gx(t, 'm');
+      // Holka: „zkusil jsi“, „jsi viděl“, „jsi si jistý“ – mužský rod v oslovení
+      expect(f).not.toMatch(/(?<!\p{L})\p{L}+[^a\s]l (jsi|ses|sis)(?!\p{L})/u);
+      expect(f).not.toMatch(/(?<!\p{L})(jsi|ses|sis) \p{L}+[^a\s]l(?!\p{L})/u);
+      expect(f).not.toMatch(/(?<!\p{L})jsi (si )?(jistý|připravený|sám|hotový)(?!\p{L})/u);
+      // Kluk: „zkusila jsi“, „jsi viděla“, „bys poznala“, „jsi sama“ – neoznačený ženský tvar
+      expect(m).not.toMatch(/(?<!\p{L})\p{L}+la (jsi|ses|sis|bys)(?!\p{L})/u);
+      expect(m).not.toMatch(/(?<!\p{L})(jsi|ses|sis|bys) \p{L}+la(?!\p{L})/u);
+      expect(m).not.toMatch(/(?<!\p{L})jsi (si )?(jistá|připravená|sama|hotová|vysoká|mokrá)(?!\p{L})/u);
+      expect(m).not.toMatch(/(?<!\p{L})(badatelk|hráčk|jezdkyn)\p{L}*/u);
     }
   });
 

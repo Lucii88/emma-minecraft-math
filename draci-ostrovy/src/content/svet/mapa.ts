@@ -5,9 +5,12 @@
 // Otázky nad mapou se počítají z pevně nakreslených map, takže každá je
 // jednoznačná. Co znamená „přímo na východ od X“, říká nápověda: ve stejném
 // řádku napravo. Chybné možnosti jsou vždy místa, která na východ neleží vůbec
-// (ani šikmo), takže správná je jen jedna, ať to hráčka chápe přísně, nebo
+// (ani šikmo), takže správná je jen jedna, ať to hráč chápe přísně, nebo
 // volněji. U „Kterým směrem je A od B?“ leží obě místa ve stejném řádku nebo
 // sloupci, šikmé směry (L4) jen přesně po úhlopříčce.
+//
+// Bez zajímavosti po správné odpovědi (showFact): vysvětlení tu je postup
+// („2 políčka na sever…“) a po správném letu by jen zdržovalo.
 
 import { bankSkill, type Spec } from '../../core/bank';
 import { capitalize, count } from '../../core/czech';
@@ -594,7 +597,9 @@ export function niceProgram(m: MapDef, a: Cell, b: Cell, eggs: Cell[] = []): Mov
   const rocks = rockSet(m);
   const full = (1 << eggs.length) - 1;
   const maskAt = (c: Cell) => eggs.reduce((mask, e, i) => (e.x === c.x && e.y === c.y ? mask | (1 << i) : mask), 0);
-  // Stav: políčko, sebraná vajíčka, poslední směr. Cena: kroky * 100 + zatáčky.
+  // Stav: políčko, sebraná vajíčka, poslední směr. Cena: kroky * 100 + zatáčky
+  // + 50 za průlet cílem, dokud vajíčka nejsou sebraná (nápověda radí „nejdřív
+  // k vajíčku“). Přirážka je menší než jeden krok, cesta se tím neprodlouží.
   type St = { c: Cell; mask: number; last: number; cost: number; path: Move[] };
   const start: St = { c: a, mask: maskAt(a), last: -1, cost: 0, path: [] };
   const seen = new Map<string, number>();
@@ -611,7 +616,9 @@ export function niceProgram(m: MapDef, a: Cell, b: Cell, eggs: Cell[] = []): Mov
       const n = { x: cur.c.x + DELTA[d].x, y: cur.c.y + DELTA[d].y };
       if (!inside(m, n) || rocks.has(cellKey(n))) return;
       const turn = cur.last !== -1 && cur.last !== di ? 1 : 0;
-      open.push({ c: n, mask: cur.mask | maskAt(n), last: di, cost: cur.cost + 100 + turn, path: [...cur.path, d] });
+      const mask = cur.mask | maskAt(n);
+      const early = mask !== full && n.x === b.x && n.y === b.y ? 50 : 0;
+      open.push({ c: n, mask, last: di, cost: cur.cost + 100 + turn + early, path: [...cur.path, d] });
     });
   }
   return best;
@@ -674,7 +681,7 @@ const kam = (key: string, prompt: string, correct: number, hints: string[], expl
   fixed(key, prompt, SMER_OPTIONS, correct, hints, explain, extra);
 
 const L1: Spec[] = [
-  q('plan-co', 'Jak se jmenuje nákres místa, jako by ses na něj dívala shora?', 'Plán',
+  q('plan-co', 'Jak se jmenuje nákres místa, jako by ses na něj {dívala|díval} shora?', 'Plán',
     ['Portrét', 'Fotka zboku', 'Pohlednice'],
     ['Tak vidí krajinu pták nebo drak.'],
     'Plán ukazuje místo shora, třeba třídu, byt nebo zahradu. Věci jsou na něm zmenšené a nakreslené značkami.'),
@@ -690,8 +697,8 @@ const L1: Spec[] = [
     ['Má dalekohled v oku', 'Chodí po zemi', 'Dívá se jen zboku'],
     ['Odkud se kreslí mapy a plány?'],
     'Z výšky vypadá krajina jako mapa: domy, lesy a řeky vidíme shora a zmenšené.'),
-  q('plan-k-cemu', 'Na co se hodí plán cesty do školy?', 'Abych věděla, kudy jít',
-    ['Abych věděla, kolik je hodin', 'Aby mi nebyla zima', 'Abych uměla plavat'],
+  q('plan-k-cemu', 'Na co se hodí plán cesty do školy?', 'Abych {věděla|věděl}, kudy jít',
+    ['Abych {věděla|věděl}, kolik je hodin', 'Aby mi nebyla zima', 'Abych {uměla|uměl} plavat'],
     ['Co na plánu uvidíš?'],
     'Plán ukáže ulice, domy a přechody. Podle něj najdeš cestu a víš, kde dát pozor.'),
   q('vpravo-ruka', 'Stojíš u dveří a postel je po tvé pravé ruce. Kde je od tebe postel?', 'Vpravo',
@@ -720,7 +727,7 @@ const L2: Spec[] = [
   q('vychazi', 'Na které straně vychází Slunce?', 'Na východě',
     ['Na západě', 'Na severu', 'Na jihu'],
     ['Kde je ráno světlo nejdřív?'],
-    'Slunce vychází ráno na východě. Ráno tedy svítí do oken, která míří na východ.'),
+    'Slunce vychází ráno na východní straně oblohy – v létě spíš na severovýchodě, v zimě spíš na jihovýchodě. Ráno proto svítí do oken, která míří na východ.'),
   q('zapada', 'Na které straně zapadá Slunce?', 'Na západě',
     ['Na východě', 'Na severu', 'Na jihu'],
     ['Zapadá na opačné straně, než vychází.'],

@@ -4,6 +4,9 @@
 // Měsíce k ročním obdobím přiřazujeme jen tam, kde to platí podle kalendáře
 // (astronomicky) i podle meteorologů: „celý letní“ je červenec a srpen, ne
 // červen nebo září.
+//
+// Vysvětlení se ukazuje i po správné odpovědi jako zajímavost (showFact):
+// nejdřív hlavní důvod, pak jeden navazující detail.
 
 import { bankSkill, type Spec } from '../../core/bank';
 import { capitalize } from '../../core/czech';
@@ -28,6 +31,22 @@ const MESICE_6 = ['lednu', 'únoru', 'březnu', 'dubnu', 'květnu', 'červnu', '
 const MESICE_7 = ['lednem', 'únorem', 'březnem', 'dubnem', 'květnem', 'červnem', 'červencem', 'srpnem', 'zářím', 'říjnem', 'listopadem', 'prosincem'];
 /** Počet dní v měsíci (únor v obyčejném roce). */
 export const DNI_V_MESICI = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+/** Zajímavost o každém měsíci: původ jména (podle etymologických slovníků,
+ *  shrnuto v Živě 1/2024), u nejasných jmen raději jev v přírodě. */
+const MESIC_FAKT = [
+  'Leden má jméno podle ledu – bývá to u nás nejstudenější měsíc roku.',
+  'Únor má jméno nejspíš podle ledu, který na řekách praská a noří se do vody.',
+  'V březnu začíná jaro a kolem 20. března je den zhruba stejně dlouhý jako noc.',
+  'Duben má jméno podle dubů – je to měsíc, kdy začínají rašit.',
+  'Květen má jméno podle květů. Dřív se mu říkalo máj.',
+  'V červnu je nejdelší den roku – kolem 21. června.',
+  'Červenec bývá u nás nejteplejší měsíc roku.',
+  'Srpen má jméno podle srpu, kterým se dřív sklízelo obilí.',
+  'V září začíná škola a kolem 22. září i podzim.',
+  'Říjen má jméno podle jelení říje – jeleni v té době v lesích troubí.',
+  'Listopad má jméno podle listí, které v té době padá ze stromů.',
+  'V prosinci je nejkratší den roku – kolem 21. prosince.',
+];
 
 const obd = (key: string, prompt: string, correct: number, hints: string[], explain: string, extra: Extra = {}) =>
   fixed(key, prompt, [...OBDOBI], correct, hints, explain, extra);
@@ -40,49 +59,49 @@ const kdy = (key: string, prompt: string, correct: number, hints: string[], expl
 const L1: Spec[] = [
   obd('po-zime', 'Které roční období přichází po zimě?', JARO,
     ['Po zimě začíná tát sníh a kvetou první květiny.'],
-    'Po zimě přichází jaro. Dny se prodlužují, sníh taje a rozkvétají první květiny.'),
+    'Po zimě přichází jaro. Dny se prodlužují, sníh taje a rozkvétají první květiny. V březnu přibývá světla každý den skoro o čtyři minuty.'),
   obd('pred-letem', 'Které roční období je před létem?', JARO,
     ['Léto přichází po období, kdy všechno raší a kvete.'],
-    'Před létem je jaro. Roční období se střídají dokola: jaro, léto, podzim, zima.'),
+    'Před létem je jaro. Podle kalendáře trvá zhruba od 20. března do 21. června, kdy je nejdelší den v roce.'),
   obd('po-lete', 'Které roční období přichází po létě?', PODZIM,
     ['Po létě začíná škola a listí na stromech žloutne.'],
-    'Po létě přichází podzim. Začíná škola, ochlazuje se a listí žloutne.'),
+    'Po létě přichází podzim. Ochlazuje se a listí žloutne. Podle kalendáře začíná kolem 22. září, kdy je den zhruba stejně dlouhý jako noc.'),
   obd('po-podzimu', 'Které roční období přichází po podzimu?', ZIMA,
     ['Po podzimu bývá mráz a někdy napadne sníh.'],
-    'Po podzimu přichází zima. Bývá mráz, sníh a nejkratší dny v roce.'),
+    'Po podzimu přichází zima. Začíná kolem 21. prosince, v nejkratší den roku – od té doby se dny zase prodlužují.'),
   ord('od-jara', 'Seřaď roční období tak, jak jdou po sobě. Začni jarem.', ['Jaro', 'Léto', 'Podzim', 'Zima'],
     ['Co přichází po jaru?', 'Po létě začíná škola.'],
-    'Roční období jdou za sebou: jaro, léto, podzim, zima. Pak zase jaro.'),
+    'Roční období jdou za sebou: jaro, léto, podzim, zima a pak zase jaro. Všechna čtyři se vystřídají za rok, než Země jednou oběhne Slunce.'),
   kdy('snehulak', 'Kdy si nejčastěji postavíš sněhuláka?', ZIMA,
     ['Na sněhuláka potřebuješ hodně sněhu.'],
-    'Sníh u nás padá hlavně v zimě, a tak se sněhuláci stavějí v zimě.'),
+    'Sníh u nás padá hlavně v zimě, a tak se sněhuláci stavějí v zimě. Nejlíp se staví z mokrého sněhu kolem nuly – suchý sníh ve velkém mrazu se nelepí.'),
   kdy('listi', 'Kdy listí na stromech žloutne, červená a opadává?', PODZIM,
     ['Je to v době, kdy začíná škola a sbírají se kaštany.'],
-    'Na podzim listy mění barvu a opadávají. Stromy se tak chystají na zimu.'),
+    'Na podzim listy mění barvu a opadávají. Žlutá barva byla v listech celé léto, jen ji zakrývala zelená.'),
   obd('snezenky', 'Sněženky a bledule kvetou mezi prvními květinami. Které roční období ohlašují?', JARO,
     ['Kvetou, když ještě občas leží sníh, ale už se otepluje.'],
-    'Sněženky a bledule ohlašují jaro. Kvetou brzy, jakmile se po zimě začne oteplovat.'),
+    'Sněženky a bledule ohlašují jaro. Rostou z cibulek plných zásob, a tak mohou vykvést hned po zimě. V přírodě jsou chráněné, proto je netrháme.'),
   kdy('prazdniny', 'Kdy jsou velké prázdniny?', LETO,
     ['Je to nejteplejší část roku.'],
-    'Velké prázdniny jsou v létě, v červenci a srpnu.'),
+    'Velké prázdniny jsou v létě, v červenci a srpnu. Jsou to nejdelší prázdniny školního roku – trvají celé dva měsíce.'),
   kdy('vanoce', 'Kdy slavíme Vánoce?', ZIMA,
     ['Vánoce jsou v prosinci, na konci roku.'],
-    'Vánoce slavíme v prosinci, na začátku zimy.'),
+    'Vánoce slavíme v prosinci, na začátku zimy. Zima začíná kolem 21. prosince, jen pár dní před Štědrým dnem.'),
   q('jezek', 'Co dělá ježek v zimě?', 'Spí zimním spánkem',
     ['Odletí do teplých krajin', 'Sbírá v lese jahody', 'Staví si hnízdo na stromě'],
     ['V zimě je málo potravy. Jak to ježek vyřeší?'],
-    'Ježek se na podzim vykrmí a celou zimu prospí v pelíšku z listí. Říká se tomu zimní spánek.'),
+    'Ježek se na podzim vykrmí a celou zimu prospí v pelíšku z listí. Vzbudí se až na jaře, kdy je zase dost broučků a žížal.'),
   q('cap', 'Kam se na zimu poděje čáp?', 'Odletí do teplých krajin',
     ['Zahrabe se do listí', 'Přespí zimu v kurníku', 'Schová se v noře'],
     ['Čáp je pták s velkými křídly.'],
-    'Čáp odlétá na zimu až do Afriky, kde je teplo a dost potravy. Na jaře se vrací.'),
+    'Čáp odlétá na zimu až do Afriky, kde je teplo a dost potravy. Na dlouhé cestě skoro nemává křídly – plachtí na teplém vzduchu, který stoupá vzhůru.'),
   q('mraz', 'Venku mrzne. Co si oblečeš?', 'Čepici a rukavice',
     ['Plavky', 'Kraťasy a tričko', 'Sandály'],
     ['Co zahřeje hlavu a ruce?'],
-    'Když mrzne, chrání nás teplé oblečení: čepice, rukavice, bunda a zimní boty.'),
+    'Když mrzne, chrání nás teplé oblečení: čepice, rukavice, bunda a zimní boty. Víc tenčích vrstev hřeje líp než jedna tlustá, protože mezi nimi zůstává teplý vzduch.'),
   kdy('draci', 'Kdy se pouštějí papíroví draci a sbírají kaštany?', PODZIM,
     ['Kaštany padají ze stromů, když dozrají.'],
-    'Na podzim fouká silnější vítr, který unese papírového draka, a ze stromů padají zralé kaštany.'),
+    'Na podzim bývají pole po sklizni volná, a tak je kde pouštět draky. Kaštany dozrávají v září a říjnu a samy padají ze stromů.'),
   kdy('koupani', 'Kdy se nejčastěji koupeme venku v rybníce?', LETO,
     ['Voda v rybníce musí být teplá.'],
     'V létě je teplo a voda v rybnících se ohřeje. Koupat se chodíme jen s dospělým.'),
@@ -94,10 +113,10 @@ const L1: Spec[] = [
     'Na jaře se otepluje, roste čerstvá tráva a přibývá hmyzu. Proto se tehdy rodí a líhne nejvíc mláďat.'),
   obd('nejtepleji', 'Které roční období bývá u nás nejteplejší?', LETO,
     ['V tomhle období se koupeme venku.'],
-    'Nejtepleji bývá v létě. Slunce je vysoko na obloze a svítí dlouho.'),
+    'Nejtepleji bývá v létě, kdy je Slunce vysoko na obloze a svítí dlouho. Nejteplejším měsícem u nás bývá červenec.'),
   obd('nejchladneji', 'Které roční období bývá u nás nejstudenější?', ZIMA,
     ['V tomhle období padá sníh.'],
-    'Nejstudeněji bývá v zimě. Dny jsou krátké a Slunce je nízko nad obzorem.'),
+    'Nejstudeněji bývá v zimě, kdy jsou dny krátké a Slunce je nízko nad obzorem. Nejstudenějším měsícem u nás bývá leden – i jméno má podle ledu.'),
   kdy('kvetou-stromy', 'Kdy kvetou jabloně a třešně?', JARO,
     ['Z květů později vyrostou plody.'],
     'Ovocné stromy kvetou na jaře. Z opylených květů pak v létě a na podzim dozrají plody.'),
@@ -106,19 +125,19 @@ const L1: Spec[] = [
     'Nejvíc bouřek bývá v létě. Horký vzduch rychle stoupá a vytvoří bouřkové mraky.'),
   kdy('vlastovky', 'Kdy se k nám vracejí vlaštovky?', JARO,
     ['Vlaštovky se vracejí, když už zase létá hodně hmyzu.'],
-    'Vlaštovky se vracejí na jaře. Živí se létajícím hmyzem a toho je na jaře zase dost.'),
+    'Vlaštovky se vracejí na jaře, když už zase létá dost hmyzu. Často přiletí až z Afriky rovnou ke stejnému hnízdu jako loni.'),
   num('pocet-obdobi', 'Kolik ročních období má rok?', 4,
     ['Zkus je vyjmenovat a počítej na prstech.'],
-    'Rok má čtyři roční období: jaro, léto, podzim a zimu.'),
+    'Rok má u nás čtyři roční období: jaro, léto, podzim a zimu. Blízko rovníku je ale teplo celý rok a střídá se tam jen období dešťů a sucha.'),
   num('pocet-mesicu', 'Kolik měsíců má rok?', 12,
     ['Začni lednem a počítej až do prosince.'],
-    'Rok má dvanáct měsíců, od ledna do prosince.'),
+    'Rok má dvanáct měsíců, od ledna do prosince. Nejkratší z nich je únor – má jen 28 dní, v přestupném roce 29.'),
   kdy('zne', 'Kdy kombajny sklízejí obilí z polí?', LETO,
     ['Obilí musí nejdřív dozrát a zezlátnout.'],
-    'Obilí dozrává v létě, hlavně v červenci a srpnu. Sklizni obilí se říká žně.'),
+    'Obilí dozrává v létě, hlavně v červenci a srpnu, a jeho sklizni se říká žně. Dřív se obilí žalo srpem – podle něj dostal jméno i měsíc srpen.'),
   kdy('krmitko', 'Kdy ptákům nejvíc pomůže krmítko?', ZIMA,
     ['Kdy je těžké najít semínka a hmyz?'],
-    'V zimě leží sníh a hmyz není vidět. Ptákům, kteří u nás zůstávají, pak krmítko pomůže.'),
+    'V zimě leží sníh a hmyz není vidět, a tak ptákům, kteří u nás zůstávají, pomůžou semínka v krmítku. Pečivo do krmítka nepatří, ptákům škodí.'),
 ];
 
 // ---------------------------------------------------------------------------
@@ -128,15 +147,15 @@ const L2: Spec[] = [
   q('prvni-mesic', 'Který měsíc je v roce první?', 'Leden',
     ['Únor', 'Březen', 'Prosinec', 'Září'],
     ['Vzpomeň si, kdy slavíme Silvestra a Nový rok.'],
-    'Rok začíná 1. ledna. Leden je první měsíc, prosinec poslední.'),
+    'Rok začíná 1. ledna, a tak je leden první měsíc. Jméno má podle ledu – bývá to nejstudenější měsíc roku.'),
   q('posledni-mesic', 'Který měsíc je v roce poslední?', 'Prosinec',
     ['Leden', 'Listopad', 'Říjen', 'Srpen'],
     ['Ve kterém měsíci jsou Vánoce a Silvestr?'],
-    'Poslední měsíc roku je prosinec. Po něm začíná nový rok lednem.'),
+    'Poslední měsíc roku je prosinec, po něm začíná nový rok lednem. V prosinci je i nejkratší den roku, kolem 21. prosince.'),
   q('vanoce-mesic', 'Ve kterém měsíci jsou Vánoce?', 'V prosinci',
     ['V listopadu', 'V lednu', 'V říjnu', 'V únoru'],
     ['Vánoce jsou kousek před koncem roku.'],
-    'Štědrý den je 24. prosince. Vánoce jsou tedy v prosinci, na konci roku.'),
+    'Štědrý den je 24. prosince, a tak jsou Vánoce v prosinci. Jen pár dní předtím, kolem 21. prosince, začíná zima.'),
   q('prazdniny-mesice', 'Ve kterých měsících jsou velké prázdniny?', 'V červenci a srpnu',
     ['V lednu a únoru', 'V dubnu a květnu', 'V říjnu a listopadu'],
     ['Velké prázdniny jsou v létě.'],
@@ -144,7 +163,7 @@ const L2: Spec[] = [
   q('skola-zari', 'Ve kterém měsíci začíná školní rok?', 'V září',
     ['V srpnu', 'V říjnu', 'V lednu', 'V červnu'],
     ['Je to hned po velkých prázdninách.'],
-    'Školní rok začíná v září, hned po velkých prázdninách.'),
+    'Školní rok začíná v září, hned po velkých prázdninách. Povinnou školní docházku u nás zavedla císařovna Marie Terezie už v roce 1774.'),
   q('zimni-spanek', 'Které zvíře spí v zimě zimním spánkem?', 'Ježek',
     ['Sýkora', 'Vrabec', 'Liška', 'Veverka'],
     ['Zimním spánkem spí zvířata, která by v zimě nenašla potravu.', 'Hledej zvíře, které se živí hmyzem a žížalami.'],
@@ -172,7 +191,7 @@ const L2: Spec[] = [
   q('snih', 'Co padá z mraků, když je v zimě mráz?', 'Sníh',
     ['Teplý déšť', 'Rosa', 'Velké kroupy'],
     ['Z čeho se staví sněhulák?'],
-    'Když je v mracích i u země mráz, padají z mraků sněhové vločky.'),
+    'Když je v mracích i u země mráz, padají z mraků sněhové vločky. Ledové krystalky ve vločkách mají skoro vždycky šest ramen.'),
   q('kroupy', 'Kdy nejčastěji padají kroupy?', 'Při letní bouřce',
     ['Při zimní chumelenici', 'Za jasné noci', 'Při ranní mlze'],
     ['Kroupy vznikají v obřích bouřkových mracích.'],
@@ -201,22 +220,22 @@ const L2: Spec[] = [
   q('mesic-leto', 'Který měsíc je celý letní?', 'Červenec',
     ['Leden', 'Duben', 'Listopad', 'Únor'],
     ['Hledej měsíc velkých prázdnin.'],
-    'Léto začíná v červnu, takže celý červenec už je letní.'),
+    'Léto začíná v červnu, takže celý červenec už je letní. Bývá to u nás nejteplejší měsíc roku.'),
   q('mesic-zima', 'Který měsíc je celý zimní?', 'Leden',
     ['Červenec', 'Květen', 'Říjen', 'Srpen'],
     ['Hledej měsíc, kterým začíná nový rok.'],
-    'Zima začíná v prosinci, takže celý leden už je zimní.'),
+    'Zima začíná v prosinci, takže celý leden už je zimní. Bývá to u nás nejstudenější měsíc roku.'),
   q('mesic-podzim', 'Který měsíc je celý podzimní?', 'Říjen',
     ['Leden', 'Červenec', 'Duben', 'Srpen'],
     ['Hledej měsíc hned po září.'],
-    'Podzim začíná v září, takže celý říjen už je podzimní.'),
+    'Podzim začíná v září, takže celý říjen už je podzimní. Jméno má podle jelení říje – jeleni v té době v lesích troubí.'),
   q('mesic-jaro', 'Který měsíc je celý jarní?', 'Duben',
     ['Leden', 'Červenec', 'Říjen', 'Srpen'],
     ['Hledej měsíc hned po březnu.'],
-    'Jaro začíná v březnu, takže celý duben už je jarní.'),
+    'Jaro začíná v březnu, takže celý duben už je jarní. Jméno má podle dubů – je to měsíc, kdy začínají rašit.'),
   num('mesice-obdobi', 'Kolik měsíců zhruba trvá jedno roční období?', 3,
     ['Rok má 12 měsíců a 4 roční období.'],
-    'Dvanáct měsíců rozdělených do čtyř ročních období dá zhruba tři měsíce na každé.'),
+    'Dvanáct měsíců rozdělených do čtyř ročních období dá zhruba tři měsíce na každé. Období ale nezačínají prvního dne měsíce – jaro třeba začíná kolem 20. března.'),
   q('sneh-taje', 'Proč na jaře taje sníh?', 'Slunce hřeje víc a otepluje se',
     ['Mrzne víc než v zimě', 'Dny jsou kratší než v zimě', 'Slunce svítí méně než v zimě'],
     ['Jak se na jaře mění dny a počasí?'],
@@ -233,15 +252,15 @@ function sousedniMesic(rng: Rng): Spec {
     return q(`po-${slug(MESICE[i])}`, `Který měsíc přichází po ${MESICE_6[i]}?`, at(1), [at(-1), at(2), at(3)],
       ['Řekni si měsíce popořadě od ledna.'],
       i === 11
-        ? 'Po prosinci přichází leden a s ním nový rok.'
-        : `Po ${MESICE_6[i]} přichází ${target}. Měsíce jdou za sebou pořád stejně.`);
+        ? `Po prosinci přichází leden a s ním nový rok. ${MESIC_FAKT[0]}`
+        : `Po ${MESICE_6[i]} přichází ${target}. ${MESIC_FAKT[(i + 1) % 12]}`);
   }
   const target = MESICE[(i + 11) % 12];
   return q(`pred-${slug(MESICE[i])}`, `Který měsíc je před ${MESICE_7[i]}?`, at(-1), [at(1), at(-2), at(-3)],
     ['Řekni si měsíce popořadě od ledna.'],
     i === 0
-      ? 'Před lednem je prosinec – poslední měsíc starého roku.'
-      : `Před ${MESICE_7[i]} je ${target}. Měsíce jdou za sebou pořád stejně.`);
+      ? `Před lednem je prosinec – poslední měsíc starého roku. ${MESIC_FAKT[11]}`
+      : `Před ${MESICE_7[i]} je ${target}. ${MESIC_FAKT[(i + 11) % 12]}`);
 }
 
 /** Seřazení čtyř měsíců od začátku roku. */
@@ -250,7 +269,7 @@ function radaMesicu(rng: Rng): Spec {
   const names = idx.map((i) => capitalize(MESICE[i]));
   return ord(`rada-${idx.map((i) => i + 1).join('-')}`, 'Seřaď měsíce od začátku roku.', names,
     ['Který z nich je v roce nejdřív?', 'Řekni si měsíce popořadě od ledna.'],
-    `V roce jdou za sebou takto: ${idx.map((i) => MESICE[i]).join(', ')}.`);
+    `V roce jdou za sebou takto: ${idx.map((i) => MESICE[i]).join(', ')}. ${MESIC_FAKT[idx[0]]}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -262,7 +281,7 @@ const L3: Spec[] = [
     'Po podzimu je zima, pak jaro a léto. Roční období se střídají pořád dokola.'),
   ord('od-zimy', 'Seřaď roční období. Začni zimou.', ['Zima', 'Jaro', 'Léto', 'Podzim'],
     ['Co přichází po zimě?'],
-    'Po zimě je jaro, pak léto a podzim. Potom zase zima.'),
+    'Po zimě je jaro, pak léto a podzim a potom zase zima. Roční období se střídají, protože Země obíhá kolem Slunce trochu nakloněná.'),
   ord('jablon', 'Seřaď, jak se mění jabloň během roku. Začni jarem.',
     ['Kvete', 'Má malá zelená jablíčka', 'Jablka dozrávají', 'Stojí bez listí'],
     ['Z čeho vyrostou jablka?', 'Kdy stojí stromy holé?'],
@@ -274,11 +293,11 @@ const L3: Spec[] = [
   q('jezek-tuk', 'Proč ježek na podzim tolik jí?', 'Ze zásob tuku žije celou zimu',
     ['Aby mu narostly delší bodliny', 'Aby mohl v zimě běhat po sněhu', 'Aby mohl odletět na jih'],
     ['Co ježek jí, když celou zimu spí?'],
-    'Během zimního spánku ježek nejí. Žije ze zásob tuku, které si na podzim vytvořil.'),
+    'Během zimního spánku ježek nejí, žije ze zásob tuku z podzimu. Do jara přitom hodně zhubne, a tak se musí na podzim pořádně vykrmit.'),
   q('spanek-telo', 'Co se děje s tělem ježka při zimním spánku?', 'Vychladne a srdce bije pomalu',
     ['Zahřeje se a srdce bije rychle', 'Rostou mu nové bodliny', 'Nic, ježek jen zavře oči'],
     ['Tělo šetří co nejvíc sil.'],
-    'Při zimním spánku ježkovi vychladne tělo a srdce bije mnohem pomaleji. Tak mu zásoby tuku vydrží do jara. Vědci to zjistili měřením teploty a tepu.'),
+    'Při zimním spánku ježkovi vychladne tělo asi na pět stupňů a srdce udeří jen několikrát za minutu. Tak mu zásoby tuku vydrží až do jara.'),
   q('zaby-zima', 'Jak přečkají zimu žáby?', 'Strnulé v bahně nebo v úkrytu',
     ['Odletí s čápy do Afriky', 'Skáčou po sněhu', 'Schovají se v ptačí budce'],
     ['Žáby nemají srst ani peří, které by je hřálo.'],
@@ -293,7 +312,7 @@ const L3: Spec[] = [
     'Únor má 28 dní, v přestupném roce 29. Všechny ostatní měsíce mají 30 nebo 31 dní.'),
   num('unor-prestupny', 'Kolik dní má únor v přestupném roce?', 29,
     ['Obyčejný únor má 28 dní. V přestupném roce jeden den přibude.'],
-    'V přestupném roce se k únoru přidává jeden den navíc, 29. února.'),
+    'V přestupném roce se k únoru přidává jeden den navíc, 29. února. Kdo se ten den narodí, najde své narozeniny v kalendáři jen jednou za čtyři roky.'),
   num('mesice-31', 'Kolik měsíců v roce má 31 dní?', 7,
     ['Počítej na kloubech pěsti: každý kloub je měsíc s 31 dny.'],
     '31 dní mají leden, březen, květen, červenec, srpen, říjen a prosinec – to je sedm měsíců.',
@@ -305,7 +324,7 @@ const L3: Spec[] = [
   q('naledi', 'Jak se jmenuje led na chodníku, když prší na zmrzlou zem?', 'Náledí',
     ['Jinovatka', 'Kroupy', 'Rampouch', 'Rosa'],
     ['Chodník je pak kluzký jako kluziště.'],
-    'Když prší a zem je zmrzlá, kapky na ní hned zmrznou. Vznikne náledí a chodníky kloužou.'),
+    'Když prší a zem je zmrzlá, kapky na ní hned zmrznou. Vznikne náledí a chodníky kloužou – proto se sypou pískem nebo solí.'),
   q('leto-vecer', 'Proč si u nás v létě můžeš hrát venku dlouho do večera?', 'Slunce zapadá později',
     ['Večer jasně svítí hvězdy', 'Hodiny v létě jdou pomaleji', 'Měsíc v létě svítí jako Slunce'],
     ['Kdy se v létě začne stmívat?'],
@@ -332,7 +351,7 @@ const L3: Spec[] = [
   q('zacatek-jara', 'Ve kterém měsíci začíná jaro?', 'V březnu',
     ['V únoru', 'V dubnu', 'V květnu', 'V lednu'],
     ['Jaro začíná ve třetím měsíci roku.'],
-    'Jaro začíná v březnu, podle kalendáře kolem 20. března.'),
+    'Jaro začíná v březnu, podle kalendáře kolem 20. března. Den a noc jsou tehdy skoro stejně dlouhé.'),
   q('zacatek-leta', 'Ve kterém měsíci začíná léto?', 'V červnu',
     ['V květnu', 'V červenci', 'V srpnu', 'V dubnu'],
     ['Léto začíná ještě před prázdninami.'],
@@ -340,7 +359,7 @@ const L3: Spec[] = [
   q('zacatek-podzimu', 'Ve kterém měsíci začíná podzim?', 'V září',
     ['V srpnu', 'V říjnu', 'V listopadu', 'V červenci'],
     ['Podzim začíná ve stejném měsíci jako škola.'],
-    'Podzim začíná v září, podle kalendáře kolem 22. září.'),
+    'Podzim začíná v září, podle kalendáře kolem 22. září. Den a noc jsou tehdy skoro stejně dlouhé.'),
   q('zacatek-zimy', 'Ve kterém měsíci začíná zima?', 'V prosinci',
     ['V listopadu', 'V lednu', 'V únoru', 'V říjnu'],
     ['Zima začíná těsně před Vánoci.'],
@@ -353,7 +372,7 @@ function dniVMesici(rng: Rng): Spec {
   const days = DNI_V_MESICI[i];
   return fixed(`dni-${slug(MESICE[i])}`, `Má ${MESICE[i]} 30, nebo 31 dní?`, ['30 dní', '31 dní'], days === 30 ? 0 : 1,
     ['Počítej na kloubech pěsti: kloub znamená 31 dní, důlek mezi klouby méně.'],
-    `${capitalize(MESICE[i])} má ${days} dní. Na kloubech pěsti vycházejí měsíce s 31 dny na klouby a kratší měsíce do důlků.`);
+    `${capitalize(MESICE[i])} má ${days} dní. Pomůže pěst: měsíce na kloubech mají 31 dní, měsíce v důlcích mezi nimi méně.`);
 }
 
 // ---------------------------------------------------------------------------
@@ -375,11 +394,11 @@ const L4: Spec[] = [
   q('jarni-rovnodennost', 'Ve kterém měsíci je jarní rovnodennost?', 'V březnu',
     ['V červnu', 'V září', 'V prosinci', 'V květnu'],
     ['Jarní rovnodennost je začátek jara podle kalendáře.'],
-    'Jarní rovnodennost je kolem 20. března. Tím začíná astronomické jaro.'),
+    'Jarní rovnodennost je kolem 20. března a začíná jí astronomické jaro. Den i noc tehdy trvají asi 12 hodin – odtud jméno rovnodennost.'),
   q('podzimni-rovnodennost', 'Ve kterém měsíci je podzimní rovnodennost?', 'V září',
     ['V březnu', 'V červnu', 'V prosinci', 'V listopadu'],
     ['Podzimní rovnodennost je začátek podzimu podle kalendáře.'],
-    'Podzimní rovnodennost je kolem 22. září. Tím začíná astronomický podzim.'),
+    'Podzimní rovnodennost je kolem 22. září a začíná jí astronomický podzim. Den i noc tehdy trvají asi 12 hodin – odtud jméno rovnodennost.'),
   ord('ctyri-body', 'Seřaď, jak jdou za sebou během roku. Začni jarní rovnodenností.',
     ['Jarní rovnodennost', 'Letní slunovrat', 'Podzimní rovnodennost', 'Zimní slunovrat'],
     ['Každý z nich začíná jedno roční období.'],
@@ -466,6 +485,7 @@ export const obdobi = bankSkill({
   },
   ability: 'znalosti',
   testLike: 'vedomosti',
+  showFact: true,
   banks: { 1: L1, 2: L2, 3: L3, 4: L4 },
   gen: {
     2: (rng) => (rng.chance(0.5) ? sousedniMesic(rng) : radaMesicu(rng)),

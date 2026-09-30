@@ -2,6 +2,9 @@
 // stromy listnaté × jehličnaté, strom × keř × bylina, ovoce × zelenina (jen
 // jednoznačné případy), bezpečí u hub a bobulí, fotosyntéza jednoduše a proč
 // houby nejsou rostliny.
+//
+// Vysvětlení se ukazuje i po správné odpovědi jako zajímavost (showFact):
+// nejdřív hlavní důvod, pak jeden navazující detail.
 
 import { bankSkill, type Spec } from '../../core/bank';
 import { capitalize } from '../../core/czech';
@@ -18,11 +21,11 @@ const L1: Spec[] = [
   q('koren', 'Která část rostliny je v zemi a saje vodu?', 'Kořen',
     ['List', 'Květ', 'Plod'],
     ['Tahle část není vidět, schovává se v hlíně.'],
-    'Kořen drží rostlinu v zemi a saje z půdy vodu a živiny.'),
+    'Kořen drží rostlinu v zemi a saje z půdy vodu a živiny. Vodu nasávají hlavně drobné kořenové vlásky.'),
   q('semenko', 'Z čeho vyroste nová rostlinka?', 'Ze semínka',
     ['Z kamínku', 'Z písku', 'Z kapky rosy'],
     ['Co zahradník na jaře zasévá do hlíny?'],
-    'Nová rostlinka vyroste ze semínka. Když má vodu a teplo, semínko vyklíčí.'),
+    'Nová rostlinka vyroste ze semínka. Semínko umí v suchu čekat i několik let a vyklíčí, až dostane vodu a teplo.'),
   q('potrebuje', 'Co potřebuje rostlina, aby rostla?', 'Vodu a světlo',
     ['Tmu a sucho', 'Sladkou limonádu', 'Hodně soli'],
     ['Proč dáváme květiny k oknu a zaléváme je?'],
@@ -30,7 +33,7 @@ const L1: Spec[] = [
   q('jehlicnaty', 'Který strom je jehličnatý?', 'Smrk',
     ['Dub', 'Lípa', 'Bříza', 'Buk'],
     ['Hledej strom, který má místo listů jehlice.'],
-    'Smrk má jehlice a šišky, je to jehličnatý strom. Dub, lípa, bříza i buk jsou listnaté.'),
+    'Smrk má jehlice a šišky, je to jehličnatý strom. Dub, lípa, bříza i buk jsou listnaté. Smrk je v českých lesích vůbec nejčastější strom.'),
   q('listnaty', 'Který strom je listnatý?', 'Dub',
     ['Smrk', 'Borovice', 'Jedle'],
     ['Hledej strom, který na podzim shazuje listí.'],
@@ -38,7 +41,7 @@ const L1: Spec[] = [
   q('zaludy', 'Na kterém stromě rostou žaludy?', 'Na dubu',
     ['Na smrku', 'Na bříze', 'Na lípě', 'Na jabloni'],
     ['Žaludy mají na sobě malou čepičku.'],
-    'Žaludy jsou plody dubu. Rády je mají veverky, sojky i divoká prasata.'),
+    'Žaludy jsou plody dubu a rády je mají veverky, sojky i divoká prasata. Sojky je schovávají do země a ze zapomenutých pak vyrostou nové duby.'),
   q('sisky', 'Na kterém stromě rostou šišky?', 'Na smrku',
     ['Na dubu', 'Na lípě', 'Na buku', 'Na jabloni'],
     ['Šišky mají jehličnaté stromy.'],
@@ -54,7 +57,7 @@ const L1: Spec[] = [
   q('mrkev', 'Kterou část mrkve jíme?', 'Kořen',
     ['List', 'Květ', 'Semínko'],
     ['Mrkev se vytahuje ze země.'],
-    'Oranžová mrkev je kořen. Zelená nať nahoře, to jsou listy.'),
+    'Oranžová mrkev je kořen, zelená nať nahoře jsou listy. Kdysi dávno bývala mrkev hlavně fialová nebo žlutá.'),
   q('salat', 'Kterou část salátu jíme?', 'Listy',
     ['Kořen', 'Květ', 'Semínka'],
     ['Salát je zelený a křupavý.'],
@@ -99,27 +102,27 @@ const L1: Spec[] = [
 
 /** Ovoce a zelenina – jen jednoznačné případy (žádné rajče, okurka, dýně). */
 const OVOCE_ZELENINA: [string, boolean, string][] = [
-  ['jablko', true, 'Jablko je ovoce. Roste na jabloni a je sladké a šťavnaté.'],
-  ['hruška', true, 'Hruška je ovoce. Roste na stromě hrušni.'],
-  ['švestka', true, 'Švestka je ovoce. Roste na stromě a uvnitř má pecku.'],
-  ['třešeň', true, 'Třešeň je ovoce. Sladké třešně rostou na stromě a mají pecku.'],
-  ['meruňka', true, 'Meruňka je ovoce. Je sladká a uvnitř má pecku.'],
+  ['jablko', true, 'Jablko je ovoce. Roste na jabloni a ve vodě plave, protože je v něm hodně vzduchu.'],
+  ['hruška', true, 'Hruška je ovoce. Roste na stromě hrušni, která je blízkou příbuznou jabloně.'],
+  ['švestka', true, 'Švestka je ovoce – roste na stromě a uvnitř má pecku. Ze švestek se vaří povidla na koláče.'],
+  ['třešeň', true, 'Třešeň je ovoce. Roste na stromě, má pecku a dozrává už na začátku léta.'],
+  ['meruňka', true, 'Meruňka je sladké ovoce s peckou uvnitř. U nás se jí nejvíc daří na teplé jižní Moravě.'],
   ['broskev', true, 'Broskev je ovoce. Má sametovou slupku a uvnitř pecku.'],
-  ['pomeranč', true, 'Pomeranč je ovoce. Roste na stromech v teplých krajích.'],
-  ['banán', true, 'Banán je ovoce. Roste v teplých krajích ve velkých trsech.'],
+  ['pomeranč', true, 'Pomeranč je ovoce z teplých krajů. Na pomerančovníku mohou být zároveň květy i zralé plody.'],
+  ['banán', true, 'Banán je ovoce z teplých krajů a roste ve velkých trsech. Banánovník vypadá jako strom, ale je to obrovská bylina.'],
   ['citron', true, 'Citron je ovoce, i když je kyselý. Roste na stromech v teplých krajích.'],
-  ['hroznové víno', true, 'Hroznové víno je ovoce. Roste na vinné révě.'],
-  ['malina', true, 'Malina je ovoce. Roste na keři maliníku.'],
-  ['jahoda', true, 'Jahoda je ovoce. Roste na nízké rostlině jahodníku.'],
+  ['hroznové víno', true, 'Hroznové víno je ovoce. Roste na vinné révě, která se úponky přidržuje opory a šplhá vzhůru.'],
+  ['malina', true, 'Malina je ovoce z keře maliníku. Skládá se z mnoha malých kuliček a každá má uvnitř svoje semínko.'],
+  ['jahoda', true, 'Jahoda je ovoce z nízkého jahodníku. Semínka nemá uvnitř, ale na povrchu – to jsou ty drobné tečky.'],
   ['mrkev', false, 'Mrkev je zelenina. Jíme její oranžový kořen.'],
   ['petržel', false, 'Petržel je zelenina. Jíme kořen i zelenou nať.'],
   ['cibule', false, 'Cibule je zelenina. Roste v zemi a při krájení štípe do očí.'],
   ['česnek', false, 'Česnek je zelenina. Jeho stroužky rostou v zemi.'],
-  ['salát', false, 'Salát je zelenina. Jíme jeho listy.'],
+  ['salát', false, 'Salát je zelenina a jíme jeho listy. Když ho necháme dlouho růst, vyžene vysoký stonek s květy a listy zhořknou.'],
   ['zelí', false, 'Zelí je zelenina. Z jeho listů se dělá i kysané zelí.'],
   ['kedluben', false, 'Kedluben je zelenina. Jíme jeho ztloustlý stonek.'],
-  ['ředkvička', false, 'Ředkvička je zelenina. Jíme její červenou bulvičku.'],
-  ['špenát', false, 'Špenát je zelenina. Jíme jeho listy.'],
+  ['ředkvička', false, 'Ředkvička je zelenina a jíme její červenou bulvičku. Ze semínka vyroste už za tři až čtyři týdny.'],
+  ['špenát', false, 'Špenát je zelenina a jíme jeho listy. Mladé lístky se dají jíst i syrové, třeba v salátu.'],
   ['celer', false, 'Celer je zelenina. Jíme jeho bulvu nebo řapíky.'],
   ['květák', false, 'Květák je zelenina. Jíme jeho nerozvité květy.'],
   ['pórek', false, 'Pórek je zelenina. Je příbuzný cibule.'],
@@ -217,12 +220,31 @@ const L2: Spec[] = [
 ];
 
 type Druh = 'strom' | 'ker' | 'bylina';
-const DRUHY: [string, Druh][] = [
-  ['dub', 'strom'], ['buk', 'strom'], ['lípa', 'strom'], ['bříza', 'strom'], ['javor', 'strom'],
-  ['smrk', 'strom'], ['borovice', 'strom'], ['jedle', 'strom'], ['modřín', 'strom'], ['jabloň', 'strom'],
-  ['rybíz', 'ker'], ['angrešt', 'ker'], ['líska', 'ker'], ['šípková růže', 'ker'],
-  ['pampeliška', 'bylina'], ['sedmikráska', 'bylina'], ['kopretina', 'bylina'], ['mák', 'bylina'],
-  ['tulipán', 'bylina'], ['sněženka', 'bylina'], ['kopřiva', 'bylina'], ['heřmánek', 'bylina'], ['jahodník', 'bylina'],
+/** [rostlina, druh, zajímavost o ní] */
+const DRUHY: [string, Druh, string][] = [
+  ['dub', 'strom', 'Může se dožít i několika set let.'],
+  ['buk', 'strom', 'Jeho plodům se říká bukvice.'],
+  ['lípa', 'strom', 'Lípa je náš národní strom.'],
+  ['bříza', 'strom', 'Poznáš ji i zdálky podle bílé kůry.'],
+  ['javor', 'strom', 'Jeho semena mají křidélka a při pádu se točí jako vrtulka.'],
+  ['smrk', 'strom', 'Je to nejčastější strom v českých lesích.'],
+  ['borovice', 'strom', 'Jehlice jí rostou po dvou ve svazečku.'],
+  ['jedle', 'strom', 'Její šišky stojí na větvích vzpřímeně a rozpadají se přímo na stromě.'],
+  ['modřín', 'strom', 'Je jehličnatý, a přesto na zimu shazuje jehlice.'],
+  ['jabloň', 'strom', 'Na jaře kvete bílými a růžovými květy.'],
+  ['rybíz', 'ker', 'Jeho bobule bývají červené, černé nebo bílé.'],
+  ['angrešt', 'ker', 'Na větvích má ostré trny.'],
+  ['líska', 'ker', 'Rostou na ní lískové oříšky.'],
+  ['šípková růže', 'ker', 'Jejím plodům se říká šípky a vaří se z nich čaj.'],
+  ['pampeliška', 'bylina', 'Ve stonku má bílou mléčnou šťávu.'],
+  ['sedmikráska', 'bylina', 'Na noc a za deště zavírá květ.'],
+  ['kopretina', 'bylina', 'Co vypadá jako jeden květ, je ve skutečnosti košík mnoha drobných kvítků.'],
+  ['mák', 'bylina', 'Jeho semínka se sypou na koláče a rohlíky.'],
+  ['tulipán', 'bylina', 'Roste z cibulky, ve které má zásoby na jaro.'],
+  ['sněženka', 'bylina', 'Kvete jako jedna z prvních, často ještě když leží sníh.'],
+  ['kopřiva', 'bylina', 'Pálí, protože má na listech žahavé chloupky.'],
+  ['heřmánek', 'bylina', 'Z jeho květů se vaří čaj.'],
+  ['jahodník', 'bylina', 'Šíří se šlahouny – dlouhými výběžky, na kterých rostou nové rostlinky.'],
 ];
 const DRUH_POPIS: Record<Druh, string> = {
   strom: 'je strom – má jeden silný dřevnatý kmen a korunu.',
@@ -231,10 +253,10 @@ const DRUH_POPIS: Record<Druh, string> = {
 };
 
 function stromKerBylina(rng: Rng): Spec {
-  const [name, druh] = rng.pick(DRUHY);
+  const [name, druh, fakt] = rng.pick(DRUHY);
   return fixed(`druh-${slug(name)}`, `Je ${name} strom, keř, nebo bylina?`, ['Strom', 'Keř', 'Bylina'], ['strom', 'ker', 'bylina'].indexOf(druh),
     ['Má dřevnatý kmen, víc dřevnatých stonků, nebo měkký zelený stonek?'],
-    `${capitalize(name)} ${DRUH_POPIS[druh]}`);
+    `${capitalize(name)} ${DRUH_POPIS[druh]} ${fakt}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -280,7 +302,7 @@ const L3: Spec[] = [
   q('mech', 'Jak mech pomáhá lesu?', 'Zadržuje vodu jako houba na nádobí',
     ['Vyrábí med', 'Odhání komáry', 'Svítí v noci'],
     ['Zmáčkni v lese mech po dešti.'],
-    'Mech nasaje hodně vody a pomalu ji pouští. Les díky němu tolik nevysychá.'),
+    'Mech nasaje hodně vody a pomalu ji pouští, a tak les tolik nevysychá. Rašeliník, jeden z mechů, nasaje až dvacetkrát víc vody, než sám váží.'),
   q('konvalinka', 'Která z těchto rostlin je jedovatá?', 'Konvalinka',
     ['Máta', 'Sedmikráska', 'Jahodník'],
     ['Kvete bílými zvonečky a krásně voní.'],
@@ -296,7 +318,7 @@ const L3: Spec[] = [
   q('jmeli', 'Kde roste jmelí?', 'Na větvích stromů',
     ['Na dně rybníka', 'Na skalách v horách', 'Pod zemí'],
     ['V zimě ho uvidíš jako zelené koule v holých korunách.'],
-    'Jmelí roste na větvích stromů a bere si od nich vodu. V zimě je vidět jako zelené koule v korunách.'),
+    'Jmelí roste na větvích stromů a bere si od nich vodu. Jeho lepkavá semínka roznášejí ptáci – přilepí se jim na zobák a oni je otřou o větev.'),
   q('jahoda-semena', 'Kde má jahoda semínka?', 'Na povrchu',
     ['Uvnitř v pecce', 'Ve slupce pod zemí', 'Nemá žádná'],
     ['Prohlédni si jahodu zblízka.'],
@@ -325,19 +347,19 @@ type Cast = (typeof CASTI)[number];
 /** [u čeho (2. pád), jíme, vysvětlení, části, které se jedí také, a proto nesmí být chybnou možností].
  *  Bez ředkvičky: její bulva je z větší části ztloustlý stonek pod děložními lístky, ne čistý kořen. */
 const JIDLA: [string, Cast, string, Cast[]?][] = [
-  ['mrkve', 'Kořen', 'Mrkev je kořen. Zelená nať nahoře, to jsou listy.'],
-  ['salátu', 'Listy', 'U salátu jíme listy.'],
-  ['špenátu', 'Listy', 'U špenátu jíme listy.'],
-  ['zelí', 'Listy', 'Hlávka zelí je z listů, které se těsně překrývají.'],
-  ['jabloně', 'Plod', 'U jabloně jíme plod – jablko. Uvnitř má semínka.'],
-  ['rajčete', 'Plod', 'Rajče je plod – uvnitř najdeš semínka.', ['Semena']],
-  ['okurky', 'Plod', 'Okurka je plod – uvnitř má semínka.', ['Semena']],
-  ['papriky', 'Plod', 'Paprika je plod – uvnitř má semínka.'],
-  ['hrášku', 'Semena', 'Kuličky hrášku jsou semena. Rostou v luscích.', ['Plod']],
+  ['mrkve', 'Kořen', 'Mrkev je kořen a zelená nať nahoře jsou listy. Dřív bývaly mrkve hlavně fialové nebo žluté, oranžové se rozšířily až později.'],
+  ['salátu', 'Listy', 'U salátu jíme listy. Když salát necháme dlouho růst, vyžene vysoký stonek s květy a listy zhořknou.'],
+  ['špenátu', 'Listy', 'U špenátu jíme listy. Mladé lístky se dají jíst i syrové, třeba v salátu.'],
+  ['zelí', 'Listy', 'Hlávka zelí je z listů, které se těsně překrývají. Nové lístky přibývají uprostřed, a tak hlávka roste zevnitř.'],
+  ['jabloně', 'Plod', 'U jabloně jíme plod – jablko se semínky uvnitř. Když semínko zasadíš, vyroste z něj jabloň s jinými jablky, než byla ta původní.'],
+  ['rajčete', 'Plod', 'Rajče je plod – uvnitř najdeš semínka. Rajčata pocházejí z Ameriky a do Evropy je přivezli mořeplavci.', ['Semena']],
+  ['okurky', 'Plod', 'Okurka je plod – uvnitř má semínka. Skoro celá je z vody, a proto tak osvěží.', ['Semena']],
+  ['papriky', 'Plod', 'Paprika je plod – uvnitř má semínka. Zelená paprika bývá nedozrálá, dozráváním zčervená nebo zežloutne.'],
+  ['hrášku', 'Semena', 'Kuličky hrášku jsou semena a rostou v luscích. Na hrachu zkoumal Gregor Mendel v Brně, proč se potomci podobají rodičům.', ['Plod']],
   ['brokolice', 'Květy', 'U brokolice jíme nerozvitá poupata květů. Když ji necháš růst, rozkvete žlutě.', ['Stonek']],
   ['květáku', 'Květy', 'U květáku jíme nerozvité květy, jak napovídá i jeho jméno.', ['Stonek']],
   ['kedlubnu', 'Stonek', 'Kedluben je ztloustlý stonek. Listy z něj rostou do stran.', ['Listy']],
-  ['chřestu', 'Stonek', 'U chřestu jíme mladé stonky, které vyrůstají ze země.', ['Listy']],
+  ['chřestu', 'Stonek', 'U chřestu jíme mladé stonky, které vyrůstají ze země. Bílý chřest roste schovaný pod hlínou ve tmě, a proto nezezelená.', ['Listy']],
 ];
 
 function kteraCast(rng: Rng): Spec {
@@ -445,6 +467,7 @@ export const rostliny = bankSkill({
   },
   ability: 'znalosti',
   testLike: 'vedomosti',
+  showFact: true,
   banks: { 1: L1, 2: L2, 3: L3, 4: L4 },
   gen: {
     1: ovoceNeboZelenina,

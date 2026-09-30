@@ -4,6 +4,9 @@
 // O potravních vztazích píšeme jen „živí se“ a „je potravou“ – žádná drsná
 // slovesa. Otázky „co by se stalo, kdyby…“ se ptají vždy na přímý důsledek
 // v nakresleném řetězci.
+//
+// Vysvětlení se ukazuje i po správné odpovědi jako zajímavost (showFact):
+// nejdřív kdo se čím živí, pak jeden detail o zvířeti ze zadání.
 
 import { bankSkill, type Spec } from '../../core/bank';
 import { capitalize } from '../../core/czech';
@@ -19,30 +22,30 @@ const STRAVA_INDEX: Record<Strava, number> = { bylozravec: 0, masozravec: 1, vse
 
 /** Zvířata s jednoznačným zařazením (žádná liška, ježek, myš ani pes). */
 export const STRAVA: [string, Strava, string][] = [
-  ['kráva', 'bylozravec', 'Kráva se živí trávou a senem. Je to býložravec.'],
-  ['koza', 'bylozravec', 'Koza se živí trávou, listím a větvičkami. Je to býložravec.'],
-  ['ovce', 'bylozravec', 'Ovce se živí trávou. Je to býložravec.'],
-  ['kůň', 'bylozravec', 'Kůň se živí trávou, senem a ovsem. Je to býložravec.'],
-  ['zajíc', 'bylozravec', 'Zajíc se živí trávou, bylinami a v zimě i kůrou. Je to býložravec.'],
-  ['srna', 'bylozravec', 'Srna se živí trávou, bylinami a pupeny keřů. Je to býložravec.'],
-  ['bobr', 'bylozravec', 'Bobr se živí kůrou a větvičkami stromů a vodními rostlinami. Je to býložravec.'],
-  ['slon', 'bylozravec', 'Slon se živí trávou, listím a ovocem. Je to býložravec.'],
-  ['žirafa', 'bylozravec', 'Žirafa se živí listím z vysokých stromů. Je to býložravec.'],
-  ['housenka', 'bylozravec', 'Housenka se živí listy rostlin. Je to býložravec.'],
-  ['vlk', 'masozravec', 'Vlk se živí hlavně srnci, jeleny a divokými prasaty. Je to masožravec.'],
-  ['rys', 'masozravec', 'Rys se živí hlavně srnami. Je to masožravec.'],
-  ['sova', 'masozravec', 'Sova se živí myšmi a jinými drobnými zvířaty. Je to masožravec.'],
-  ['orel', 'masozravec', 'Orel se živí menšími zvířaty a rybami. Je to masožravec.'],
-  ['štika', 'masozravec', 'Štika se živí menšími rybami. Je to masožravec.'],
-  ['lev', 'masozravec', 'Lev se živí zebrami, antilopami a jinými zvířaty. Je to masožravec.'],
-  ['tygr', 'masozravec', 'Tygr se živí jeleny, divokými prasaty a jinými zvířaty. Je to masožravec.'],
-  ['krokodýl', 'masozravec', 'Krokodýl se živí rybami a jinými zvířaty. Je to masožravec.'],
-  ['čáp', 'masozravec', 'Čáp se živí žábami, hmyzem, myšmi a rybkami. Je to masožravec.'],
-  ['medvěd', 'vsezravec', 'Medvěd se živí lesními plody, kořínky, medem i masem. Je to všežravec.'],
-  ['divoké prase', 'vsezravec', 'Divoké prase se živí žaludy, kořínky, žížalami i myšmi. Je to všežravec.'],
-  ['jezevec', 'vsezravec', 'Jezevec se živí žížalami, hmyzem, kořínky i lesními plody. Je to všežravec.'],
-  ['potkan', 'vsezravec', 'Potkan se živí skoro čímkoli – zrním, ovocem i zbytky masa. Je to všežravec.'],
-  ['vrána', 'vsezravec', 'Vrána se živí semínky, hmyzem, žížalami i zbytky jídla. Je to všežravec.'],
+  ['kráva', 'bylozravec', 'Kráva se živí trávou a senem, je to býložravec. Za den spase desítky kilogramů trávy.'],
+  ['koza', 'bylozravec', 'Koza se živí trávou, listím a větvičkami, je to býložravec. Pro chutné listí vyleze i na skálu nebo na nakloněný strom.'],
+  ['ovce', 'bylozravec', 'Ovce se živí trávou, je to býložravec. Spásá ji až těsně u země.'],
+  ['kůň', 'bylozravec', 'Kůň se živí trávou, senem a ovsem, je to býložravec. Na pastvě se pase i víc než půl dne.'],
+  ['zajíc', 'bylozravec', 'Zajíc se živí trávou a bylinami a v zimě i kůrou, je to býložravec. Oči má po stranách hlavy, a tak vidí skoro dokola.'],
+  ['srna', 'bylozravec', 'Srna se živí trávou, bylinami a pupeny keřů, je to býložravec. Vybírá si ty nejchutnější lístky a pupeny.'],
+  ['bobr', 'bylozravec', 'Bobr se živí kůrou a větvičkami stromů a vodními rostlinami, je to býložravec. Přední zuby mu rostou celý život a o dřevo se obrušují.'],
+  ['slon', 'bylozravec', 'Slon se živí trávou, listím a ovocem, je to býložravec. Za den spotřebuje i přes sto kilogramů rostlin.'],
+  ['žirafa', 'bylozravec', 'Žirafa se živí listím z vysokých stromů, je to býložravec. Listí stahuje z větví jazykem dlouhým skoro půl metru.'],
+  ['housenka', 'bylozravec', 'Housenka se živí listy rostlin, je to býložravec. Jí skoro pořád, a tak za pár týdnů mnohokrát vyroste.'],
+  ['vlk', 'masozravec', 'Vlk se živí hlavně srnci, jeleny a divokými prasaty, je to masožravec. Vlci žijí v rodinných smečkách.'],
+  ['rys', 'masozravec', 'Rys se živí hlavně srnami, je to masožravec. Na špičkách uší má černé štětičky chlupů.'],
+  ['sova', 'masozravec', 'Sova se živí myšmi a jinými drobnými zvířaty, je to masožravec. Co nestráví, třeba chlupy, vyvrhne jako chuchvalec – vývržek.'],
+  ['orel', 'masozravec', 'Orel se živí menšími zvířaty a rybami, je to masožravec. Z velké výšky uvidí i malého zajíce na louce.'],
+  ['štika', 'masozravec', 'Štika se živí menšími rybami, je to masožravec. Dorůstá i přes metr.'],
+  ['lev', 'masozravec', 'Lev se živí zebrami, antilopami a jinými zvířaty, je to masožravec. Lvi žijí ve smečkách a o potravu se starají hlavně lvice.'],
+  ['tygr', 'masozravec', 'Tygr se živí jeleny, divokými prasaty a jinými zvířaty, je to masožravec. Je to největší kočkovitá šelma na světě.'],
+  ['krokodýl', 'masozravec', 'Krokodýl se živí rybami a jinými zvířaty, je to masožravec. Bez potravy vydrží i několik měsíců.'],
+  ['čáp', 'masozravec', 'Čáp se živí žábami, hmyzem, myšmi a rybkami, je to masožravec. Rád se prochází po čerstvě posečené louce.'],
+  ['medvěd', 'vsezravec', 'Medvěd se živí lesními plody, kořínky, medem i masem, je to všežravec. Na podzim se vykrmí a zimu prospí v brlohu.'],
+  ['divoké prase', 'vsezravec', 'Divoké prase se živí žaludy, kořínky, žížalami i myšmi, je to všežravec. Potravu vyrývá rypákem ze země.'],
+  ['jezevec', 'vsezravec', 'Jezevec se živí žížalami, hmyzem, kořínky i lesními plody, je to všežravec. Jeho rodina bydlí ve stejné noře i desítky let.'],
+  ['potkan', 'vsezravec', 'Potkan se živí skoro čímkoli – zrním, ovocem i zbytky masa, je to všežravec. Umí výborně plavat.'],
+  ['vrána', 'vsezravec', 'Vrána se živí semínky, hmyzem, žížalami i zbytky jídla, je to všežravec. Vrány jsou velmi chytré a pamatují si i lidské tváře.'],
 ];
 
 function cimSeZivi(rng: Rng): Spec {
@@ -64,82 +67,141 @@ interface Clen {
   a: string;
   /** 2. pád (mn. č. nebo látkové): „zajíců by přibylo“. */
   g: string;
+  /** Živí se i jinou potravou než předchozím článkem: „liška se živí i zajíci“. */
+  also?: boolean;
+  /** Zajímavost o tomto zvířeti – do vysvětlení otázek, které se na ně ptají. */
+  fakt?: string;
 }
 
 interface Retezec {
   key: string;
   chain: Clen[];
-  /** „kdyby z řetězce zmizely všechny lišky“ */
-  gone: string;
+  /** „kdyby z řetězce zmizely všechny lišky“ – jen u řetězců, kde se na to
+   *  dá ptát (viz moře). */
+  gone?: string;
   /** Vysvětlení, co by se stalo bez posledního článku. */
-  goneWhy: string;
+  goneWhy?: string;
   /** Druhý článek je jasný býložravec. */
   herbivore?: boolean;
 }
 
-const c = (n: string, i: string, a: string, g: string): Clen => ({ n, i, a, g });
+const c = (n: string, i: string, a: string, g: string, more: { also?: boolean; fakt?: string } = {}): Clen => ({ n, i, a, g, ...more });
+
+/** „liška se živí i zajíci“ */
+const ziviSe = (x: Clen, food: Clen) => `se živí ${x.also ? 'i ' : ''}${food.i}`;
+
+/** Zajímavost o článku řetězce (chybějící je chyba v datech). */
+function faktOf(x: Clen): string {
+  if (!x.fakt) throw new Error(`článek řetězce ${x.n} nemá zajímavost`);
+  return x.fakt;
+}
 
 export const RETEZCE: Retezec[] = [
   {
     key: 'louka', herbivore: true,
-    chain: [c('Tráva', 'trávou', 'trávu', 'trávy'), c('Zajíc', 'zajíci', 'zajíce', 'zajíců'), c('Liška', 'liškami', 'lišku', 'lišek')],
+    chain: [
+      c('Tráva', 'trávou', 'trávu', 'trávy'),
+      c('Zajíc', 'zajíci', 'zajíce', 'zajíců', { fakt: 'Zajíc má oči po stranách hlavy, a tak vidí skoro dokola.' }),
+      c('Liška', 'liškami', 'lišku', 'lišek', { also: true, fakt: 'Nejčastěji se ale liška živí myšmi a hraboši.' }),
+    ],
     gone: 'zmizely všechny lišky',
     goneWhy: 'Lišky se živí i zajíci. Kdyby zmizely, zajíců by přibylo – a trávy by pak ubylo, protože by ji spásalo víc zajíců.',
   },
   {
     key: 'pole',
-    chain: [c('Semínka', 'semínky', 'semínka', 'semínek'), c('Myš', 'myšmi', 'myš', 'myší'), c('Sova', 'sovami', 'sovu', 'sov')],
+    chain: [
+      c('Semínka', 'semínky', 'semínka', 'semínek'),
+      c('Myš', 'myšmi', 'myš', 'myší'),
+      c('Sova', 'sovami', 'sovu', 'sov', { fakt: 'Sova najde myš po sluchu i v úplné tmě.' }),
+    ],
     gone: 'zmizely všechny sovy',
     goneWhy: 'Sovy se živí myšmi. Kdyby zmizely, myší by přibylo – a semínek by pak ubylo.',
   },
   {
     key: 'les', herbivore: true,
-    chain: [c('Listy', 'listy', 'listy', 'listů'), c('Housenka', 'housenkami', 'housenku', 'housenek'), c('Sýkora', 'sýkorami', 'sýkoru', 'sýkor'), c('Krahujec', 'krahujci', 'krahujce', 'krahujců')],
+    chain: [
+      c('Listy', 'listy', 'listy', 'listů'),
+      c('Housenka', 'housenkami', 'housenku', 'housenek', { fakt: 'Housenka jí skoro pořád, a tak za pár týdnů mnohokrát vyroste.' }),
+      c('Sýkora', 'sýkorami', 'sýkoru', 'sýkor', { fakt: 'Rodiče sýkor přinesou mláďatům za den i stovky housenek.' }),
+      c('Krahujec', 'krahujci', 'krahujce', 'krahujců', { also: true, fakt: 'Krahujec je dravec velký asi jako holub a obratně proletí i mezi větvemi.' }),
+    ],
     gone: 'zmizeli všichni krahujci',
     goneWhy: 'Krahujci se živí drobnými ptáky, třeba sýkorami. Kdyby zmizeli, sýkor by přibylo – a housenek by pak ubylo.',
   },
   {
     key: 'rybnik',
-    chain: [c('Řasy', 'řasami', 'řasy', 'řas'), c('Perloočky', 'perloočkami', 'perloočky', 'perlooček'), c('Plotice', 'ploticemi', 'plotici', 'plotic'), c('Štika', 'štikami', 'štiku', 'štik')],
+    chain: [
+      c('Řasy', 'řasami', 'řasy', 'řas'),
+      c('Perloočky', 'perloočkami', 'perloočky', 'perlooček', { fakt: 'Perloočky jsou drobní korýši, menší než zrnko rýže.' }),
+      c('Plotice', 'ploticemi', 'plotici', 'plotic', { also: true, fakt: 'Plotici poznáš podle červených očí.' }),
+      c('Štika', 'štikami', 'štiku', 'štik', { also: true, fakt: 'Štika dorůstá i přes metr.' }),
+    ],
     gone: 'zmizely všechny štiky',
     goneWhy: 'Štiky se živí menšími rybami, třeba ploticemi. Kdyby zmizely, plotic by přibylo – a perlooček by pak ubylo.',
   },
   {
-    // Ne čáp: ten se živí i kobylkami, takže by otázky „v tomto řetězci“ neměly
-    // jedinou odpověď. Kobylka není „jasný býložravec“ (kobylka zelená se živí
-    // hlavně hmyzem), proto tu chybí herbivore.
+    // Dřív „tráva, kobylka, žába, užovka“: kobylky se ale živí hlavně jiným
+    // hmyzem, takže „kobylka se živí trávou“ neplatí. Slimák se živí rostlinami,
+    // ropucha i slimáky a užovka i ropuchami. Ne čáp: ten se živí mnoha
+    // různými zvířaty, otázky „v tomto řetězci“ by neměly jedinou odpověď.
     key: 'tun',
-    chain: [c('Tráva', 'trávou', 'trávu', 'trávy'), c('Kobylka', 'kobylkami', 'kobylku', 'kobylek'), c('Žába', 'žábami', 'žábu', 'žab'), c('Užovka', 'užovkami', 'užovku', 'užovek')],
+    chain: [
+      c('Rostliny', 'rostlinami', 'rostliny', 'rostlin'),
+      c('Slimák', 'slimáky', 'slimáka', 'slimáků', { fakt: 'Slimák je plž jako hlemýžď, jen nemá ulitu.' }),
+      c('Ropucha', 'ropuchami', 'ropuchu', 'ropuch', { also: true, fakt: 'Ropucha se na jaře vrací k rybníku, ve kterém se sama vylíhla.' }),
+      c('Užovka', 'užovkami', 'užovku', 'užovek', { also: true, fakt: 'Užovku obojkovou poznáš podle dvou žlutých skvrn za hlavou.' }),
+    ],
     gone: 'zmizely všechny užovky',
-    goneWhy: 'Užovky se živí hlavně žábami. Kdyby zmizely, žab by přibylo – a kobylek by pak ubylo.',
+    goneWhy: 'Užovky se živí hlavně žábami a ropuchami. Kdyby zmizely, ropuch by přibylo – a slimáků by pak ubylo.',
   },
   {
     key: 'zahrada', herbivore: true,
-    chain: [c('Rostliny', 'rostlinami', 'rostliny', 'rostlin'), c('Mšice', 'mšicemi', 'mšice', 'mšic'), c('Beruška', 'beruškami', 'berušku', 'berušek')],
+    chain: [
+      c('Rostliny', 'rostlinami', 'rostliny', 'rostlin'),
+      c('Mšice', 'mšicemi', 'mšice', 'mšic', { fakt: 'Mravenci mšice hlídají, protože z nich olizují sladkou šťávu.' }),
+      c('Beruška', 'beruškami', 'berušku', 'berušek', { fakt: 'Jedna beruška se za den nasytí desítkami mšic.' }),
+    ],
     gone: 'zmizely všechny berušky',
     goneWhy: 'Berušky se živí mšicemi. Kdyby zmizely, mšic by přibylo – a rostlinám by se dařilo hůř.',
   },
   {
     key: 'hvozd', herbivore: true,
-    chain: [c('Tráva', 'trávou', 'trávu', 'trávy'), c('Srna', 'srnami', 'srnu', 'srn'), c('Rys', 'rysy', 'rysa', 'rysů')],
+    chain: [
+      c('Tráva', 'trávou', 'trávu', 'trávy'),
+      c('Srna', 'srnami', 'srnu', 'srn', { fakt: 'Kromě trávy srna ráda mlsá i byliny, lístky a pupeny.' }),
+      c('Rys', 'rysy', 'rysa', 'rysů', { fakt: 'Rys má na špičkách uší černé štětičky chlupů.' }),
+    ],
     gone: 'zmizeli všichni rysové',
     goneWhy: 'Rysové se živí hlavně srnami. Kdyby zmizeli, srn by přibylo – a trávy a mladých stromků by pak ubylo.',
   },
   {
     key: 'puda',
-    chain: [c('Spadané listí', 'spadaným listím', 'spadané listí', 'spadaného listí'), c('Žížala', 'žížalami', 'žížalu', 'žížal'), c('Krtek', 'krtky', 'krtka', 'krtků')],
+    chain: [
+      c('Spadané listí', 'spadaným listím', 'spadané listí', 'spadaného listí'),
+      c('Žížala', 'žížalami', 'žížalu', 'žížal'),
+      c('Krtek', 'krtky', 'krtka', 'krtků', { fakt: 'Krtek skoro nevidí, žížaly najde hmatem a čichem.' }),
+    ],
     gone: 'zmizeli všichni krtci',
     goneWhy: 'Krtci se živí hlavně žížalami. Kdyby zmizeli, žížal by přibylo – a spadaného listí by pak ubylo.',
   },
   {
+    // Bez otázky „co by se stalo, kdyby zmizely velryby“: když lidé velryby
+    // vylovili, krilu kupodivu nepřibylo, ale ubylo – trus velryb totiž hnojí
+    // řasy, kterými se kril živí. Jednoduchý řetězec by tu vedl ke špatné odpovědi.
     key: 'more',
-    chain: [c('Řasy', 'řasami', 'řasy', 'řas'), c('Kril', 'krilem', 'kril', 'krilu'), c('Velryba', 'velrybami', 'velrybu', 'velryb')],
-    gone: 'zmizely všechny velryby',
-    goneWhy: 'Velké velryby se živí drobným krilem. Kdyby zmizely, krilu by přibylo – a řas by pak ubylo.',
+    chain: [
+      c('Řasy', 'řasami', 'řasy', 'řas'),
+      c('Kril', 'krilem', 'kril', 'krilu'),
+      c('Velryba', 'velrybami', 'velrybu', 'velryb', { fakt: 'Kril tvoří drobní korýši podobní krevetám a velká velryba ho za den spotřebuje i několik tun.' }),
+    ],
   },
   {
     key: 'doubrava',
-    chain: [c('Žaludy', 'žaludy', 'žaludy', 'žaludů'), c('Divoké prase', 'divokými prasaty', 'divoké prase', 'divokých prasat'), c('Vlk', 'vlky', 'vlka', 'vlků')],
+    chain: [
+      c('Žaludy', 'žaludy', 'žaludy', 'žaludů'),
+      c('Divoké prase', 'divokými prasaty', 'divoké prase', 'divokých prasat', { also: true }),
+      c('Vlk', 'vlky', 'vlka', 'vlků', { also: true, fakt: 'Vlci se do Česka vrátili po víc než sto letech.' }),
+    ],
     gone: 'zmizeli všichni vlci',
     goneWhy: 'Vlci se živí i divokými prasaty. Kdyby zmizeli, divokých prasat by přibylo – a žaludů by pak ubylo.',
   },
@@ -159,22 +221,22 @@ function chainVisual(r: Retezec): { visual: Visual; said: string } {
   };
 }
 
-/** Věta „Zajíc se živí trávou, liška se živí zajíci.“ */
+/** Věta „Zajíc se živí trávou, liška se živí i zajíci.“ */
 function kdoCimSeZivi(r: Retezec): string {
   const parts = r.chain.slice(1).map((x, k) => {
     const who = k === 0 ? x.n : x.n.toLocaleLowerCase('cs');
-    return `${who} se živí ${r.chain[k].i}`;
+    return `${who} ${ziviSe(x, r.chain[k])}`;
   });
   return `${parts.join(', ')}.`;
 }
 
-/** Seřazení řetězce od rostliny. */
+/** Seřazení řetězce od rostliny (zajímavost o posledním článku). */
 function seradRetezec(keys: string[]) {
   return (rng: Rng): Spec => {
     const r = byKey(rng.pick(keys));
     return ord(`rada-${r.key}`, 'Seřaď potravní řetězec. Začni rostlinou.', r.chain.map((x) => x.n),
       ['Najdi v řetězci rostlinu nebo její část.', 'Kdo se živí tím, co je před ním?'],
-      kdoCimSeZivi(r));
+      `${kdoCimSeZivi(r)} ${faktOf(r.chain[r.chain.length - 1])}`);
   };
 }
 
@@ -186,7 +248,7 @@ function kdoJeBylozravec(keys: string[]) {
     const prompt = 'Kdo je v tomto řetězci býložravec?';
     return q(`bylozravec-${r.key}`, prompt, r.chain[1].n, r.chain.filter((_, i) => i !== 1).map((x) => x.n),
       ['Býložravec se živí rostlinami.', 'Kdo je v řetězci hned za rostlinou?'],
-      `${r.chain[1].n} se živí ${r.chain[0].i}, a tak je to býložravec. Ostatní se živí jinými zvířaty, nebo jsou to rostliny.`,
+      `${r.chain[1].n} ${ziviSe(r.chain[1], r.chain[0])}, a tak je to býložravec. ${faktOf(r.chain[1])}`,
       { visual, speak: `${said} ${prompt}` });
   };
 }
@@ -201,7 +263,7 @@ function potravouPro(keys: string[]) {
     const prompt = `Kdo je v tomto řetězci potravou pro ${x.a}?`;
     return q(`potrava-${r.key}-${slug(x.n)}`, prompt, r.chain[i - 1].n, r.chain.filter((_, j) => j !== i && j !== i - 1).map((y) => y.n),
       ['V řetězci se každý živí tím, co je hned před ním.'],
-      `${x.n} se živí ${r.chain[i - 1].i}. V řetězci se každý živí tím, co je hned před ním.`,
+      `${x.n} ${ziviSe(x, r.chain[i - 1])}. ${faktOf(x)}`,
       { visual, speak: `${said} ${prompt}` });
   };
 }
@@ -210,6 +272,7 @@ function potravouPro(keys: string[]) {
 function zmiziPosledni(keys: string[]) {
   return (rng: Rng): Spec => {
     const r = byKey(rng.pick(keys));
+    if (!r.gone || !r.goneWhy) throw new Error(`řetězec ${r.key} nemá otázku „co by se stalo“`);
     const n = r.chain.length;
     const prey = r.chain[n - 2];
     const below = r.chain[n - 3];
@@ -236,9 +299,9 @@ const PROSTREDNI: Record<string, { gone: string; top: string; why: string }> = {
     why: 'Plotice se živí perloočkami. Bez plotic by perlooček přibylo a spotřebovaly by víc řas. Štikám by naopak potrava ubyla.',
   },
   tun: {
-    gone: 'zmizely všechny žáby',
+    gone: 'zmizely všechny ropuchy',
     top: 'Užovky by měly víc potravy',
-    why: 'Žáby se živí kobylkami. Bez žab by kobylek přibylo a spásaly by víc trávy. Užovkám by naopak potrava ubyla.',
+    why: 'Ropuchy se živí i slimáky. Bez ropuch by slimáků přibylo a okusovali by víc rostlin. Užovkám by naopak potrava ubyla.',
   },
 };
 
@@ -314,7 +377,7 @@ const L2: Spec[] = [
   q('beruska-potrava', 'Čím se živí beruška?', 'Mšicemi',
     ['Listy', 'Dřevem', 'Semínky'],
     ['Beruška je malý masožravec.'],
-    'Beruška se živí mšicemi. Za den jich spotřebuje hodně, a proto ji mají zahradníci rádi.'),
+    'Beruška se živí mšicemi a za den jich sní desítky. Proto ji mají zahradníci rádi.'),
   q('zuby-bylozravec', 'Jaké zuby mají býložravci, třeba kráva?', 'Široké ploché zuby na žvýkání',
     ['Dlouhé ostré tesáky', 'Žádné zuby', 'Jen jeden zub'],
     ['Tráva se musí pořádně rozžvýkat.'],
@@ -445,7 +508,7 @@ const L4: Spec[] = [
   q('mravenci', 'Jak pomáhají mravenci lesu?', 'Roznášejí semena a uklízejí',
     ['Opylují stromy', 'Vyrábějí kyslík', 'Zalévají mech'],
     ['Co všechno mravenci nosí do mraveniště?'],
-    'Mravenci roznášejí semena některých rostlin a uklízejí les od zbytků. Lesní mraveniště jsou proto chráněná.'),
+    'Mravenci roznášejí semena některých rostlin a uklízejí les od zbytků. Lesní mravenci jsou u nás chránění, a tak mraveniště nerozhrabáváme.'),
   q('vyrobci', 'Jak se v řetězci říká rostlinám?', 'Výrobci',
     ['Spotřebitelé', 'Rozkladači', 'Opylovači'],
     ['Rostliny si potravu samy vyrábějí.'],
@@ -538,6 +601,7 @@ export const retezce = bankSkill({
     5: ['ČJS-5-4-01', 'ČJS-5-4-03'],
   },
   ability: 'usuzovani',
+  showFact: true,
   banks: { 2: L2, 3: L3, 4: L4, 5: L5 },
   gen: {
     2: (rng) => (rng.chance(0.6) ? cimSeZivi(rng) : seradRetezec(['louka', 'pole', 'hvozd', 'more'])(rng)),
@@ -545,7 +609,7 @@ export const retezce = bankSkill({
       const r = rng.next();
       if (r < 0.35) return seradRetezec(['les', 'tun', 'zahrada', 'puda', 'doubrava'])(rng);
       if (r < 0.6) return kdoJeBylozravec(['louka', 'les', 'zahrada', 'hvozd'])(rng);
-      return zmiziPosledni(['louka', 'pole', 'zahrada', 'hvozd', 'puda', 'more', 'doubrava'])(rng);
+      return zmiziPosledni(['louka', 'pole', 'zahrada', 'hvozd', 'puda', 'doubrava'])(rng);
     },
     4: (rng) => {
       const r = rng.next();
