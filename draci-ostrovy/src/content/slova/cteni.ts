@@ -13,7 +13,7 @@ const GENERIC_HINT: Record<QuestionKind, string> = {
   detail: 'Vrať se do textu a najdi místo, kde se o tom píše.',
   proc: 'Otázka se ptá na důvod. Hledej, co se stalo předtím, nebo slova protože a aby.',
   hlavni: 'Zkus říct jednou větou, o čem je celý text – ne jen jedna jeho část.',
-  poradi: 'Zkus si příběh v duchu převyprávět od začátku do konce.',
+  poradi: 'Zkus si text v duchu převyprávět od začátku do konce.',
   nazor: 'Fakt se dá ověřit. Názor je to, co si někdo myslí nebo co se mu líbí.',
 };
 

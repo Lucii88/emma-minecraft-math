@@ -159,7 +159,7 @@ const L2: Entry[] = [
   spelled('bpv', 'oběd', ['objed', 'objéd'], 'Slyšíme bje, ale píšeme bě: oběd.'),
   spelled('bpv', 'pěna', ['pjena', 'pena'], 'Slyšíme pje, ale píšeme pě: pěna.'),
   spelled('bpv', 'pět', ['pjet', 'pjét'], 'Slyšíme pje, ale píšeme pě: pět.'),
-  spelled('bpv', 'zpěv', ['zpjev', 'spjev'], 'Slyšíme pje, ale píšeme pě: zpěv. Na začátku je z, protože zpívat.'),
+  spelled('bpv', 'zpěv', ['zpjev', 'spjev'], 'Slyšíme pje, ale píšeme pě: zpěv. Na začátku píšeme z jako ve slově zpívat.'),
   spelled('bpv', 'věc', ['vjec', 'vec'], 'Slyšíme vje, ale píšeme vě: věc.'),
   spelled('bpv', 'věž', ['vjež', 'vješ'], 'Slyšíme vje, ale píšeme vě: věž.'),
   spelled('bpv', 'květ', ['kvjet', 'kveť'], 'Slyšíme vje, ale píšeme vě: květ.'),
@@ -183,7 +183,7 @@ const L2: Entry[] = [
   capWord('brno', 'Včera jsme jeli do brna.', 'brna', ['jeli', 'jsme'], 'Brno je jméno města, proto píšeme do Brna.'),
   capWord('liv', 'V lese potkala liv ježka.', 'liv', ['lese', 'ježka'], 'Liv je jméno, proto má velké písmeno.'),
   capWord('micka', 'Kočka micka má koťata.', 'micka', ['koťata', 'má'], 'Micka je jméno kočky, proto píšeme Micka.'),
-  capWord('bublinka', 'Dráček bublinka umí plavat.', 'bublinka', ['umí', 'plavat'], 'Bublinka je jméno dráčka, proto píšeme Bublinka.'),
+  capWord('bublinka', 'Dračice bublinka umí plavat.', 'bublinka', ['umí', 'plavat'], 'Bublinka je jméno dračice, proto píšeme Bublinka.'),
   capWord('olomouc', 'Moje teta bydlí v olomouci.', 'olomouci', ['teta', 'bydlí'], 'Olomouc je jméno města, proto píšeme v Olomouci. Slovo teta je obyčejné.'),
 ];
 

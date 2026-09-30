@@ -174,20 +174,21 @@ const L4_PREFIX: [string, string][] = [
   ['v_savač', 'vysavač'], ['v_let', 'výlet'], ['v_brat', 'vybrat'],
 ];
 
-/** Záludná slova s i/í: [s mezerou, celé slovo, vyjmenované slovo, se kterým se plete]. */
-const L4_TRAPS: [string, string, string][] = [
+/** Záludná slova s i/í: [s mezerou, celé slovo, vyjmenované slovo, se kterým
+ *  se plete, případná poznámka k vysvětlení]. */
+const L4_TRAPS: [string, string, string, string?][] = [
   ['b_lý', 'bílý', 'bylina'], ['v_tr', 'vítr', 'výt'], ['m_sit', 'mísit', 'myslit'],
   ['sl_mák', 'slimák', 'slyšet'], ['l_zátko', 'lízátko', 'lyže'], ['p_skat', 'pískat', 'pysk'],
   ['sv_tit', 'svítit', 'blýskat se'], ['sl_bit', 'slíbit', 'slyšet'], ['zv_ře', 'zvíře', 'zvykat'],
-  ['l_pa', 'lípa', 'lýko'],
+  ['l_pa', 'lípa', 'lýko', 'Lipové lýko se sice používalo třeba na provazy, ale slova lípa a lýko příbuzná nejsou.'],
 ];
 
 /** Dvojice ve větách: [klíč, věta s mezerou, celá věta, vysvětlení]. */
 const L4_SENTENCES: [string, string, string, string][] = [
-  ['byt-veterinarkou', 'Chtěla bych b_t veterinářkou.', 'Chtěla bych být veterinářkou.', 'Být (existovat, stát se někým) je vyjmenované slovo, píšeme ý.'],
+  ['byt-veterinarkou', '{Chtěla|Chtěl} bych b_t {veterinářkou|veterinářem}.', '{Chtěla|Chtěl} bych být {veterinářkou|veterinářem}.', 'Být (existovat, stát se někým) je vyjmenované slovo, píšeme ý.'],
   ['srdce-bije', 'Srdce mi b_je radostí.', 'Srdce mi bije radostí.', 'Bije je od slovesa bít (tlouct). To není vyjmenované slovo, píšeme i.'],
   ['myt-ruce', 'Před jídlem si musím m_t ruce.', 'Před jídlem si musím mýt ruce.', 'Mýt (umývat) je vyjmenované slovo, píšeme ý.'],
-  ['mit-psa', 'Chtěla bych m_t psa.', 'Chtěla bych mít psa.', 'Mít (vlastnit) není vyjmenované slovo, píšeme í.'],
+  ['mit-psa', '{Chtěla|Chtěl} bych m_t psa.', '{Chtěla|Chtěl} bych mít psa.', 'Mít (vlastnit) není vyjmenované slovo, píšeme í.'],
   ['vyr-houka', 'V noci houká v_r.', 'V noci houká výr.', 'Výr je sova a patří mezi vyjmenovaná slova po v, píšeme ý.'],
   ['vir-voda', 'Voda se točila ve v_ru.', 'Voda se točila ve víru.', 'Vír je točící se voda nebo vzduch. Není vyjmenovaný, píšeme í.'],
   ['pyl-vcely', 'Včely sbírají p_l z květů.', 'Včely sbírají pyl z květů.', 'Pyl z květů je vyjmenované slovo po p, píšeme y.'],
@@ -200,7 +201,7 @@ const L4_SENTENCES: [string, string, string, string][] = [
   ['mi-knizku', 'Podej m_ tu knížku.', 'Podej mi tu knížku.', 'Mi je krátký tvar zájmena já (komu? mně, mi). Není vyjmenované, píšeme i.'],
   ['odbily-poledne', 'Hodiny odb_ly poledne.', 'Hodiny odbily poledne.', 'Odbily je od slovesa odbít, které vzniklo ze slova bít (tlouct). Není vyjmenované, píšeme i.'],
   ['odbyt-ukol', 'Úkol nesmíš odb_t.', 'Úkol nesmíš odbýt.', 'Odbýt (udělat něco rychle a špatně) je příbuzné se slovem být, píšeme ý.'],
-  ['vyje-vlk', 'Vlk v_je na měsíc.', 'Vlk vyje na měsíc.', 'Vyje je od slovesa výt, které patří mezi vyjmenovaná slova, píšeme y.'],
+  ['vyje-vlk', 'V lese v_je vlk.', 'V lese vyje vlk.', 'Vyje je od slovesa výt, které patří mezi vyjmenovaná slova, píšeme y.'],
   ['viji-venecky', 'Děti v_jí věnečky z kopretin.', 'Děti vijí věnečky z kopretin.', 'Vijí je od slovesa vít (splétat). Není vyjmenované, píšeme i.'],
   ['zmyli-kazdy', 'Každý se někdy zm_lí.', 'Každý se někdy zmýlí.', 'Zmýlit se je příbuzné s vyjmenovaným slovem mýlit se, píšeme ý.'],
   ['mila-babicka', 'Moje m_lá babička peče buchty.', 'Moje milá babička peče buchty.', 'Milá není vyjmenované ani příbuzné slovo, píšeme i.'],
@@ -229,12 +230,12 @@ function l4Items(): GapItem[] {
       explanation: `Slovo ${full} začíná předponou ${full.slice(0, 2)}- a ta se píše vždy s ${letter}.`,
     });
   }
-  for (const [gapped, full, trap] of L4_TRAPS) {
+  for (const [gapped, full, trap, note] of L4_TRAPS) {
     const letter = letterAt(gapped, full);
     out.push({
       key: slug(full), gapped, full, letter, options: ALL4,
-      hints: [L4_HINT_1, `Nenech se zmást slovem ${trap}. Opravdu spolu tato slova souvisí?`],
-      explanation: `Slovo ${full} není příbuzné se slovem ${trap} ani s jiným vyjmenovaným slovem, proto píšeme ${letter}.`,
+      hints: [L4_HINT_1, `Nenech se zmást slovem ${trap}. Jsou tato slova opravdu příbuzná?`],
+      explanation: `Slovo ${full} není příbuzné se slovem ${trap} ani s jiným vyjmenovaným slovem, proto píšeme ${letter}.${note ? ` ${note}` : ''}`,
     });
   }
   for (const [key, gapped, full, why] of L4_SENTENCES) {

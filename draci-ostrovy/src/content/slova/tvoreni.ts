@@ -85,7 +85,7 @@ export const PROMPTS: Prompt[] = [
     'Jedna je čistá a druhá byla včera na výletě.', 'Která z nich zažila větší dobrodružství?',
   ]),
   pr('slunce-mesic', 'pribeh', 4, 6, 'Napiš rozhovor mezi Sluncem a Měsícem.', [
-    'Na co by se Měsíc chtěl Slunce zeptat?', 'Co vidí Slunce ve dne, co Měsíc nikdy nevidí?',
+    'Na co by se Měsíc chtěl Slunce zeptat?', 'Co vidí Slunce ve dne a co Měsíc v noci?',
   ], { 4: 'Napiš aspoň šest vět rozhovoru.', 5: 'Napiš aspoň osm vět rozhovoru a použij uvozovky.', 6: 'Napiš delší rozhovor, ve kterém se oba dozvědí něco nového.' }),
   pr('prekvapivy-konec', 'pribeh', 4, 6, 'Napiš příběh jen v pěti větách, ale tak, aby měl překvapivý konec.', [
     'Nejdřív si vymysli konec a pak k němu napiš začátek.', 'Překvapení může být třeba v tom, kdo je kdo.',
@@ -153,7 +153,7 @@ export const PROMPTS: Prompt[] = [
     'Třeba jak vysoko umí vyletět.', 'Nebo co se mu zdá, když spí.',
   ]),
   pr('lehke-velke', 'napady', 4, 6, 'Vymysli co nejvíc věcí, které jsou velké, ale lehké.', [
-    'Třeba nafukovací balón.', 'Co takhle mrak?',
+    'Třeba nafukovací balón.', 'Co takhle papírový drak?',
   ]),
   pr('plavou', 'napady', 1, 6, 'Vymysli co nejvíc zvířat, která umějí plavat.', [
     'Vzpomeň si na rybník.', 'A na moře.',
@@ -184,10 +184,10 @@ export const PROMPTS: Prompt[] = [
     'Jak by vypadala cesta do školy?', 'Byly by ještě potřeba schody?',
   ]),
   pr('vlastni-drak', 'kdyby', 1, 5, 'Kdyby ti patřil vlastní drak, co byste spolu dělali jako první?', [
-    'Kam byste spolu letěli?', 'Co bys mu ukázal nebo ukázala?',
+    'Kam byste spolu letěli?', 'Co bys mu {ukázala|ukázal}?',
   ]),
-  pr('byt-drakem', 'kdyby', 1, 3, 'Doplň větu: Kdyby ze mě byl drak, …', [
-    'Jakou bys měl nebo měla barvu?', 'Co bys dělal nebo dělala jako první?',
+  pr('byt-drakem', 'kdyby', 1, 3, 'Doplň větu: Kdyby ze mě {byla|byl} {dračice|drak}, …', [
+    'Jakou bys {měla|měl} barvu?', 'Co bys {dělala|dělal} jako první?',
   ]),
   // --- popis a pocity ------------------------------------------------------
   pr('vysneny-drak', 'popis', 1, 6, 'Popiš svého vysněného draka: jakou má barvu, jak je velký a co má rád.', [

@@ -112,11 +112,11 @@ const p = (key: string, lines: string, pair: string, answer: string, sense: stri
 
 export const POEMS: Poem[] = [
   p('plaminek', 'Malý dráček Plamínek\nnašel v trávě …', 'Plamínek', 'kamínek', 'kámen', ['komínek', 'jablko']),
-  p('drak-mrak', 'Na obloze letí drak,\nschoval se za bílý …', 'drak', 'mrak', 'strom', ['vlak']),
+  p('drak-mrak', 'Na obloze letí drak,\nschoval se za bílý …', 'drak', 'mrak', 'strom', ['rak']),
   p('jiskra-hop', 'Jiskra ráda skáče hop,\naž se hlavou ťukne o …', 'hop', 'strop', 'zeď', ['cop']),
   p('knutuv-pes', 'Kde je Knutův bílý pes?\nŠel si hrát až za …', 'pes', 'les', 'dům', ['plot', 'dnes']),
   p('kyticka', 'Na louce roste kytička,\nna ní sedí …', 'kytička', 'včelička', 'motýl', ['lžička']),
-  p('olaf-syr', 'Olaf nesl domů sýr,\nna komíně seděl …', 'sýr', 'výr', 'pták', ['vír', 'sova']),
+  p('olaf-syr', 'Olaf nesl domů sýr,\nna komíně seděl …', 'sýr', 'výr', 'pták', ['mír', 'sova']),
   p('sigrun-zpiva', 'Sigrun ráda zpívá,\nkočka hlavou …', 'zpívá', 'kývá', 'točí', ['skrývá']),
   p('ingrid-boty', 'Ingrid má nové boty,\nnosí je od pondělí do …', 'boty', 'soboty', 'neděle', ['noty']),
   p('slunicko', 'Svítí, svítí sluníčko,\nzralé je už …', 'sluníčko', 'jablíčko', 'rajče', ['víčko']),

@@ -45,11 +45,11 @@ export const RIDDLES: Riddle[] = [
   },
   {
     key: 'kocka', lvl: 1,
-    text: 'Myši chytá, mlíčko pije,\nmňouká a s námi doma žije.',
+    text: 'Myši chytá, klubko koulí,\nmňouká a v pelíšku se choulí.',
     ask: 'Kdo je to?',
     answer: 'kočka', distractors: ['pes', 'sova', 'myš'],
     hints: ['Když je spokojená, přede.'],
-    explanation: 'Kočka chytá myši, ráda pije mlíčko a mňouká.',
+    explanation: 'Kočka chytá myši, ráda si hraje s klubkem a mňouká.',
   },
   {
     key: 'pes', lvl: 1,
@@ -73,7 +73,7 @@ export const RIDDLES: Riddle[] = [
     ask: 'Kdo je to?',
     answer: 'slepice', distractors: ['kohout', 'vrabec', 'kočka'],
     hints: ['Je to pták, který bydlí na dvoře.', 'Ozývá se: kdák, kdák!'],
-    explanation: 'Slepice zobe zrní a snáší vajíčka. Kohout vajíčka nesnáší.',
+    explanation: 'Slepice zobe zrní a snáší vajíčka. Kohout zobe taky, ale vejce snese jen slepice.',
   },
   {
     key: 'ryba', lvl: 1,
@@ -188,7 +188,7 @@ export const RIDDLES: Riddle[] = [
   {
     key: 'slunce', lvl: 1,
     text: 'Z nebe svítí, hřeje nás,\nvečer zajde, ráno vyjde zas.',
-    answer: 'slunce', distractors: ['Měsíc', 'hvězda', 'lampa'],
+    answer: 'slunce', distractors: ['Měsíc', 'mrak', 'lampa'],
     hints: ['Je vysoko na obloze.', 'Kdy vychází a kdy zapadá?'],
     explanation: 'Slunce nás hřeje, večer zapadá a ráno zase vychází.',
   },
@@ -247,7 +247,7 @@ export const RIDDLES: Riddle[] = [
   {
     key: 'stul', lvl: 2, folk: true,
     text: 'Čtyři bratři\npod jedním kloboukem stojí.',
-    answer: 'stůl', distractors: ['skříň', 'lampa', 'dveře'],
+    answer: 'stůl', distractors: ['koberec', 'lampa', 'dveře'],
     hints: ['Je to kus nábytku.', 'Bratři jsou tu nohy.'],
     explanation: 'Stůl má čtyři nohy – bratry – a nahoře jednu desku jako klobouk.',
   },
@@ -256,7 +256,7 @@ export const RIDDLES: Riddle[] = [
     text: 'Dvě sestřičky přes kopeček bydlí,\na přece se nikdy neuvidí.',
     answer: 'oči', distractors: ['ruce', 'nohy', 'zuby'],
     hints: ['Je to část obličeje.', 'Kopeček je tu nos.'],
-    explanation: 'Oči jsou dvě, mezi nimi je nos jako kopeček, a samy sebe nikdy neuvidí.',
+    explanation: 'Oči jsou dvě, mezi nimi je nos jako kopeček – a jedno oko to druhé nikdy neuvidí.',
   },
   {
     key: 'houba', lvl: 2, folk: true,
@@ -277,7 +277,7 @@ export const RIDDLES: Riddle[] = [
     text: 'Ve dne spí a v noci svítí,\npo obloze se jako zlatá zrnka třpytí.',
     answer: 'hvězdy', distractors: ['slunce', 'lampy', 'svíčky'],
     hints: ['Jsou na obloze.', 'Je jich tolik, že je nikdo nespočítá.'],
-    explanation: 'Hvězdy vidíme v noci na obloze. Z dálky vypadají jako malá zlatá zrnka.',
+    explanation: 'Hvězdy vidíme v noci na obloze. Z dálky vypadají jako malá zlatá zrnka. Ve dne na nebi zůstávají, jen je přes sluneční světlo nevidíme.',
   },
   {
     key: 'duha', lvl: 2,
@@ -305,7 +305,7 @@ export const RIDDLES: Riddle[] = [
     text: 'Dva konce, dva kroužky,\nuprostřed hřebíček.',
     answer: 'nůžky', distractors: ['kleště', 'jehla', 'hřeben'],
     hints: ['Najdeš je v penálu nebo v šuplíku.', 'Do kroužků strčíš prsty.'],
-    explanation: 'Nůžky mají dva kroužky na prsty, dva ostré konce a uprostřed šroubek, který je drží pohromadě.',
+    explanation: 'Nůžky mají dva kroužky na prsty, dva ostré konce a uprostřed hřebíček nebo šroubek, který obě půlky drží pohromadě.',
   },
   {
     key: 'vejce', lvl: 2,
@@ -576,7 +576,7 @@ export const RIDDLES: Riddle[] = [
     text: 'Hora, co chrlí oheň jako drak,\nz vrcholu jí stoupá kouř a mrak.',
     answer: 'sopka', distractors: ['jeskyně', 'komín', 'maják'],
     hints: ['Z jejího nitra může vytékat žhavá láva.'],
-    explanation: 'Sopka je hora, ze které může vytékat láva a stoupat kouř.',
+    explanation: 'Sopka je hora, ze které může vytékat žhavá láva – ta svítí jako oheň – a stoupat kouř.',
   },
   {
     key: 'tma', lvl: 4,
@@ -609,7 +609,7 @@ export const RIDDLES: Riddle[] = [
   {
     key: 'zitrek', lvl: 4,
     text: 'Pořád je před tebou,\na nikdy ho neuvidíš.',
-    answer: 'zítřek', distractors: ['nos', 'cesta', 'stín'],
+    answer: 'zítřek', distractors: ['strom', 'cesta', 'stín'],
     hints: ['Souvisí to s časem.'],
     explanation: 'Zítřek je pořád před námi. Když přijde, je z něj dnešek.',
   },
@@ -625,7 +625,7 @@ export const RIDDLES: Riddle[] = [
     key: 'kohoutek', lvl: 4,
     text: 'Kterého kohoutka\nnikdy neuslyšíš kokrhat?',
     ask: 'Vyber správnou odpověď.',
-    answer: 'vodovodní kohoutek', distractors: ['mladý kohoutek', 'kohout na dvoře', 'kohout z pohádky'],
+    answer: 'vodovodní kohoutek', distractors: ['kohout na plotě', 'kohout na dvoře', 'sousedův kohout'],
     hints: ['Najdeš ho v kuchyni nebo v koupelně.'],
     explanation: 'Vodovodní kohoutek se jmenuje jako malý kohout, ale místo kokrhání z něj teče voda.',
   },
@@ -646,11 +646,11 @@ export const RIDDLES: Riddle[] = [
   },
   {
     key: 'mesice-28', lvl: 4,
-    text: 'Který měsíc v roce\nmá 28 dní?',
+    text: 'Kolik měsíců v roce\nmá aspoň 28 dní?',
     ask: 'Vyber správnou odpověď.',
-    answer: 'všechny', distractors: ['únor', 'leden', 'žádný'],
-    hints: ['Otázka se neptá, který měsíc má jen 28 dní.'],
-    explanation: 'Každý měsíc má aspoň 28 dní. Únor jich má přesně tolik, ostatní ještě víc.',
+    answer: 'všech dvanáct', distractors: ['jen jeden', 'šest', 'žádný'],
+    hints: ['Nejkratší měsíc v roce je únor. Kolik dní má on a kolik ostatní měsíce?'],
+    explanation: 'Nejkratší měsíc, únor, má 28 dní (v přestupném roce 29). Ostatní měsíce mají 30 nebo 31 dní, takže aspoň 28 dní má všech dvanáct.',
   },
 ];
 

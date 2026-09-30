@@ -63,7 +63,7 @@ export const ANTONYMS_L2: [string, string, Triple][] = [
   ['bohatý', 'chudý', ['štědrý', 'šťastný', 'velký']],
   ['zdravý', 'nemocný', ['silný', 'unavený', 'veselý']],
   ['široký', 'úzký', ['dlouhý', 'velký', 'nízký']],
-  ['hluboký', 'mělký', ['vysoký', 'široký', 'tmavý']],
+  ['hluboký', 'mělký', ['dlouhý', 'široký', 'tmavý']],
   ['ostrý', 'tupý', ['špičatý', 'tvrdý', 'rovný']],
   ['vyhrát', 'prohrát', ['hrát', 'soutěžit', 'závodit']],
   ['koupit', 'prodat', ['zaplatit', 'vybrat', 'vzít']],
@@ -83,7 +83,7 @@ export const ANTONYMS_L2: [string, string, Triple][] = [
 
 export const SYNONYMS_L3: [string, string, Triple][] = [
   ['rychle', 'hbitě', ['pomalu', 'hlasitě', 'často']],
-  ['velký', 'obrovský', ['malý', 'vysoký', 'těžký']],
+  ['velký', 'obrovský', ['malý', 'silný', 'těžký']],
   ['malý', 'drobný', ['velký', 'krátký', 'slabý']],
   ['krásný', 'nádherný', ['ošklivý', 'velký', 'veselý']],
   ['smutný', 'zarmoucený', ['veselý', 'unavený', 'zlý']],
@@ -305,7 +305,7 @@ export const POLYSEMY: Poly[] = [
   {
     word: 'houba',
     senses: [
-      { key: 'les', gloss: 'to, co sbíráme v lese do košíku, třeba hřib', sentence: 'Našla jsem v lese velkou houbu.' },
+      { key: 'les', gloss: 'to, co sbíráme v lese do košíku, třeba hřib', sentence: '{Našla|Našel} jsem v lese velkou houbu.' },
       { key: 'myti', gloss: 'věc na mytí a utírání', sentence: 'Tabuli smažeme mokrou houbou.' },
     ],
     extra: 'druh ryby',
@@ -324,7 +324,7 @@ export const POLYSEMY: Poly[] = [
       { key: 'zvire', gloss: 'zvíře s pruhy', sentence: 'V zoo jsme viděli zebru.' },
       { key: 'prechod', gloss: 'přechod pro chodce', sentence: 'Přes silnici chodíme po zebře.' },
     ],
-    extra: 'druh koláče',
+    extra: 'druh sýra',
   },
   {
     word: 'pas',

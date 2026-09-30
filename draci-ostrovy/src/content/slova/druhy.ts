@@ -114,7 +114,7 @@ const FIND3: [Kind3, string, string, string, string][] = [
   ['podstatné jméno', 'radost', 'radostný', 'raduje se', 'deset'],
   ['přídavné jméno', 'modrý', 'moře', 'maluje', 'dva'],
   ['přídavné jméno', 'ledový', 'led', 'leží', 'pět'],
-  ['číslovka', 'šest', 'šestka', 'šije', 'šedý'],
+  ['číslovka', 'šest', 'šaty', 'šije', 'šedý'],
   ['číslovka', 'devět', 'děvče', 'dívá se', 'divný'],
 ];
 
@@ -188,7 +188,7 @@ const CLASSIFY4: [string, string, string, Kind4, [Kind4, Kind4, Kind4]][] = [
   ['dnes', 'My jsme dnes viděli tři draky.', 'dnes', 'příslovce', ['podstatné jméno', 'zájmeno', 'předložka']],
   ['videli', 'My jsme dnes viděli tři draky.', 'viděli', 'sloveso', ['přídavné jméno', 'podstatné jméno', 'příslovce']],
   ['kez', 'Kéž by už bylo léto!', 'Kéž', 'částice', ['citoslovce', 'spojka', 'příslovce']],
-  ['haf', 'Pes udělal haf a utekl.', 'haf', 'citoslovce', ['podstatné jméno', 'sloveso', 'částice']],
+  ['haf', 'Haf! Pes zaštěkal na pošťáka.', 'Haf', 'citoslovce', ['podstatné jméno', 'sloveso', 'částice']],
   ['knutuv', 'Knutův drak spí pod stromem.', 'Knutův', 'přídavné jméno', ['podstatné jméno', 'zájmeno', 'číslovka']],
   ['pod', 'Knutův drak spí pod stromem.', 'pod', 'předložka', ['příslovce', 'spojka', 'citoslovce']],
   ['protoze', 'Sven přišel, protože měl hlad.', 'protože', 'spojka', ['příslovce', 'částice', 'předložka']],
