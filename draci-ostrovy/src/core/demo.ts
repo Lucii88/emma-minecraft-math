@@ -14,12 +14,12 @@ const DAY = 24 * 60 * 60 * 1000;
 
 /** Smyšlený profil: silný v počtech a úvahách, v paměti spíš průměrný. */
 const TALENT: Record<AbilityTag, number> = {
-  pocetni: 1.7,
-  usuzovani: 1.3,
-  prostorove: 0.9,
-  znalosti: 0.6,
-  slovni: 0.2,
-  pamet: -0.3,
+  pocetni: 2.6,
+  usuzovani: 2.2,
+  prostorove: 1.6,
+  znalosti: 1.1,
+  slovni: 0.5,
+  pamet: -0.2,
   tvorivost: 0,
 };
 
@@ -78,7 +78,7 @@ export function buildDemo(seed = 20260930, now = Date.now()): Demo {
       let confidence: Confidence | undefined;
       if (events.length % 3 === 2) {
         // Mírné podceňování u těžších úloh – ať je v ukázce co číst.
-        confidence = first ? (p < 0.65 && rng.chance(0.45) ? 'hadala' : p > 0.8 ? 'jiste' : 'asi') : rng.chance(0.15) ? 'jiste' : 'asi';
+        confidence = first ? (p < 0.75 && rng.chance(0.5) ? 'hadala' : p > 0.85 ? 'jiste' : 'asi') : rng.chance(0.08) ? 'jiste' : 'asi';
       }
       const responseMs = rng.int(6, 40) * 1000 + (skill.ability === 'usuzovani' ? 15000 : 0);
       t += responseMs + rng.int(3, 12) * 1000;

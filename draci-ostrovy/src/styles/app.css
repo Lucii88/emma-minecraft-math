@@ -522,8 +522,9 @@ h3 {
 /* ---------- Hráči: úvodní nastavení a „Kdo hraje?“ ---------- */
 
 .setup {
-  display: grid;
-  place-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
   padding: 24px 16px;
 }
 
@@ -549,6 +550,10 @@ h3 {
 
 .setup-card > p {
   margin: 0;
+}
+
+.setup-card .name-input {
+  width: 100%;
 }
 
 .field-block {
@@ -589,6 +594,11 @@ h3 {
 .pin-row .pin-input {
   flex: 1;
   min-width: 0;
+}
+
+.pin-row .pin-input::placeholder {
+  letter-spacing: normal;
+  font-size: 1rem;
 }
 
 .privacy {
