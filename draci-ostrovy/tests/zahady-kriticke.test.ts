@@ -32,6 +32,13 @@ const JAK_TO_VIME = /(pozor|měř|pokus|zkouš|přístroj|kamer|fot|dalekohled|s
 /** Strašidelná a nevhodná témata (smrt, krev, zločin, válka). */
 const STRASIDELNE = /(smrt|zemř|umř|umír|zabi|zabí|sežr|sežer|krev|krví|krve|válk|vražd|zloč|zloděj|ukrad|krade|kradl|zranil|policie)/i;
 
+/** Ženský tvar o hráči (2. osoba) bez značky {ženský|mužský}: „abys měla“,
+ *  „Viděla jsi“, „aby ses bála“, „budeš smutná“. Postavy ve 3. osobě tvar
+ *  „jsi/bys/sis/ses“ nemají, takže tu nevadí. */
+const UNMARKED_FEMININE =
+  /(?<!\p{L})(?:(?:jsi|bys|abys|kdybys|sis|ses)(?: (?:to|ho|ji|je|si|se|mu|jí|už|opravdu|nejvíc))? \p{L}+la|\p{L}+la (?:jsi|bys|sis|ses)|(?:jsi|budeš|buď) \p{L}+á)(?!\p{L})/iu;
+const withoutMarks = (t: string) => t.replace(/\{[^{}|]*\|[^{}|]*\}/g, '');
+
 /** Skutečné značky, které se v reklamách nesmějí objevit (jen vymyšlené).
  *  „Dračí síla“ jsou skutečné bylinné kapky, „Sluneční zahrada“ skutečná dílna. */
 const SKUTECNE_ZNACKY = /(kofola|tatranka|horalk|kinder|lentilk|míša|brumík|pribináček|kubík|fidork|orion|opavia|milka|nutella|lego|barbie|mcdonald|coca|pepsi|youtube|tiktok|instagram|nesquik|granko|haribo|disney|dračí síla|sluneční zahrada)/i;
@@ -424,5 +431,28 @@ describe('Texty', () => {
         expect((t.match(/„/g) ?? []).length, `${item.id}: ${t}`).toBe((t.match(/“/g) ?? []).length);
       }
     }
+  });
+
+  it('všech pět dovedností ukazuje vysvětlení jako zajímavost i po správné odpovědi', () => {
+    for (const s of kritickeSkills) expect(s.showFact, s.id).toBe(true);
+  });
+
+  it('hráče oslovují značky {ženský|mužský}: žádný ženský tvar o hráči bez značky', () => {
+    // „abys měla“, „Viděla jsi“, „budeš smutná“ – 2. osoba, takže vždy o hráči.
+    const cardTexts = kritickeCards.flatMap((c) => [c.title, c.text, c.fix?.before ?? '', c.fix?.evidence ?? '']);
+    const missionTexts = kritickeMissions.flatMap((m) => [m.title, m.text, m.parentTip]);
+    for (const t of [...allItems.flatMap(texts), ...cardTexts, ...missionTexts]) {
+      expect(withoutMarks(t), t).not.toMatch(UNMARKED_FEMININE);
+    }
+    // Tipy pro rodiče mluví o dítěti ve 3. osobě – „dcera“ jen se značkou.
+    for (const t of missionTexts) expect(withoutMarks(t), t).not.toMatch(/(^|[^\p{L}])dcer/u);
+  });
+});
+
+describe('Mýtus o tučňácích (připomínka maminky)', () => {
+  it('lední medvědi ve vysvětlení navazují na otázku: žijí na severu místo tučňáků', () => {
+    const item = enumerateItems('zahady.mytus', 2).find((i) => i.id.endsWith(':tucnaci-sever'))!;
+    expect(item.explanation).toMatch(/na severním pólu žádní nejsou/);
+    expect(item.explanation).toMatch(/místo nich žijí lední medvědi/);
   });
 });

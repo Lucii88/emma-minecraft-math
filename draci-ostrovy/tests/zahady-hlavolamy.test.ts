@@ -230,6 +230,19 @@ describe('Ostrov záhad – hlavolamy: texty a obrázky', () => {
     }
   });
 
+  it('hráče oslovují značky {ženský|mužský}: žádný ženský tvar o hráči bez značky', () => {
+    // „abys měla“, „která sis vzala“ – 2. osoba, takže vždy o hráči.
+    const UNMARKED_FEMININE =
+      /(?<!\p{L})(?:(?:jsi|bys|abys|kdybys|sis|ses)(?: (?:to|ho|ji|je|si|se|mu|jí|už|opravdu|nejvíc))? \p{L}+la|\p{L}+la (?:jsi|bys|sis|ses)|(?:jsi|budeš|buď) \p{L}+á)(?!\p{L})/iu;
+    const withoutMarks = (t: string) => t.replace(/\{[^{}|]*\|[^{}|]*\}/g, '');
+    const other = [...hlavolamyCards.flatMap((c) => [c.title, c.text, c.fix?.before ?? '', c.fix?.evidence ?? '']), ...hlavolamyMissions.flatMap((m) => [m.title, m.text, m.parentTip])];
+    for (const t of [...all.flatMap(texts), ...other]) expect(withoutMarks(t), t).not.toMatch(UNMARKED_FEMININE);
+  });
+
+  it('hlavolamy ukazují vysvětlení (postup) jen po chybě, ne jako zajímavost', () => {
+    for (const s of hlavolamySkills) expect(s.showFact, s.id).toBeUndefined();
+  });
+
   it('používají se jen povolená emoji (Unicode ≤ 12) a žádné vlajky', () => {
     const used = new Set<string>();
     const collect = (x: unknown) => {

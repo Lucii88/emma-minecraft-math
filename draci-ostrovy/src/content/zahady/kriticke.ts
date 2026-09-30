@@ -1,6 +1,8 @@
 // Ostrov záhad – kritické myšlení. Hádankář mlžný se na každou odpověď
 // zeptá: „A jak to víš?“ Dovednosti: jak to víme, fakt × názor, mýtus ×
 // pravda, reklama a dračí detektivka. Úlohy jsou v souborech kriticke-*.ts.
+// Vysvětlení všech pěti dovedností jsou zajímavosti (showFact): ukážou se
+// i po správné odpovědi, proto nezačínají hodnocením a mají nejvýš 300 znaků.
 
 import { bankSkill } from '../../core/bank';
 import type { SkillDef } from '../../core/types';
@@ -24,6 +26,7 @@ export const jakToVime = bankSkill({
     4: ['ČJS-5-4-06', 'I-5-1-01'],
   },
   ability: 'usuzovani',
+  showFact: true,
   banks: jakBanks,
 });
 
@@ -39,6 +42,7 @@ export const faktNazor = bankSkill({
     4: ['ČJL-5-1-02'],
   },
   ability: 'usuzovani',
+  showFact: true,
   banks: faktBanks,
 });
 
@@ -55,6 +59,7 @@ export const mytusPravda = bankSkill({
     5: ['ČJS-5-4-02', 'ČJS-5-4-06'],
   },
   ability: 'usuzovani',
+  showFact: true,
   banks: mytusBanks,
 });
 
@@ -70,6 +75,7 @@ export const reklama = bankSkill({
     5: ['ČJL-5-1-06', 'ČJS-5-2-03', 'M-5-4-01'],
   },
   ability: 'usuzovani',
+  showFact: true,
   banks: reklamaBanks,
 });
 
@@ -85,6 +91,7 @@ export const detektiv = bankSkill({
     5: ['ČJL-5-1-02', 'M-5-4-01'],
   },
   ability: 'usuzovani',
+  showFact: true,
   banks: detektivBanks,
 });
 

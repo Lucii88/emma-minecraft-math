@@ -75,7 +75,7 @@ export const kritickeCards: KnowledgeCard[] = [
   {
     id: 'zahady.mytus.blesk', skillId: 'zahady.mytus', level: 3, emoji: '⚡',
     title: 'Blesk a stejné místo',
-    text: 'Blesk klidně uhodí do stejného místa mnohokrát. Do mrakodrapu Empire State Building v New Yorku uhodí v průměru asi pětadvacetkrát za rok.',
+    text: 'Blesk klidně uhodí do stejného místa mnohokrát. Do mrakodrapu Empire State Building v New Yorku uhodí v průměru asi dvacetkrát až pětadvacetkrát za rok.',
     fix: {
       before: 'Blesk nikdy neuhodí dvakrát do stejného místa.',
       evidence: 'Vědci měří údery blesku přístroji a kamerami na vysokých stavbách.',
@@ -140,24 +140,24 @@ export const kritickeMissions: JointMission[] = [
     id: 'zahady.detektiv-reklam', island: 'zahady', emoji: '📺', level: 2,
     title: 'Detektivka reklam',
     text: 'Najdi s rodičem tři reklamy – v časopise, na ulici nebo v televizi. U každé zjisti, co po tobě chce a kdo ji asi zaplatil.',
-    parentTip: 'Ptejte se společně: Co nám reklama slibuje? Jaký trik používá – známou tvář, spěch, hvězdičku s malým písmem? Chvalte, když si dcera všimne detailu, ne rychlou odpověď. Klidně se spolu zasmějte nejvtipnějšímu triku.',
+    parentTip: 'Ptejte se společně: Co nám reklama slibuje? Jaký trik používá – známou tvář, spěch, hvězdičku s malým písmem? Chvalte, když si {dcera|syn} všimne detailu, ne rychlou odpověď. Klidně se spolu zasmějte nejvtipnějšímu triku.',
   },
   {
     id: 'zahady.overeni-mytu', island: 'zahady', emoji: '🧪', level: 1,
     title: 'Ověř tvrzení pokusem',
     text: 'Vyber si jedno tvrzení a ověř ho bezpečným pokusem. Třeba: Plave kostka ledu? Hřeje svetr sám od sebe? Nejdřív si tipni, pak zkoušej.',
-    parentTip: 'Nechte dceru nejdřív říct tip a zapsat nebo nakreslit ho. Pokus zopakujte aspoň třikrát. Pak se ptejte: Co jsme čekali a co se stalo? Když tip nevyšel, oslavte to – přesně tak se věda opravuje. Použijte jen bezpečné věci z kuchyně.',
+    parentTip: 'Nechte {dceru|syna} nejdřív říct tip a zapsat nebo nakreslit ho. Pokus zopakujte aspoň třikrát. Pak se ptejte: Co jsme čekali a co se stalo? Když tip nevyšel, oslavte to – přesně tak se věda opravuje. Použijte jen bezpečné věci z kuchyně.',
   },
   {
     id: 'zahady.vecere', island: 'zahady', emoji: '🍽️', level: 1,
     title: 'Fakt a názor u večeře',
     text: 'U večeře řekne každý jeden fakt a jeden názor o dnešním dni. Ostatní hádají, co bylo co.',
-    parentTip: 'Začněte sami, třeba: „Dnes pršelo“ a „Déšť je otravný“. Ptejte se: Jak bychom fakt ověřili? Může mít někdo jiný názor? Oceňujte zajímavé příklady a nechte dceru nachytat vás na zapeklitých větách.',
+    parentTip: 'Začněte sami, třeba: „Dnes pršelo“ a „Déšť je otravný“. Ptejte se: Jak bychom fakt ověřili? Může mít někdo jiný názor? Oceňujte zajímavé příklady a nechte {dceru|syna} nachytat vás na zapeklitých větách.',
   },
   {
     id: 'zahady.tyden-jak-to-vis', island: 'zahady', emoji: '🔎', level: 2,
     title: 'Týden „A jak to víš?“',
     text: 'Celý týden si hrajte na Hádankáře mlžného. Kdo doma něco tvrdí, toho se ostatní mohou zeptat: „A jak to víš?“ Uvidíte, co víte jistě a co jen z doslechu.',
-    parentTip: 'Hrajte vlídně a s humorem, otázka nemá nikoho zahanbit. Za dobrou odpověď (viděla jsem, změřila jsem, četla jsem v knize) dejte třeba dračí razítko. Nechte dceru ptát se i vás a přiznejte, když něco víte jen z doslechu.',
+    parentTip: 'Hrajte vlídně a s humorem, otázka nemá nikoho zahanbit. Za dobrou odpověď ({viděla|viděl} jsem, {změřila|změřil} jsem, {četla|četl} jsem v knize) dejte třeba dračí razítko. Nechte {dceru|syna} ptát se i vás a přiznejte, když něco víte jen z doslechu.',
   },
 ];

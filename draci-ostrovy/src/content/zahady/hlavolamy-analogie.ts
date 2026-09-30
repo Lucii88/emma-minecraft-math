@@ -47,7 +47,9 @@ const REL = {
   kola: 'vozidlo a počet jeho kol',
   misto: 'věc a místo, kde ji najdeš',
   prace: 'člověk a to, co dělá',
-  potrava: 'zvíře a to, čím se živí',
+  // Ne „čím se živí“: králík se živí hlavně senem, mrkev je jen pamlsek
+  // (viz „Mýtus, nebo pravda?“ – králík a mrkev).
+  potrava: 'zvíře a to, na čem si rádo pochutná',
   nasledek: 'příčina a to, co způsobí',
   vede: 'místo a ten, kdo ho vede',
   vyroba: 'surovina a to, co se z ní vyrobí',
@@ -160,7 +162,7 @@ const L2: Spec[] = [
   pic(P('🍯', 'med'), P('🐝', 'včela'), P('🥛', 'mléko'), P('🐄', 'kráva'),
     [P('🐔', 'slepice'), P('🐷', 'prase'), P('🐶', 'pes')], 'puvod', 'Od kterého zvířete máme mléko?'),
   pic(P('🐝', 'včela'), P('🌸', 'květ'), P('🐰', 'králík'), P('🥕', 'mrkev'),
-    [P('🦴', 'kost'), P('🧀', 'sýr'), P('🍯', 'med')], 'potrava', 'Co rád chroupe králík?', 0.1),
+    [P('🦴', 'kost'), P('🧀', 'sýr'), P('🍯', 'med')], 'potrava', 'Na čem si rád pochutná králík?', 0.1),
 ];
 
 // ---------------------------------------------------------------------------

@@ -680,6 +680,9 @@ function tableAttempt(level: Level, rng: Rng): Spec | null {
   const N = (i: number) => cast[i].nom;
   const G = (i: number) => cast[i].gen!;
   const D = (i: number) => cast[i].dat!;
+  // „Zbývající dva, Leif a Runa“, ale „zbývající dvě, Anna a Runa“.
+  const two = (x: number, y: number) => (cast[x].female && cast[y].female ? 'dvě' : 'dva');
+  const leftover = (x: number, y: number) => (cast[x].female && cast[y].female ? 'Zbylé dvě' : 'Zbylí dva');
   const a = 0;
   const b = opp(0);
   const others = [1, 2, 3].filter((i) => i !== b);
@@ -692,7 +695,7 @@ function tableAttempt(level: Level, rng: Rng): Spec | null {
   const [c, d] = form === 'dvakrat' ? rng.shuffle(others) : [...others].sort((x, y) => byName(cast[x], cast[y]));
   if (form === 'naproti') {
     clues = [`${N(a)} sedí naproti ${D(b)}.`];
-    explain = `${N(a)} a ${N(b)} sedí naproti sobě. Zbývající dva, ${N(c)} a ${N(d)}, tedy také sedí naproti sobě.`;
+    explain = `${N(a)} a ${N(b)} sedí naproti sobě. Zbývající ${two(c, d)}, ${N(c)} a ${N(d)}, tedy také sedí naproti sobě.`;
     variant = 'n';
   } else if (form === 'nevedle') {
     clues = [`${N(a)} nesedí vedle ${G(b)}.`];
@@ -700,7 +703,7 @@ function tableAttempt(level: Level, rng: Rng): Spec | null {
     variant = 'w';
   } else {
     clues = [`${N(c)} sedí vedle ${G(a)}.`, `${N(c)} sedí vedle ${G(b)}.`];
-    explain = `${N(c)} sedí vedle ${G(a)} i vedle ${G(b)}, takže naproti ${D(c)} sedí ${N(d)}. Zbylí dva, ${N(a)} a ${N(b)}, sedí naproti sobě.`;
+    explain = `${N(c)} sedí vedle ${G(a)} i vedle ${G(b)}, takže naproti ${D(c)} sedí ${N(d)}. ${leftover(a, b)}, ${N(a)} a ${N(b)}, sedí naproti sobě.`;
     variant = 'v';
   }
   // Otázka na někoho, o kom vodítko přímo neříká, kdo sedí naproti.
@@ -837,7 +840,7 @@ const MISC_L2: Spec[] = [
 ];
 
 const MISC_L3: Spec[] = [
-  num('stuha-4', 'Kolikrát musíš přestřihnout stuhu, abys měla 4 kousky?', 3,
+  num('stuha-4', 'Kolikrát musíš přestřihnout stuhu, abys {měla|měl} 4 kousky?', 3,
     ['Nakresli si stuhu a čárky tam, kde střihneš.'],
     'Jeden střih udělá 2 kousky a každý další přidá jeden. Na 4 kousky stačí 3 střihy.'),
   num('sloupky-5', 'Na rovné cestě stojí v řadě 5 sloupků. Mezi každými dvěma sousedními je natažený provázek. Kolik je provázků?', 4,
@@ -847,7 +850,7 @@ const MISC_L3: Spec[] = [
     ['Nezapomeň započítat Leifa.'], 'Leif, jeho dvě sestry a bratr – to jsou 4 děti.'),
   num('jablka-vezmes', 'V krabici jsou 3 jablka. Vezmeš si 2. Kolik jablek máš ty?', 2,
     ['Čti pozorně: kolik jich máš ty, ne kolik jich zůstalo v krabici.'],
-    'Máš ta 2 jablka, která sis vzala. V krabici zůstalo jedno.'),
+    'Máš ta 2 jablka, která sis {vzala|vzal}. V krabici zůstalo jedno.'),
   num('vek-az', 'Leifovi je 7 let a Runě 4 roky. Kolik let bude Runě, až bude Leifovi 10?', 7,
     ['O kolik let je Leif starší než Runa?'],
     'Leif je o 3 roky starší a ten rozdíl se nemění. Až mu bude 10, Runě bude 10 − 3 = 7 let.'),
@@ -963,7 +966,7 @@ const IFS: IfCtx[] = [
     askP: 'Dostal dnes Blesk rybu?', askQ: 'Zamával dnes Blesk radostně křídly?',
     mp: 'Za rybu Blesk zamává vždycky – a dnes ji dostal.',
     mt: 'Kdyby Blesk dostal rybu, zamával by křídly. Nezamával, takže rybu nedostal.',
-    ac: 'Blesk mohl mávat radostí i z jiného důvodu, třeba když uviděl svou jezdkyni.',
+    ac: 'Blesk mohl mávat radostí i z jiného důvodu, třeba když uviděl kamaráda.',
     da: 'Pravidlo říká jen, co Blesk udělá, když dostane rybu. Jinak mávat může, ale nemusí.',
   },
   {
@@ -1261,23 +1264,23 @@ const COMB_L6: Spec[] = [
 const BAD_LUCK = 'Představ si největší smůlu: co vytáhneš, když se ti to bude co nejdéle nedařit?';
 
 const PIGEON_L6: Spec[] = [
-  num('holub-stejne-2barvy', 'V šuplíku je 6 červených a 6 modrých ponožek. Je tma. Kolik ponožek musíš vytáhnout, abys měla jistě dvě ponožky stejné barvy?', 3,
+  num('holub-stejne-2barvy', 'V šuplíku je 6 červených a 6 modrých ponožek. Je tma. Kolik ponožek musíš vytáhnout, abys {měla|měl} jistě dvě ponožky stejné barvy?', 3,
     [BAD_LUCK], 'Po dvou ponožkách můžeš mít červenou a modrou. Třetí už barvu zopakuje, takže stačí 3.'),
-  num('holub-stejne-3barvy', 'V šuplíku je 5 červených, 5 modrých a 5 zelených ponožek. Je tma. Kolik jich musíš vytáhnout, abys měla jistě dvě ponožky stejné barvy?', 4,
+  num('holub-stejne-3barvy', 'V šuplíku je 5 červených, 5 modrých a 5 zelených ponožek. Je tma. Kolik jich musíš vytáhnout, abys {měla|měl} jistě dvě ponožky stejné barvy?', 4,
     [BAD_LUCK], 'Při smůle vytáhneš nejdřív tři různé barvy. Čtvrtá ponožka už barvu zopakuje.'),
-  num('holub-cervene2', 'V šuplíku je 5 červených a 3 modré ponožky. Je tma. Kolik jich musíš vytáhnout, abys měla jistě dvě červené?', 5,
+  num('holub-cervene2', 'V šuplíku je 5 červených a 3 modré ponožky. Je tma. Kolik jich musíš vytáhnout, abys {měla|měl} jistě dvě červené?', 5,
     [BAD_LUCK], 'Při smůle vytáhneš nejdřív všechny 3 modré. Pak potřebuješ ještě 2 červené: 3 + 2 = 5.'),
-  num('holub-modra1', 'V šuplíku je 5 červených a 3 modré ponožky. Je tma. Kolik jich musíš vytáhnout, abys měla jistě aspoň jednu modrou?', 6,
+  num('holub-modra1', 'V šuplíku je 5 červených a 3 modré ponožky. Je tma. Kolik jich musíš vytáhnout, abys {měla|měl} jistě aspoň jednu modrou?', 6,
     [BAD_LUCK], 'Při smůle vytáhneš nejdřív všech 5 červených. Šestá ponožka už je určitě modrá.'),
-  num('holub-kulicky3', 'V pytlíku jsou 4 žluté a 4 zelené kuličky. Taháš poslepu. Kolik jich musíš vytáhnout, abys měla jistě 3 kuličky stejné barvy?', 5,
+  num('holub-kulicky3', 'V pytlíku jsou 4 žluté a 4 zelené kuličky. Taháš poslepu. Kolik jich musíš vytáhnout, abys {měla|měl} jistě 3 kuličky stejné barvy?', 5,
     [BAD_LUCK], 'Při smůle máš po 4 kuličkách 2 žluté a 2 zelené. Pátá už udělá trojici.'),
-  num('holub-rukavice', 'V krabici jsou 4 levé a 4 pravé rukavice, všechny stejné barvy. Je tma. Kolik jich musíš vytáhnout, abys měla jistě levou i pravou?', 5,
+  num('holub-rukavice', 'V krabici jsou 4 levé a 4 pravé rukavice, všechny stejné barvy. Je tma. Kolik jich musíš vytáhnout, abys {měla|měl} jistě levou i pravou?', 5,
     [BAD_LUCK], 'Při smůle vytáhneš nejdřív všechny 4 levé (nebo 4 pravé). Pátá je určitě na druhou ruku.'),
-  num('holub-bonbony', 'V misce je 6 jahodových a 4 citronové bonbony. Bereš poslepu. Kolik jich musíš vzít, abys měla jistě aspoň jeden od každé příchutě?', 7,
+  num('holub-bonbony', 'V misce je 6 jahodových a 4 citronové bonbony. Bereš poslepu. Kolik jich musíš vzít, abys {měla|měl} jistě aspoň jeden od každé příchutě?', 7,
     [BAD_LUCK], 'Při smůle vezmeš nejdřív všech 6 jahodových. Sedmý je určitě citronový.'),
   num('holub-narozeniny', 'Kolik nejméně dětí musí být ve skupině, aby dvě z nich měly jistě narozeniny ve stejném měsíci?', 13,
     ['Kolik je v roce měsíců?'], 'Měsíců je 12. Dvanáct dětí může mít narozeniny každé v jiném měsíci, ale třinácté už měsíc s někým sdílí.'),
-  num('holub-pary', 'V šuplíku je 10 bílých a 10 černých ponožek. Je tma. Kolik jich musíš vytáhnout, abys měla jistě dva páry? Pár jsou dvě ponožky stejné barvy.', 5,
+  num('holub-pary', 'V šuplíku je 10 bílých a 10 černých ponožek. Je tma. Kolik jich musíš vytáhnout, abys {měla|měl} jistě dva páry? Pár jsou dvě ponožky stejné barvy.', 5,
     [BAD_LUCK, 'Kolik párů je ve 3 bílých a 1 černé ponožce?'], 'Ze 4 ponožek můžeš mít 3 bílé a 1 černou – to je jen jeden pár. Z 5 ponožek máš vždycky dva páry.'),
 ];
 

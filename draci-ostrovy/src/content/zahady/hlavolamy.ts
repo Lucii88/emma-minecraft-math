@@ -5,6 +5,9 @@
 // inteligence. Hra je podle rozhodnutí rodiče trénuje, ale každé procvičení
 // zapisuje (testLike), aby šlo psycholožce přesně říct, co dítě dělalo.
 // Úlohy jsou vlastní, nejsou převzaté ze skutečných testů.
+//
+// Vysvětlení hlavolamů je postup řešení, ne zajímavost – showFact tu
+// záměrně chybí (po správné odpovědi by jen zdržovalo).
 
 import { bankSkill } from '../../core/bank';
 import type { JointMission, KnowledgeCard, SkillDef } from '../../core/types';
@@ -272,7 +275,7 @@ export const hlavolamyMissions: JointMission[] = [
     title: 'Řady z věcí',
     text: 'Rodič poskládá na stůl řadu z lžiček, kostek nebo pastelek. Ty přijdeš na pravidlo a v řadě pokračuješ. Pak si role vyměníte.',
     parentTip:
-      'Začněte jednoduše (lžička, kostka, lžička, kostka…) a postupně přidávejte: dvě stejné a jednu jinou, tři různé, rostoucí řady. Ptejte se: „Jak jsi na to přišla?“ Když skládá řadu dítě, občas se schválně spleťte a nechte ho chybu najít.',
+      'Začněte jednoduše (lžička, kostka, lžička, kostka…) a postupně přidávejte: dvě stejné a jednu jinou, tři různé, rostoucí řady. Ptejte se: „Jak jsi na to {přišla|přišel}?“ Když skládá řadu dítě, občas se schválně spleťte a nechte ho chybu najít.',
     level: 1,
   },
   {
