@@ -76,6 +76,11 @@ const isFixedItem = (item: Item) =>
 
 const allItems = digitalniSkills.flatMap(itemsOf);
 
+/** Text bez značek {ženský|mužský}. */
+const unmarked = (t: string) => t.replace(/\{[^{}|]*\|[^{}|]*\}/g, '');
+/** Ženský tvar o hráči bez značky: „jsi vyhrála“, „bys ověřila“, „máš ráda“, „dcera“. */
+const FEMININE_ONLY = /(^|[^\p{L}])(dcer\p{L}*|\p{L}+la (jsi|bys)|(jsi|a?bys|kdybys)( \p{L}+){0,3} \p{L}+la|máš ráda|chodíš sama)([^\p{L}]|$)/u;
+
 // ---------------------------------------------------------------------------
 
 describe('Dílna, digitální svět – dovednosti', () => {
@@ -146,6 +151,15 @@ describe('Dílna, digitální svět – dovednosti', () => {
           seen.set(item.id, content);
         }
       }
+    }
+  });
+
+  it('zajímavost po správné odpovědi mají znalostní dovednosti, třídění strojem (postup) ne', () => {
+    const SHOW_FACT: Record<string, boolean> = { 'dilna.ai': true, 'dilna.stroj': false, 'dilna.hugin': true, 'dilna.soukromi': true };
+    for (const s of digitalniSkills) expect(s.showFact ?? false, s.id).toBe(SHOW_FACT[s.id]);
+    // Zajímavost se ukazuje i po správné odpovědi: nezačíná hodnocením tvrzení.
+    for (const s of digitalniSkills.filter((x) => x.showFact)) {
+      for (const item of itemsOf(s)) expect(item.explanation, item.id).not.toMatch(/^(Opravdu|To není|Je to naopak|Ano|Ne)(?![\p{L}])/u);
     }
   });
 
@@ -363,6 +377,13 @@ describe('Oprav Hugina', () => {
 
   it('vysvětlení vždy říká, jak se to ověří', () => {
     for (const item of itemsOf(s)) expect(item.explanation, item.id).toMatch(JAK_OVERIT);
+  });
+
+  it('vysvětlení navazuje na tvrzení: nic nového nespadne z nebe', () => {
+    const tucnaci = itemsOf(s).find((i) => keyOf(i) === 'tvrzeni-tucnaci')!;
+    expect(tucnaci.explanation).toMatch(/severním pólu/);
+    // Lední medvědi jsou výslovně provázaní se severním pólem.
+    if (/lední medvěd/.test(tucnaci.explanation)) expect(tucnaci.explanation).toMatch(/Tam místo nich žijí lední medvědi/);
   });
 
   it('počty v Huginových tvrzeních sedí s tím, jestli má pravdu', () => {
@@ -773,6 +794,7 @@ describe('Dílna, digitální svět – texty', () => {
         expect((t.match(/„/g) ?? []).length, `${item.id}: „${t}“`).toBe((t.match(/“/g) ?? []).length);
         expect((t.match(/‚/g) ?? []).length, `${item.id}: „${t}“`).toBe((t.match(/‘/g) ?? []).length);
         expect(lower(t), item.id).not.toMatch(/(^|[^\p{L}])em+a([^\p{L}]|$)|kniha draků/u);
+        expect(unmarked(t), `${item.id}: tvar o hráči bez značky rodu v „${t}“`).not.toMatch(FEMININE_ONLY);
       }
     }
   });
@@ -800,6 +822,8 @@ describe('Dílna, digitální svět – texty', () => {
         expect((t.match(/„/g) ?? []).length, m.id).toBe((t.match(/“/g) ?? []).length);
       }
       expect(m.text, m.id).not.toMatch(/\b(zkusil|udělal|našel) jsi\b/);
+      // Oslovení hráče má obě podoby ({ověřila|ověřil}), mimo značky nezbude ženský tvar.
+      for (const t of [m.text, m.parentTip]) expect(unmarked(t), m.id).not.toMatch(FEMININE_ONLY);
     }
   });
 });

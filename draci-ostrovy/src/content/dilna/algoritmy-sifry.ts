@@ -533,7 +533,7 @@ const L6: Spec[] = [
   {
     kind: 'number',
     key: 'lampy-dvacet',
-    prompt: 'Lampy v řadě mají čísla 1, 2, 4, 8 a tak dál. Každá rozsvícená lampa přidá své číslo. Kolik lamp musí řada mít, abys ukázala číslo 20?',
+    prompt: 'Lampy v řadě mají čísla 1, 2, 4, 8 a tak dál. Každá rozsvícená lampa přidá své číslo. Kolik lamp musí řada mít, abys {ukázala|ukázal} číslo 20?',
     correct: 5,
     hints: ['Jaké největší číslo ukážou lampy 1, 2, 4 a 8?', 'Která lampa se do 20 ještě vejde?'],
     explain: 'Lampy 1, 2, 4 a 8 ukážou nejvýš 15, a to na 20 nestačí. Řada potřebuje i lampu 16 (20 = 16 + 4), takže musí mít pět lamp.',

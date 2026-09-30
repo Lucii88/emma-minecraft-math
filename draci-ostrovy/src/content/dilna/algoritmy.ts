@@ -20,7 +20,7 @@ export const algoritmyMissions: JointMission[] = [
     emoji: '🤖',
     title: 'Robot rodič',
     text: 'Schovej v pokoji malý poklad. Rodič bude robot, který umí jen tři povely: „krok dopředu“, „otoč se doleva“ a „otoč se doprava“. Doveď ho povely až k pokladu!',
-    parentTip: 'Buďte opravdu doslovný robot: udělejte přesně to, co zazní, i když to vede ke zdi (opatrně). Když se robot splete, zeptejte se: „Který povel byl špatně?“ Chvalte, když dcera chybu sama najde a opraví. Pak si role vyměňte.',
+    parentTip: 'Buďte opravdu doslovný robot: udělejte přesně to, co zazní, i když to vede ke zdi (opatrně). Když se robot splete, zeptejte se: „Který povel byl špatně?“ Chvalte, když {dcera|syn} chybu {sama|sám} najde a opraví. Pak si role vyměňte.',
     level: 1,
   },
   {
@@ -29,7 +29,7 @@ export const algoritmyMissions: JointMission[] = [
     emoji: '🔐',
     title: 'Tajná zpráva',
     text: 'Vymysli vlastní šifru: každému písmenu přiřaď obrázek nebo číslo. Napiš rodiči tajný vzkaz a dej mu k němu klíč. Dokáže ho rozluštit?',
-    parentTip: 'Nechte dceru, ať šifru vymyslí sama, i kdyby byla jednoduchá. Při luštění nahlas přemýšlejte, jak postupujete, a nechte se opravit. Starší luštitelé můžou zkusit vzkaz bez klíče: která značka je nejčastější? V češtině patří k nejčastějším písmenům O, E a A.',
+    parentTip: 'Nechte {dceru|syna}, ať šifru vymyslí {sama|sám}, i kdyby byla jednoduchá. Při luštění nahlas přemýšlejte, jak postupujete, a nechte se opravit. Starší luštitelé můžou zkusit vzkaz bez klíče: která značka je nejčastější? V češtině patří k nejčastějším písmenům O, E a A.',
     level: 1,
   },
   {
@@ -38,7 +38,7 @@ export const algoritmyMissions: JointMission[] = [
     emoji: '🐦',
     title: 'Sčítání z okna',
     text: 'Sedni si s rodičem k oknu a deset minut počítej, co vidíš: ptáky, auta nebo lidi se psem. Každou věc zapiš čárkou do tabulky. Pak z čárek nakresli sloupcový graf.',
-    parentTip: 'Připravte tabulku se třemi řádky a obrázky (pták, auto, pes) a nechte dceru čárkovat. Potom se ptejte: Čeho bylo nejvíc? O kolik? Myslíš, že to zítra bude stejné? Graf nakreslete na čtverečkovaný papír – jedno políčko je jedna čárka.',
+    parentTip: 'Připravte tabulku se třemi řádky a obrázky (pták, auto, pes) a nechte {dceru|syna} čárkovat. Potom se ptejte: Čeho bylo nejvíc? O kolik? Myslíš, že to zítra bude stejné? Graf nakreslete na čtverečkovaný papír – jedno políčko je jedna čárka.',
     level: 1,
   },
   {

@@ -165,6 +165,11 @@ function drawn(g: Grid, path: Move[]): { rocks: number[]; goal: number[]; exit: 
   return out;
 }
 
+/** Text bez značek {ženský|mužský}. */
+const unmarked = (t: string) => t.replace(/\{[^{}|]*\|[^{}|]*\}/g, '');
+/** Ženský tvar o hráči bez značky: „abys ukázala“, „jsi vyhrála“, „dcera“. */
+const FEMININE_ONLY = /(^|[^\p{L}])(dcer\p{L}*|\p{L}+la (jsi|bys)|(jsi|a?bys|kdybys)( \p{L}+){0,3} \p{L}+la|máš ráda)([^\p{L}]|$)/u;
+
 /** Tvary podstatných jmen podle čísla (1 / 2–4 / 0 a 5+); u 2–4 i 4. pád. */
 const NOUNS: [string[], string[], string[]][] = [
   [['krok'], ['kroky'], ['kroků']],
@@ -241,6 +246,10 @@ describe('Dílna (algoritmy) – dovednosti', () => {
     }
   });
 
+  it('vysvětlení je postup (výpočet, cesta, klíč), ne zajímavost: showFact je vypnutý', () => {
+    for (const s of algoritmySkills) expect(s.showFact ?? false, s.id).toBe(false);
+  });
+
   it('úroveň mimo rozsah dovednosti dá úlohu nejbližší úrovně', () => {
     for (const s of algoritmySkills) {
       for (const level of [1, 2, 3, 4, 5, 6] as Level[]) {
@@ -267,6 +276,12 @@ describe('Dílna (algoritmy) – karty a mise', () => {
     expect(algoritmyMissions.length).toBeGreaterThanOrEqual(3);
     expect(algoritmyMissions.length).toBeLessThanOrEqual(4);
     for (const m of algoritmyMissions) expect(m.level).toBeLessThanOrEqual(2);
+  });
+
+  it('mise oslovují holku i kluka: mimo značky rodu nezbude ženský tvar', () => {
+    for (const m of algoritmyMissions) {
+      for (const t of [m.title, m.text, m.parentTip]) expect(unmarked(t), m.id).not.toMatch(FEMININE_ONLY);
+    }
   });
 
   it('fakta v kartách odpovídají nezávislé tabulce', () => {
@@ -985,6 +1000,7 @@ describe('Dílna (algoritmy) – texty', () => {
         expect(t, item.id).not.toMatch(/\s[,.?!]/);
         expect(t, item.id).not.toMatch(/\b(undefined|null|NaN)\b/);
         expect(t.toLocaleLowerCase('cs'), item.id).not.toMatch(/\bem+a\b/);
+        expect(unmarked(t), `${item.id}: tvar o hráči bez značky rodu v „${t}“`).not.toMatch(FEMININE_ONLY);
       }
       if (SYMBOL.test(item.prompt)) expect(item.speak, `${item.id}: zadání se symboly potřebuje speak`).toBeTruthy();
       if (item.speak) expect(item.speak, item.id).not.toMatch(SYMBOL);

@@ -1,8 +1,8 @@
 // Vynálezecká dílna – umělá inteligence a digitální svět. Průvodcem je Hugin,
 // mechanický havran z dílny (jméno má po Odinově havranovi ze severských
 // bájí). Je to jasně stroj: umí hodně, ale plete se, nemá city a rád se
-// nechá opravit. Hráčka se učí, že AI se mýlí a je potřeba ji ověřovat.
-// Emočním parťákem hráčky je její drak, ne Hugin.
+// nechá opravit. Hráč nebo hráčka se učí, že AI se mýlí a je potřeba ji ověřovat.
+// Emočním parťákem hráče je jeho drak, ne Hugin.
 
 import type { JointMission, KnowledgeCard, SkillDef } from '../../core/types';
 import { aiCards, aiSkill } from './digitalni-ai';
@@ -38,7 +38,7 @@ export const digitalniMissions: JointMission[] = [
     island: 'dilna',
     emoji: '🤖',
     title: 'Hraj si na stroj',
-    text: 'Rodič ti ukáže věci s nálepkou „drak“ a „není drak“. Ty jsi stroj: přijdi na pravidlo a pak třiď nové věci. Potom si role vyměňte.',
+    text: 'Rodič ti ukáže věci s nálepkou „drak“ a „není drak“. Ty jsi stroj: přijď na pravidlo a pak třiď nové věci. Potom si role vyměňte.',
     parentTip: 'Zvolte jednoduché skryté pravidlo, třeba „drak je všechno zelené“ nebo „drak má ocas“. Ukazujte příklady po jednom a nechte dítě tipovat. Pak ať vymyslí pravidlo pro vás. Povídejte si, kolik příkladů bylo potřeba a kdy se stroj spletl.',
     level: 2,
   },
@@ -47,7 +47,7 @@ export const digitalniMissions: JointMission[] = [
     island: 'dilna',
     emoji: '🐦',
     title: 'Oprav Hugina naživo',
-    text: 'Rodič bude Hugin a přečte ti pět tvrzení. Dvě z nich jsou schválně špatně. Najdi je a vymysli, jak bys každé tvrzení ověřila.',
+    text: 'Rodič bude Hugin a přečte ti pět tvrzení. Dvě z nich jsou schválně špatně. Najdi je a vymysli, jak bys každé tvrzení {ověřila|ověřil}.',
     parentTip: 'Připravte pět krátkých tvrzení z domova, třeba „lednička je vyšší než stůl“, dvě z nich chybná. U každého se ptejte: Jak bychom to ověřili? Pak to spolu opravdu změřte, spočítejte nebo najděte v knize. Chvalte nápady na ověření.',
     level: 1,
   },
