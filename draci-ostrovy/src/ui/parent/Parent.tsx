@@ -25,6 +25,9 @@ function rangeLabel(l: { low: number; mid: number; high: number }): string {
 
 type Tab = 'radar' | 'testy' | 'mise' | 'portfolio' | 'settings';
 
+/** „od 2. ročníku“ – od kdy se mise hodí (2. pád, ne „od 2. ročník“). */
+const fromLevel = (level: number) => (level >= 6 ? 'nad rámec 1. stupně' : `od ${Math.max(1, level)}. ročníku`);
+
 const pct = (x: number | null) => (x === null ? '–' : `${Math.round(x * 100)} %`);
 const date = (t: number) => new Date(t).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' });
 
@@ -434,7 +437,7 @@ function MissionsView({ view: { profile, demo, t } }: { view: View }) {
                 <article key={m.id} className={`card pm${done[m.id] ? ' done' : ''}`}>
                   <h3>
                     <span aria-hidden>{m.emoji}</span> {m.title}
-                    <span className="muted small"> · od {levelLabel(m.level)}</span>
+                    <span className="muted small"> · {fromLevel(m.level)}</span>
                   </h3>
                   <p>
                     <strong>Pro dítě:</strong> {m.text}
