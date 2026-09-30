@@ -4,6 +4,7 @@ import { sfx } from '../../core/sound';
 import type { DragonLook } from '../../core/storage';
 import { BELLY_COLORS, BODY_COLORS, DEFAULT_LOOK, Dragon, EYE_COLORS, Egg, WING_COLORS } from '../components/Dragon';
 import { Sparkles } from '../components/Bits';
+import { useGx } from '../useGx';
 
 export function DragonEditor({ look, onChange }: { look: DragonLook; onChange: (l: DragonLook) => void }) {
   const set = (patch: Partial<DragonLook>) => onChange({ ...look, ...patch });
@@ -74,6 +75,7 @@ function Swatch({ color, active, label, onClick }: { color: string; active: bool
 }
 
 export function Hatch() {
+  const t = useGx();
   const hatch = useGame((s) => s.hatch);
   const [step, setStep] = useState<'egg' | 'hatched' | 'look' | 'name'>('egg');
   const [cracks, setCracks] = useState(0);
@@ -93,7 +95,7 @@ export function Hatch() {
     <div className="screen hatch center">
       {step === 'egg' && (
         <>
-          <h1>Vítej, jezdkyně!</h1>
+          <h1>{t('Vítej, {jezdkyně|jezdče}!')}</h1>
           <p className="lead">Na tvém ostrově leží dračí vejce. Něco se v něm hýbe…</p>
           <button className="egg-btn" onClick={tapEgg} aria-label="Ťukni na vejce">
             <Egg look={look} cracks={cracks} size={220} wobble />

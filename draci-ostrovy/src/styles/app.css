@@ -505,7 +505,136 @@ h3 {
 }
 
 .parent-btn {
-  opacity: 0.7;
+  font-size: 0.95rem;
+}
+
+.player-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 8px;
+}
+
+.player-chip svg {
+  flex: none;
+}
+
+/* ---------- Hráči: úvodní nastavení a „Kdo hraje?“ ---------- */
+
+.setup {
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+}
+
+.setup-card {
+  width: 100%;
+  max-width: 520px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+}
+
+.setup-card > svg {
+  align-self: center;
+}
+
+.setup-card h1 {
+  margin: 0;
+  text-align: center;
+  color: var(--sea-deep);
+}
+
+.setup-card > p {
+  margin: 0;
+}
+
+.field-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.field-block .muted {
+  font-weight: 400;
+}
+
+.field-block select {
+  font: inherit;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 2px solid var(--parchment-edge);
+  background: #fff;
+}
+
+.gender-pick {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gender-chip {
+  flex: 1 1 150px;
+  justify-content: center;
+}
+
+.pin-row {
+  display: flex;
+  gap: 10px;
+}
+
+.pin-row .pin-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.privacy {
+  text-align: center;
+  margin: 0;
+}
+
+.players h1 {
+  color: var(--sea-deep);
+}
+
+.player-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  max-width: 760px;
+}
+
+.player-card {
+  width: 170px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: 3px solid var(--parchment-edge);
+}
+
+.player-card.current {
+  border-color: var(--ok);
+}
+
+.player-card.add {
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.add-plus {
+  font-size: 3rem;
+  line-height: 1;
+  color: var(--sea-deep);
 }
 
 /* ---------- Líhnutí a úprava draka ---------- */
@@ -1126,6 +1255,36 @@ h3 {
   font-size: 1.15rem;
 }
 
+.sheet-expl p {
+  margin: 0;
+}
+
+/* Zajímavost po správné odpovědi */
+.sheet-fact {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 12px;
+  text-align: left;
+  background: #fff;
+  border: 2px solid #bfe8da;
+  border-radius: 18px;
+  padding: 12px 16px;
+}
+
+.sheet-fact .fact-label {
+  grid-column: 1 / -1;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #1f7a5c;
+}
+
+.sheet-fact .speak {
+  width: 48px;
+  height: 48px;
+}
+
 @keyframes slide-up {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
@@ -1664,6 +1823,35 @@ h3 {
 .err {
   color: #b23a1d;
   font-weight: 700;
+}
+
+.pin-question {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.pin-card .forgot {
+  align-self: center;
+}
+
+/* Ukázka se smyšleným dítětem a pozvánka k ní */
+.demo-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px 16px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  border-color: var(--gold);
+  background: #fff8e6;
+  margin-bottom: 16px;
+}
+
+.demo-banner p {
+  margin: 0;
+  flex: 1 1 320px;
 }
 
 .wipe-confirm {

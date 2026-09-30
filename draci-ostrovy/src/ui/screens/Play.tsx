@@ -13,13 +13,14 @@ import { renderWorldVisual, visualSpeech } from '../visuals/WorldVisuals';
 import { BodyMap, labelOf } from '../visuals/BodyMap';
 import { arrows, shortestProgram } from '../../core/grid';
 import { IslandArt } from './MapScreen';
+import { useGx } from '../useGx';
 
 const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)];
 
 const PRAISE_PLAIN = ['Přesně tak.', 'Správně.', 'Sedí to.', 'Ano, to je ono.'];
-const PRAISE_HARD = ['Tohle byla těžká úloha – a vyřešila jsi ji.', 'Těžší úloha a zvládla jsi ji. Klobouk dolů.'];
-const PRAISE_RETRY = ['Nevzdala ses – a vyšlo to.', 'Druhý pokus a je to tam.', 'Zkusila jsi to jinak a povedlo se.'];
-const PRAISE_HINT = ['Nápověda pomohla a zbytek jsi zvládla sama.', 'S malou nápovědou jsi na to přišla.'];
+const PRAISE_HARD = ['Tohle byla těžká úloha – a {vyřešila|vyřešil} jsi ji.', 'Těžší úloha a {zvládla|zvládl} jsi ji. Klobouk dolů.'];
+const PRAISE_RETRY = ['{Nevzdala|Nevzdal} ses – a vyšlo to.', 'Druhý pokus a je to tam.', '{Zkusila|Zkusil} jsi to jinak a povedlo se.'];
+const PRAISE_HINT = ['Nápověda pomohla a zbytek jsi {zvládla sama|zvládl sám}.', 'S malou nápovědou jsi na to {přišla|přišel}.'];
 const RETRY = ['Tohle ještě ne. Zkus to znovu.', 'Skoro! Zkus jinou cestu.', 'Hmm, ještě jednou – podívej se na nápovědu.'];
 
 type Phase = 'answer' | 'confidence' | 'feedback' | 'solution' | 'open-done';
@@ -68,6 +69,7 @@ function IslandPicker() {
 }
 
 function ItemView({ item }: { item: Item }) {
+  const t = useGx();
   const run = useGame((s) => s.run)!;
   const profile = useGame((s) => s.profile);
   const useHint = useGame((s) => s.useHint);
@@ -110,15 +112,15 @@ function ItemView({ item }: { item: Item }) {
       hard && out === 'first' ? sfx.hard() : sfx.correct();
       setMood('happy');
       let msg = out === 'first' ? (hard ? pick(PRAISE_HARD) : pick(PRAISE_PLAIN)) : n > 1 ? pick(PRAISE_RETRY) : pick(PRAISE_HINT);
-      if (conf === 'hadala' && out === 'first') msg += ' Věděla jsi víc, než sis myslela.';
-      setMessage(msg);
+      if (conf === 'hadala' && out === 'first') msg += ' {Věděla|Věděl} jsi víc, než sis {myslela|myslel}.';
+      setMessage(t(msg));
       setPhase('feedback');
       return;
     }
     if (n < 3) {
       sfx.retry();
       setMood('oops');
-      setMessage(conf === 'jiste' && n === 1 ? 'Byla sis jistá, a přesto to nevyšlo – takové chyby si mozek pamatuje nejlíp. Zkus to znovu.' : pick(RETRY));
+      setMessage(conf === 'jiste' && n === 1 ? t('{Byla|Byl} sis {jistá|jistý}, a přesto to nevyšlo – takové chyby si mozek pamatuje nejlíp. Zkus to znovu.') : pick(RETRY));
       if (hintsShown < item.hints.length) {
         useHint();
         setHintsShown((h) => h + 1);
@@ -263,7 +265,7 @@ function ItemView({ item }: { item: Item }) {
                 sfx.correct();
                 setMood('happy');
                 setOpenPayload({ text, ideas });
-                setMessage(ideas && ideas > 1 ? `${capitalize(count(ideas, ['nápad', 'nápady', 'nápadů']))}! Každý se počítá – i ten nejpraštěnější.` : 'Díky! Tvůj text je uložený v Deníku jezdkyně.');
+                setMessage(ideas && ideas > 1 ? `${capitalize(count(ideas, ['nápad', 'nápady', 'nápadů']))}! Každý se počítá – i ten nejpraštěnější.` : t('Díky! Tvůj text je uložený v Deníku {jezdkyně|jezdce}.'));
                 setPhase('open-done');
               }}
             />
@@ -305,7 +307,17 @@ function ItemView({ item }: { item: Item }) {
               Správně je <strong>{solutionText}</strong>. {explanation}
             </p>
           )}
-          {phase === 'feedback' && outcome !== 'first' && item.explanation && <p className="sheet-expl">{item.explanation}</p>}
+          {phase === 'feedback' && item.explanation && (outcome !== 'first' || skill.showFact) && (
+            <div className={`sheet-expl${skill.showFact ? ' sheet-fact' : ''}`}>
+              {skill.showFact && (
+                <span className="fact-label">
+                  <span aria-hidden>💡</span> Zajímavost
+                </span>
+              )}
+              <p>{explanation}</p>
+              {skill.showFact && <SpeakButton text={explanation} />}
+            </div>
+          )}
           <button className="btn btn-primary btn-big" onClick={finish} autoFocus>
             {phase === 'solution' ? 'Rozumím' : 'Pokračovat'}
           </button>

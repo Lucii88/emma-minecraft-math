@@ -3,12 +3,36 @@
 import { create } from 'zustand';
 import { CARDS, ISLANDS, MISSIONS, SKILL_BY_ID, TRICKS, islandOf } from '../content';
 import { masteredLevels, scoreOf, updateState } from './model';
+import { gx, type Gender } from './gender';
 import { MISSION_LENGTH, missionForSkill, nextItem, pickGrowthSkill, planDay, stateOf, type Mission } from './planner';
-import { appendEvent, loadProfile, saveProfile, type DragonLook, type JournalEntry, type Profile } from './storage';
+import {
+  appendEvent,
+  defaultProfile,
+  loadDevice,
+  loadProfile,
+  newPlayerId,
+  removePlayerData,
+  saveDevice,
+  saveProfile,
+  setActivePlayer,
+  type Device,
+  type DragonLook,
+  type JournalEntry,
+  type Profile,
+} from './storage';
 import { setMuted } from './sound';
 import type { AnswerEvent, Confidence, IslandId, Item } from './types';
 
-export type Screen = 'hatch' | 'map' | 'island' | 'play' | 'missionEnd' | 'dayEnd' | 'book' | 'journal' | 'parent';
+export type Screen = 'setup' | 'players' | 'hatch' | 'map' | 'island' | 'play' | 'missionEnd' | 'dayEnd' | 'book' | 'journal' | 'parent';
+
+/** Nový hráč: vyplní rodič před líhnutím draka. */
+export interface NewPlayer {
+  name: string;
+  gender: Gender;
+  grade: number;
+  /** Rodičovský PIN – jen u prvního hráče na zařízení. */
+  pin?: string;
+}
 
 export type Outcome = AnswerEvent['outcome'];
 
@@ -36,6 +60,10 @@ export interface Run {
 }
 
 interface GameState {
+  /** Hráči na zařízení a rodičovský PIN. */
+  device: Device;
+  /** Id hráče, který právě hraje (null = zatím nikdo). */
+  playerId: string | null;
   profile: Profile;
   screen: Screen;
   island: IslandId | null;
@@ -49,6 +77,11 @@ interface GameState {
   updateSettings: (patch: Partial<Profile['settings']>) => void;
   setGrade: (grade: number) => void;
   replaceProfile: (p: Profile) => void;
+  createPlayer: (p: NewPlayer) => void;
+  switchPlayer: (id: string) => void;
+  removePlayer: (id: string) => Promise<void>;
+  updatePlayer: (patch: { name?: string; gender?: Gender }) => void;
+  setPin: (pin: string | undefined) => void;
 
   startDay: () => void;
   startSkill: (skillId: string, brave?: boolean) => void;
@@ -65,10 +98,16 @@ interface GameState {
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
+// Kdo právě hraje – kam se ukládá profil.
+let current: string | null = null;
+
 function persist(p: Profile) {
-  saveProfile(p);
+  if (current) saveProfile(current, p);
   return p;
 }
+
+/** Úvodní obrazovka hráče: bez draka se líhne, jinak mapa. */
+const homeOf = (p: Profile): Screen => (p.dragon ? 'map' : 'hatch');
 
 function journal(p: Profile, kind: JournalEntry['kind'], text: string): Profile {
   return { ...p, journal: [...p.journal, { t: Date.now(), kind, text }] };
@@ -95,12 +134,24 @@ function unlockCards(p: Profile, skillId: string, from: number, to: number): { p
   return { profile, gain: { kind: 'card', text: cards.length > 4 ? `${cards.length} nových stránek v Knize draků` : text } };
 }
 
-const initialProfile = loadProfile();
+const initialDevice = loadDevice();
+current = initialDevice.active;
+if (current) setActivePlayer(current);
+const initialProfile = current ? loadProfile(current) : defaultProfile();
 setMuted(!initialProfile.settings.sound);
 
+/** Při startu: bez hráče nastavení, víc hráčů → kdo hraje, jinak rovnou hra. */
+function initialScreen(): Screen {
+  if (!current) return 'setup';
+  if (initialDevice.players.length > 1) return 'players';
+  return homeOf(initialProfile);
+}
+
 export const useGame = create<GameState>((set, get) => ({
+  device: initialDevice,
+  playerId: current,
   profile: initialProfile,
-  screen: initialProfile.dragon ? 'map' : 'hatch',
+  screen: initialScreen(),
   island: null,
   run: null,
   choosingIsland: false,
@@ -129,7 +180,59 @@ export const useGame = create<GameState>((set, get) => ({
 
   replaceProfile: (p) => {
     setMuted(!p.settings.sound);
-    set({ profile: persist(p), screen: p.dragon ? 'map' : 'hatch', run: null });
+    set({ profile: persist(p), screen: homeOf(p), run: null });
+  },
+
+  createPlayer: ({ name, gender, grade, pin }) => {
+    const id = newPlayerId();
+    const profile: Profile = { ...defaultProfile(), name: name.trim(), gender, grade };
+    const device: Device = { ...get().device, players: [...get().device.players, id], active: id, ...(pin ? { pin } : {}) };
+    current = id;
+    setActivePlayer(id);
+    saveProfile(id, profile);
+    saveDevice(device);
+    setMuted(!profile.settings.sound);
+    set({ device, playerId: id, profile, screen: 'hatch', run: null, island: null, choosingIsland: false });
+  },
+
+  switchPlayer: (id) => {
+    const device: Device = { ...get().device, active: id };
+    const profile = loadProfile(id);
+    current = id;
+    setActivePlayer(id);
+    saveDevice(device);
+    setMuted(!profile.settings.sound);
+    set({ device, playerId: id, profile, screen: homeOf(profile), run: null, island: null, choosingIsland: false });
+  },
+
+  removePlayer: async (id) => {
+    await removePlayerData(id);
+    const players = get().device.players.filter((p) => p !== id);
+    if (get().playerId !== id) {
+      const device: Device = { ...get().device, players };
+      saveDevice(device);
+      set({ device });
+      return;
+    }
+    const next = players[0] ?? null;
+    const device: Device = { ...get().device, players, active: next };
+    saveDevice(device);
+    current = next;
+    if (next) setActivePlayer(next);
+    const profile = next ? loadProfile(next) : defaultProfile();
+    set({ device, playerId: next, profile, screen: next ? homeOf(profile) : 'setup', run: null, island: null, choosingIsland: false });
+  },
+
+  updatePlayer: (patch) => {
+    const p = { ...get().profile, ...(patch.name !== undefined ? { name: patch.name.trim() } : {}), ...(patch.gender ? { gender: patch.gender } : {}) };
+    set({ profile: persist(p) });
+  },
+
+  setPin: (pin) => {
+    const { pin: _, ...rest } = get().device;
+    const device: Device = pin ? { ...rest, pin } : rest;
+    saveDevice(device);
+    set({ device });
   },
 
   startDay: () => {
@@ -270,7 +373,7 @@ export const useGame = create<GameState>((set, get) => ({
       endGains.push({ kind: 'species', text: `Nový dračí přítel: ${isl.species.name}` });
     }
     if (brave) {
-      profile = journal(profile, 'brave', 'Bouřkový let: pustila ses do úloh, které byly schválně těžké. Odznak odvahy!');
+      profile = journal(profile, 'brave', gx('Bouřkový let: {pustila|pustil} ses do úloh, které byly schválně těžké. Odznak odvahy!', profile.gender));
       endGains.push({ kind: 'brave', text: 'Odznak odvahy za Bouřkový let' });
     }
     // Pokud mise nepřinesla nový kousek, občas se drak naučí něco i tak –
@@ -310,7 +413,7 @@ export const useGame = create<GameState>((set, get) => ({
     let profile = get().profile;
     if (!mission || profile.missionsDone[id]) return;
     profile = { ...profile, missionsDone: { ...profile.missionsDone, [id]: Date.now() } };
-    profile = journal(profile, 'mission', `Společná mise splněna: ${mission.title}.`);
+    profile = journal(profile, 'mission', gx(`Společná mise splněna: ${mission.title}.`, profile.gender));
     set({ profile: persist(profile) });
   },
 

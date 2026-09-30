@@ -78,6 +78,7 @@ const POS: Record<IslandId, { x: number; y: number }> = {
 
 export function MapScreen() {
   const profile = useGame((s) => s.profile);
+  const players = useGame((s) => s.device.players.length);
   const go = useGame((s) => s.go);
   const startDay = useGame((s) => s.startDay);
 
@@ -90,14 +91,18 @@ export function MapScreen() {
       <div className="map-top topbar">
         <h1 className="logo">Dračí ostrovy</h1>
         <span className="spacer" />
+        <button className="btn btn-ghost player-chip" onClick={() => go('players')} title={players > 1 ? 'Kdo hraje?' : 'Hráči – přidat sourozence'}>
+          {profile.dragon && <Dragon look={profile.dragon} size={30} />}
+          <span>{profile.name || profile.dragonName || 'Hráč'}</span>
+        </button>
         <button className="btn btn-ghost" onClick={() => go('book')}>
           <Icon name="book" /> Kniha draků
         </button>
         <button className="btn btn-ghost" onClick={() => go('journal')}>
           <Icon name="scroll" /> Deník
         </button>
-        <button className="btn btn-round btn-ghost parent-btn" onClick={() => go('parent')} aria-label="Pro rodiče">
-          <Icon name="lock" size={22} />
+        <button className="btn btn-ghost parent-btn" onClick={() => go('parent')}>
+          <Icon name="lock" size={20} /> Pro rodiče
         </button>
       </div>
 

@@ -3,9 +3,12 @@
 // (podepsaná cookie), takže dítě kód nezadává. Bez závislostí, jen Node.
 //
 // Proměnné prostředí:
-//   ACCESS_CODE     přístupový kód (povinný – bez něj server nenastartuje)
-//   SESSION_SECRET  tajemství pro podpis cookie (doporučené). Změna kódu
-//                   nebo tajemství odhlásí všechna zařízení.
+//   ACCESS_CODE     rodinný přístupový kód (povinný – bez něj server nenastartuje)
+//   GUEST_CODES     další kódy oddělené čárkou (nepovinné), např. pro kamarády
+//                   nebo pro příspěvek. Každý kód má vlastní cookie: kód, který
+//                   ze seznamu odeberete, odhlásí jen zařízení přihlášená jím.
+//   SESSION_SECRET  tajemství pro podpis cookie (doporučené). Změna tajemství
+//                   odhlásí všechna zařízení.
 //   PORT            port (Railway nastavuje sám)
 //
 // Data hry se na server nikdy neposílají – zůstávají v prohlížeči.
@@ -124,30 +127,40 @@ function loginPage(message = '') {
     color: #fff; background: var(--fire); box-shadow: 0 5px 0 var(--fire-dark); }
   button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
   .error { margin: 0 0 14px; color: var(--error); font-weight: 600; }
+  .note { margin: 18px 0 0; font-size: 0.85rem; }
 </style>
 </head>
 <body>
 <main>
   <div class="egg" aria-hidden="true"></div>
   <h1>Dračí ostrovy</h1>
-  <p>Zadejte rodinný kód. Toto zařízení si ho zapamatuje.</p>
+  <p>Vzdělávací hra pro děti 6–9 let. Dítě si vylíhne draka a spolu se učí počítat, číst, poznávat svět, zacházet s penězi i přemýšlet jako vynálezce.</p>
+  <p>Zadejte kód, který jste dostali. Zařízení si ho zapamatuje.</p>
   ${message ? `<p class="error" role="alert">${message}</p>` : ''}
   <form method="post" action="${LOGIN}">
-    <label for="kod">Rodinný kód</label>
+    <label for="kod">Přístupový kód</label>
     <input id="kod" name="kod" type="password" autocomplete="current-password" autocapitalize="none"
       spellcheck="false" required autofocus>
     <button type="submit">Vstoupit</button>
   </form>
+  <p class="note">Hra nic neodesílá: postup dítěte zůstává jen v tomto zařízení.</p>
 </main>
 </body>
 </html>`;
 }
 
+/** Kódy z proměnné prostředí: oddělené čárkou, prázdné vynechá. */
+export const parseCodes = (value) =>
+  String(value ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
 /**
  * Vytvoří HTTP server (zatím neposlouchá).
- * @param {{ root: string, accessCode: string, secret?: string, now?: () => number }} options
+ * @param {{ root: string, accessCode: string, guestCodes?: string[], secret?: string, now?: () => number }} options
  */
-export function createApp({ root, accessCode, secret, now = Date.now }) {
+export function createApp({ root, accessCode, guestCodes = [], secret, now = Date.now }) {
   if (!accessCode) throw new Error('Chybí přístupový kód (ACCESS_CODE).');
   const files = loadFiles(root);
   const index = files.get('/index.html');
@@ -155,8 +168,12 @@ export function createApp({ root, accessCode, secret, now = Date.now }) {
 
   const key = secret || accessCode;
   const mac = (text) => createHmac('sha256', key).update(text).digest();
-  const token = mac(`draci-ostrovy/v1/${normalize(accessCode)}`).toString('base64url');
-  const codeMac = mac(`kod/${normalize(accessCode)}`);
+  // Každý kód má vlastní cookie. Rodinný kód má stejnou jako dřív, takže
+  // přidání dalších kódů nikoho neodhlásí.
+  const codes = [...new Set([accessCode, ...guestCodes].map(normalize).filter(Boolean))].map((code) => ({
+    check: mac(`kod/${code}`),
+    token: Buffer.from(mac(`draci-ostrovy/v1/${code}`).toString('base64url')),
+  }));
   const fails = new Map();
 
   const cookieOf = (req) => {
@@ -167,7 +184,10 @@ export function createApp({ root, accessCode, secret, now = Date.now }) {
     return '';
   };
   const same = (a, b) => a.length === b.length && timingSafeEqual(a, b);
-  const authed = (req) => same(Buffer.from(cookieOf(req)), Buffer.from(token));
+  const authed = (req) => {
+    const cookie = Buffer.from(cookieOf(req));
+    return codes.some((c) => same(cookie, c.token));
+  };
 
   // Railway předává adresu klienta v X-Forwarded-For (poslední položku
   // doplňuje jeho proxy, ty předchozí si může klient vymyslet).
@@ -252,9 +272,11 @@ export function createApp({ root, accessCode, secret, now = Date.now }) {
         const ip = clientIp(req);
         if (blocked(ip)) return html(res, 429, loginPage('Příliš mnoho pokusů. Zkuste to prosím za čtvrt hodiny.'));
         const form = await readForm(req);
-        if (same(mac(`kod/${normalize(form.get('kod') ?? '')}`), codeMac)) {
+        const typed = mac(`kod/${normalize(form.get('kod') ?? '')}`);
+        const match = codes.find((c) => same(typed, c.check));
+        if (match) {
           fails.delete(ip);
-          return send(res, 303, { Location: '/', 'Set-Cookie': cookie(token, MAX_AGE), 'Cache-Control': 'no-store' }, '');
+          return send(res, 303, { Location: '/', 'Set-Cookie': cookie(match.token.toString(), MAX_AGE), 'Cache-Control': 'no-store' }, '');
         }
         recordFail(ip);
         return html(res, 401, loginPage('Kód nesedí. Zkuste to znovu.'));
@@ -297,7 +319,9 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     process.exit(1);
   }
   if (!process.env.SESSION_SECRET) console.warn('SESSION_SECRET není nastavený – cookie se podepisuje přístupovým kódem.');
-  const server = createApp({ root, accessCode, secret: process.env.SESSION_SECRET });
+  const guestCodes = parseCodes(process.env.GUEST_CODES);
+  const server = createApp({ root, accessCode, guestCodes, secret: process.env.SESSION_SECRET });
+  if (guestCodes.length) console.log(`Další přístupové kódy: ${guestCodes.length}.`);
   const port = Number(process.env.PORT ?? 3000);
   // Bez adresy: Node poslouchá na IPv6 i IPv4 (::), kde IPv6 není, jen na IPv4.
   server.listen(port, () => console.log(`Dračí ostrovy běží na portu ${port}.`));

@@ -4,12 +4,14 @@
 import { useEffect, useState } from 'react';
 import { CARDS, ISLANDS, MISSIONS, SKILL_BY_ID, TRICKS, cardsOf, missionsOf } from '../../content';
 import { useGame } from '../../core/game';
+import { mapStrings } from '../../core/gender';
 import { sfx } from '../../core/sound';
 import { loadEvents } from '../../core/storage';
 import type { IslandId, JointMission, KnowledgeCard } from '../../core/types';
 import { Dragon } from '../components/Dragon';
 import { Icon, SpeakButton } from '../components/Bits';
 import { IslandArt } from './MapScreen';
+import { useGx } from '../useGx';
 
 type Tab = 'draci' | 'znalosti' | 'mise' | 'vytvory';
 
@@ -20,7 +22,9 @@ export function isUnlocked(card: KnowledgeCard, best: Record<string, number>): b
   return (best[card.skillId] ?? 0) >= card.level;
 }
 
-export function KnowledgePage({ card, unlocked }: { card: KnowledgeCard; unlocked: boolean }) {
+export function KnowledgePage({ card: raw, unlocked }: { card: KnowledgeCard; unlocked: boolean }) {
+  const gender = useGame((s) => s.profile.gender);
+  const card = mapStrings(raw, gender);
   const skill = SKILL_BY_ID[card.skillId];
   if (!unlocked) {
     const island = skill ? ISLANDS.find((i) => i.id === skill.island) : undefined;
@@ -67,7 +71,9 @@ export function KnowledgePage({ card, unlocked }: { card: KnowledgeCard; unlocke
   );
 }
 
-export function MissionCard({ mission }: { mission: JointMission }) {
+export function MissionCard({ mission: raw }: { mission: JointMission }) {
+  const gender = useGame((s) => s.profile.gender);
+  const mission = mapStrings(raw, gender);
   const done = useGame((s) => s.profile.missionsDone[mission.id]);
   const complete = useGame((s) => s.completeMission);
   return (
@@ -225,6 +231,7 @@ function MissionsTab() {
 }
 
 function CreationsTab() {
+  const t = useGx();
   const profile = useGame((s) => s.profile);
   const [texts, setTexts] = useState<{ t: number; text: string; skill: string }[] | null>(null);
   useEffect(() => {
@@ -243,7 +250,7 @@ function CreationsTab() {
         {profile.dragon && <Dragon look={profile.dragon} size={150} mood="happy" />}
         <div>
           <h2>{profile.dragonName || 'Tvůj drak'}</h2>
-          <p className="muted">Draka jsi navrhla sama – barvy, vzor i rohy. Tohle je tvůj první vynález.</p>
+          <p className="muted">{t('Draka jsi {navrhla sama|navrhl sám} – barvy, vzor i rohy. Tohle je tvůj první vynález.')}</p>
         </div>
       </div>
       <h2 className="section-title">Moje příběhy a nápady</h2>

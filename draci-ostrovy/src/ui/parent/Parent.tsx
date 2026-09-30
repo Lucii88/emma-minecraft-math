@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ISLANDS, MISSIONS, missionsOf } from '../../content';
 import { useGame } from '../../core/game';
+import { gx, mapStrings, type Gender } from '../../core/gender';
 import { buildRadar, type Radar } from '../../core/radar';
 import { levelLabel } from '../../core/planner';
-import { exportAll, importAll, loadEvents, wipeAll } from '../../core/storage';
+import { exportAll, importAll, loadEvents, wipeAll, type Profile } from '../../core/storage';
 import { hasCzechVoice, voiceName } from '../../core/speech';
 import type { AnswerEvent } from '../../core/types';
 import { Icon } from '../components/Bits';
 import { count, form } from '../../core/czech';
+import { buildDemo } from '../../core/demo';
+import { DragonEditor } from '../screens/Hatch';
 
 const ODPOVED = ['odpověď', 'odpovědi', 'odpovědí'] as const;
 const DEN = ['den', 'dny', 'dní'] as const;
@@ -19,12 +22,20 @@ function rangeLabel(l: { low: number; mid: number; high: number }): string {
   const main = l.mid > 0 ? levelLabel(l.mid) : 'pod 1. ročníkem';
   return l.low === l.high ? main : `${main} (rozpětí ${lo}–${l.high}. ročník)`;
 }
-import { DragonEditor } from '../screens/Hatch';
 
-type Tab = 'radar' | 'ppp' | 'mise' | 'portfolio' | 'settings';
+type Tab = 'radar' | 'testy' | 'mise' | 'portfolio' | 'settings';
 
 const pct = (x: number | null) => (x === null ? '–' : `${Math.round(x * 100)} %`);
 const date = (t: number) => new Date(t).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' });
+
+/** Co rodič právě prohlíží: své dítě, nebo ukázku se smyšleným dítětem. */
+interface View {
+  profile: Profile;
+  radar: Radar;
+  demo: boolean;
+  /** Texty o dítěti ve správném rodě. */
+  t: (text: string) => string;
+}
 
 export function Parent() {
   const go = useGame((s) => s.go);
@@ -32,17 +43,37 @@ export function Parent() {
   const [unlocked, setUnlocked] = useState(false);
   const [tab, setTab] = useState<Tab>('radar');
   const [events, setEvents] = useState<AnswerEvent[] | null>(null);
+  const [demo, setDemo] = useState(false);
 
   useEffect(() => {
     if (unlocked) void loadEvents().then((e) => setEvents([...e]));
   }, [unlocked]);
 
-  const radar = useMemo(() => (events ? buildRadar(profile, events) : null), [profile, events]);
+  const demoData = useMemo(() => (demo ? buildDemo() : null), [demo]);
+  const shown = demoData?.profile ?? profile;
+  const radar = useMemo(() => {
+    if (demoData) return buildRadar(demoData.profile, demoData.events);
+    return events ? buildRadar(profile, events) : null;
+  }, [demoData, profile, events]);
 
   if (!unlocked) return <PinGate onOk={() => setUnlocked(true)} onBack={() => go('map')} />;
 
+  const view: View | null = radar ? { profile: shown, radar, demo, t: (text) => gx(text, shown.gender) } : null;
+  const tabs: [Tab, string][] = [
+    ['radar', 'Jak na tom je'],
+    ['testy', 'Testové úlohy'],
+    ['mise', 'Společné mise'],
+    ['portfolio', 'Portfolio'],
+    ...(demo ? [] : ([['settings', 'Nastavení']] as [Tab, string][])),
+  ];
+  const openDemo = () => {
+    setDemo(true);
+    setTab('radar');
+    window.scrollTo(0, 0);
+  };
+
   return (
-    <div className="screen parent">
+    <div className={`screen parent${demo ? ' demo' : ''}`}>
       <div className="topbar no-print">
         <button className="btn btn-round btn-ghost" onClick={() => go('map')} aria-label="Zpět do hry">
           <Icon name="back" />
@@ -50,45 +81,95 @@ export function Parent() {
         <h1>Pro rodiče</h1>
         <span className="spacer" />
         <nav className="tabs">
-          {(
-            [
-              ['radar', 'Radar'],
-              ['ppp', 'Trénink pro PPP'],
-              ['mise', 'Společné mise'],
-              ['portfolio', 'Portfolio'],
-              ['settings', 'Nastavení'],
-            ] as const
-          ).map(([id, name]) => (
+          {tabs.map(([id, name]) => (
             <button key={id} className={`tab${tab === id ? ' active' : ''}`} onClick={() => setTab(id)}>
               {name}
             </button>
           ))}
         </nav>
       </div>
-      {!radar && <p>Načítám…</p>}
-      {radar && tab === 'radar' && <RadarView radar={radar} />}
-      {radar && tab === 'ppp' && <PppView radar={radar} />}
-      {tab === 'mise' && <MissionsView />}
-      {radar && tab === 'portfolio' && <Portfolio radar={radar} />}
-      {tab === 'settings' && <SettingsView />}
+      {demo ? (
+        <div className="card demo-banner no-print">
+          <p>
+            <strong>Ukázka.</strong> Smyšlené dítě ({shown.name}, {shown.grade}. třída) a smyšlená data zhruba z měsíce hraní – takhle přehled vypadá, když se naplní. Nejsou to data vašeho dítěte.
+          </p>
+          <button className="btn btn-sea" onClick={() => setDemo(false)}>
+            Zpět k {profile.name ? `přehledu: ${profile.name}` : 'mému dítěti'}
+          </button>
+        </div>
+      ) : (
+        view &&
+        view.radar.totals.answers < 30 &&
+        tab === 'radar' && (
+          <div className="card demo-banner no-print">
+            <p>Přehled se naplní po několika dnech hraní. Mezitím se můžete podívat, jak vypadá u smyšleného dítěte.</p>
+            <button className="btn btn-sea" onClick={openDemo}>
+              Ukázka přehledu
+            </button>
+          </div>
+        )
+      )}
+      {!view && <p>Načítám…</p>}
+      {view && tab === 'radar' && <RadarView view={view} />}
+      {view && tab === 'testy' && <TestLikeView view={view} />}
+      {view && tab === 'mise' && <MissionsView view={view} />}
+      {view && tab === 'portfolio' && <Portfolio view={view} />}
+      {!demo && tab === 'settings' && <SettingsView onDemo={openDemo} />}
     </div>
   );
 }
 
 function PinGate({ onOk, onBack }: { onOk: () => void; onBack: () => void }) {
-  const pin = useGame((s) => s.profile.settings.pin);
-  const update = useGame((s) => s.updateSettings);
+  const pin = useGame((s) => s.device.pin);
+  const setPin = useGame((s) => s.setPin);
   const [a, setA] = useState('');
   const [b, setB] = useState('');
   const [err, setErr] = useState('');
+  const [forgot, setForgot] = useState(false);
+  const [answer, setAnswer] = useState('');
+  // Otázka pro dospělé: dvojmístné krát jednomístné číslo.
+  const [q] = useState(() => ({ x: 13 + Math.floor(Math.random() * 80), y: 3 + Math.floor(Math.random() * 7) }));
   const creating = !pin;
+
+  if (forgot && !creating) {
+    return (
+      <div className="screen center pin-gate">
+        <div className="card pin-card">
+          <h2>Zapomenutý PIN</h2>
+          <p className="muted small">Otázka pro dospělé. Když odpovíte, nastavíte si nový PIN – data dítěte zůstanou.</p>
+          <p className="pin-question">
+            Kolik je {q.x} × {q.y}?
+          </p>
+          <input className="pin-input" inputMode="numeric" maxLength={4} value={answer} onChange={(e) => setAnswer(e.target.value.replace(/\D/g, ''))} autoFocus />
+          {err && <p className="err">{err}</p>}
+          <div className="row-actions">
+            <button className="btn btn-ghost" onClick={() => setForgot(false)}>
+              Zpět
+            </button>
+            <button
+              className="btn btn-sea"
+              onClick={() => {
+                if (Number(answer) !== q.x * q.y) return setErr('To nesedí.');
+                setErr('');
+                setPin(undefined);
+                setForgot(false);
+              }}
+            >
+              Ověřit
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="screen center pin-gate">
       <div className="card pin-card">
         <h2>{creating ? 'Nastavte rodičovský PIN' : 'Jen pro rodiče'}</h2>
         <p className="muted small">
           {creating
-            ? 'Čtyři číslice. Chrání rodičovský přehled před zvědavými dračími jezdkyněmi (není to zabezpečení proti útočníkům – data jsou jen v tomto zařízení).'
+            ? 'Čtyři číslice. Chrání rodičovský přehled před zvědavými dračími jezdci (není to zabezpečení proti útočníkům – data jsou jen v tomto zařízení).'
             : 'Zadejte PIN.'}
         </p>
         <input className="pin-input" inputMode="numeric" maxLength={4} value={a} onChange={(e) => setA(e.target.value.replace(/\D/g, ''))} placeholder="PIN" autoFocus />
@@ -103,7 +184,7 @@ function PinGate({ onOk, onBack }: { onOk: () => void; onBack: () => void }) {
             onClick={() => {
               if (creating) {
                 if (a.length !== 4 || a !== b) return setErr('PIN musí mít 4 číslice a obě pole se musí shodovat.');
-                update({ pin: a });
+                setPin(a);
                 onOk();
               } else if (a === pin) onOk();
               else setErr('To není ono.');
@@ -112,6 +193,17 @@ function PinGate({ onOk, onBack }: { onOk: () => void; onBack: () => void }) {
             Pokračovat
           </button>
         </div>
+        {!creating && (
+          <button
+            className="btn btn-ghost btn-small forgot"
+            onClick={() => {
+              setErr('');
+              setForgot(true);
+            }}
+          >
+            Zapomněli jste PIN?
+          </button>
+        )}
       </div>
     </div>
   );
@@ -122,12 +214,11 @@ function Advantage({ value }: { value: number }) {
   return <span className={`adv adv-${value >= 1 ? 'up' : value >= 0 ? 'mid' : 'down'}`}>{label}</span>;
 }
 
-function RadarView({ radar }: { radar: Radar }) {
-  const profile = useGame((s) => s.profile);
+function RadarView({ view: { profile, radar, t } }: { view: View }) {
   return (
     <div className="radar">
       <div className="card note">
-        <strong>Jak číst radar.</strong> Ukazuje signály, ne diagnózu – žádné IQ ani srovnání s jinými dětmi. Úrovně jsou vztažené k očekávaným výstupům RVP ZV (1.–5. ročník) a mají rozpětí podle toho, kolik odpovědí máme. Odhad se zpřesňuje zhruba po 10 odpovědích v dovednosti. Dítě tuto stránku nevidí.
+        <strong>Jak číst přehled.</strong> Ukazuje signály, ne diagnózu – žádné IQ ani srovnání s jinými dětmi. Úrovně jsou vztažené k očekávaným výstupům RVP ZV (1.–5. ročník) a mají rozpětí podle toho, kolik odpovědí máme. Odhad se zpřesňuje zhruba po 10 odpovědích v dovednosti. Dítě tuto stránku nevidí.
       </div>
 
       <div className="stat-row">
@@ -137,8 +228,8 @@ function RadarView({ radar }: { radar: Radar }) {
         <div className="card stat"><b>{radar.totals.minutes}</b><span>{form(radar.totals.minutes, ['minuta', 'minuty', 'minut'])} přemýšlení</span></div>
       </div>
 
-      <h2 className="section-title">1. Schopnosti – co zvládá vzhledem k RVP</h2>
-      <p className="muted small">Pruh ukazuje rozpětí stupňů, které zvládá s pravděpodobností aspoň 70 %; tečka je nejpravděpodobnější hodnota. Svislá čára = aktuální ročník ({profile.grade}.).</p>
+      <h2 className="section-title">1. Co zvládá vzhledem k ročníku</h2>
+      <p className="muted small">Pruh ukazuje rozpětí stupňů, které zvládá s pravděpodobností aspoň 70 %; tečka je nejpravděpodobnější hodnota. Svislá čára = aktuální ročník ({profile.grade}.). Stupně odpovídají očekávaným výstupům RVP ZV.</p>
       {radar.islands.map(({ island, skills }) => (
         <div key={island.id} className="card radar-island">
           <h3>{island.name}</h3>
@@ -148,7 +239,7 @@ function RadarView({ radar }: { radar: Radar }) {
                 <tr key={s.skill.id}>
                   <td className="lv-name">
                     {s.skill.name}
-                    {s.skill.testLike && <span className="tag" title="Formát podobný subtestu inteligence">testový formát</span>}
+                    {s.skill.testLike && <span className="tag" title="Formát podobný úlohám psychologických testů">testový formát</span>}
                   </td>
                   <td className="lv-bar-cell">
                     <div className="lv-bar">
@@ -164,7 +255,7 @@ function RadarView({ radar }: { radar: Radar }) {
                   </td>
                   <td className="lv-text small">
                     {!s.levels ? (
-                      <span className="muted">zatím nehrála</span>
+                      <span className="muted">{t('zatím {nehrála|nehrál}')}</span>
                     ) : (
                       <>
                         {rangeLabel(s.levels)}
@@ -182,7 +273,7 @@ function RadarView({ radar }: { radar: Radar }) {
 
       {radar.abilities.length > 0 && (
         <div className="card">
-          <h3>Relativní profil (silné stránky v rámci dítěte, ne srovnání s ostatními)</h3>
+          <h3>Silné stránky (v rámci dítěte, ne srovnání s ostatními)</h3>
           <ul className="plain">
             {radar.abilities.map((a) => (
               <li key={a.ability}>
@@ -193,7 +284,7 @@ function RadarView({ radar }: { radar: Radar }) {
         </div>
       )}
 
-      <h2 className="section-title">2. Potenciál učení</h2>
+      <h2 className="section-title">2. Jak rychle se učí</h2>
       <div className="card">
         <p>
           Úplně nové typy úloh: <b>{radar.potential.novelTasks}</b> · napoprvé správně <b>{pct(radar.potential.novelFirstTry)}</b> · průměrně nápověd na novou úlohu{' '}
@@ -202,10 +293,10 @@ function RadarView({ radar }: { radar: Radar }) {
         <p className="muted small">Málo nápověd u neznámého typu úlohy je jeden z lepších signálů rychlého učení. Pořád jde o orientační údaj.</p>
       </div>
 
-      <h2 className="section-title">3. Zaujetí úkolem a vytrvalost</h2>
+      <h2 className="section-title">3. Vytrvalost</h2>
       <div className="card">
         <p>
-          Bouřkový let (dobrovolně těžší úlohy): <b>{radar.commitment.braveItems}</b> úloh, vyřešeno <b>{radar.commitment.braveSolved}</b>. Po chybě to nakonec vyřešila v{' '}
+          Bouřkový let (dobrovolně těžší úlohy): <b>{radar.commitment.braveItems}</b> úloh, vyřešeno <b>{radar.commitment.braveSolved}</b>. {t('Po chybě to nakonec {vyřešila|vyřešil}')} v{' '}
           <b>{pct(radar.commitment.solvedAfterError)}</b> případů ({radar.commitment.errorItems} úloh s chybou).
         </p>
       </div>
@@ -230,7 +321,8 @@ function RadarView({ radar }: { radar: Radar }) {
       <h2 className="section-title">5. Sebedůvěra</h2>
       <div className="card">
         <p>
-          Hodnocených odpovědí: <b>{radar.confidence.rated}</b>. Ze správných odpovědí označila „hádala jsem“: <b>{pct(radar.confidence.underconfidence)}</b>. Z chybných odpovědí označila „jistě“: <b>{pct(radar.confidence.overconfidence)}</b>.
+          Hodnocených odpovědí: <b>{radar.confidence.rated}</b>. {t('Ze správných odpovědí {označila|označil} „{hádala|hádal} jsem“')}: <b>{pct(radar.confidence.underconfidence)}</b>.{' '}
+          {t('Z chybných odpovědí {označila|označil} „jistě“')}: <b>{pct(radar.confidence.overconfidence)}</b>.
           {radar.confidence.rated < 20 && <span className="muted"> Zatím málo dat – spolehlivější obrázek dá zhruba 20+ hodnocených odpovědí.</span>}
         </p>
         <table className="conf-table small">
@@ -244,7 +336,7 @@ function RadarView({ radar }: { radar: Radar }) {
           <tbody>
             {(['hadala', 'asi', 'jiste'] as const).map((k) => (
               <tr key={k}>
-                <td>{k === 'hadala' ? 'Hádala jsem' : k === 'asi' ? 'Asi' : 'Jistě'}</td>
+                <td>{k === 'hadala' ? t('{Hádala|Hádal} jsem') : k === 'asi' ? 'Asi' : 'Jistě'}</td>
                 <td>{radar.confidence.byChoice[k].n}</td>
                 <td>{radar.confidence.byChoice[k].n ? pct(radar.confidence.byChoice[k].correct / radar.confidence.byChoice[k].n) : '–'}</td>
               </tr>
@@ -252,25 +344,34 @@ function RadarView({ radar }: { radar: Radar }) {
           </tbody>
         </table>
         <p className="muted small">
-          Sedmileté děti se obvykle spíš přeceňují. Vysoký podíl „hádala jsem“ u správných odpovědí proto stojí za pozornost – je to vzorec podceňování, o kterém můžete mluvit i s psycholožkou.
+          {t(
+            'Děti v tomhle věku se obvykle spíš přeceňují. Vysoký podíl „{hádala|hádal} jsem“ u správných odpovědí proto stojí za pozornost – je to vzorec podceňování, o kterém stojí za to s dítětem mluvit (a případně i s učitelem nebo psychologem).',
+          )}
         </p>
       </div>
     </div>
   );
 }
 
-function PppView({ radar }: { radar: Radar }) {
-  const settings = useGame((s) => s.profile.settings);
+function TestLikeView({ view: { profile, radar, demo } }: { view: View }) {
   const update = useGame((s) => s.updateSettings);
+  const settings = profile.settings;
   return (
     <div className="ppp">
       <div className="card note">
-        <strong>Co dítě trénovalo.</strong> Podle vašeho rozhodnutí hra trénuje i úlohy, jejichž formát se podobá subtestům inteligence (např. řady nebo váhy). Takový trénink může výsledek v PPP zvednout zhruba o 3–5 bodů. Předejte proto tento přehled psycholožce – může zvolit jiné úlohy nebo výsledek vyložit s ohledem na něj.
+        <strong>Úlohy podobné testům.</strong> Některé hlavolamy mají stejný formát jako úlohy psychologických testů (třeba obrázkové řady, matice, analogie nebo obecné znalosti). Pro běžné hraní jsou v pořádku – rozvíjejí úvahu. Krátce před vyšetřením (například v pedagogicko-psychologické poradně) ale může jejich trénink výsledek zvednout zhruba o 3–5 bodů. Proto tu je přehled, co a kdy dítě trénovalo, a možnost tyto úlohy vynechat.
       </div>
-      <label className="field">
-        Datum návštěvy PPP:{' '}
-        <input type="date" value={settings.pppDate ?? ''} onChange={(e) => update({ pppDate: e.target.value })} />
-      </label>
+      {!demo && (
+        <div className="card">
+          <label className="field">
+            <input type="checkbox" checked={!!settings.skipTestLike} onChange={(e) => update({ skipTestLike: e.target.checked })} /> Vynechat úlohy podobné testům
+          </label>
+          <label className="field">
+            Datum vyšetření (nepovinné):{' '}
+            <input type="date" value={settings.pppDate ?? ''} onChange={(e) => update({ pppDate: e.target.value })} />
+          </label>
+        </div>
+      )}
       <div className="card">
         {radar.testLike.length === 0 ? (
           <p className="muted">Zatím žádné úlohy testového formátu.</p>
@@ -300,56 +401,62 @@ function PppView({ radar }: { radar: Radar }) {
         )}
       </div>
       <div className="card">
-        <h3>Příprava na návštěvu (co funguje)</h3>
+        <h3>Když dítě čeká vyšetření (co funguje)</h3>
         <ul className="plain">
-          <li>Řekněte dítěti: „Paní psycholožka má spoustu různých úkolů. Nejdřív budou lehké, pak čím dál těžší, až tak těžké, že je nevyřeší ani dospělí – to je schválně a stává se to každému. Když nevíš, můžeš tipnout. Nejsou to známky a nedá se to pokazit.“</li>
+          <li>Řekněte dítěti: „Budeš dostávat různé úkoly. Nejdřív budou lehké, pak čím dál těžší, až tak těžké, že je nevyřeší ani dospělí – to je schválně a stává se to každému. Když nevíš, můžeš tipnout. Nejsou to známky a nedá se to pokazit.“</li>
           <li>Nemluvte o „testu nadání“ a neslibujte odměnu za výsledek.</li>
-          <li>Vyspaná, spíš dopolední termín, svačina.</li>
-          <li>Psycholožce řekněte o sklonu podceňovat se a vzdávat těžké úlohy a požádejte o výklad po indexech.</li>
-          <li>Vezměte portfolio (záložka Portfolio) a vyplněný školní dotazník.</li>
+          <li>Vyspané dítě, spíš dopolední termín, svačina.</li>
+          <li>Pokud se dítě podceňuje nebo těžké úlohy vzdává, řekněte to psychologovi a požádejte o výklad po indexech.</li>
+          <li>Vezměte portfolio (záložka Portfolio) a tento přehled trénovaných úloh.</li>
         </ul>
       </div>
     </div>
   );
 }
 
-function MissionsView() {
-  const done = useGame((s) => s.profile.missionsDone);
+function MissionsView({ view: { profile, demo, t } }: { view: View }) {
   const undo = useGame((s) => s.undoMission);
+  const done = profile.missionsDone;
   const islands = ISLANDS.filter((i) => i.available && missionsOf(i.id).length > 0);
   return (
     <div className="parent-missions">
       <p className="lead">
-        Úkoly do skutečného světa na 10–20 minut. Nejde o doučování: hrajte si, ptejte se a chvalte postup („zkusila jsi to jinak“), ne talent. Dítě si splněnou misi odškrtne samo v Knize draků nebo na ostrově.
+        Úkoly do skutečného světa na 10–20 minut. Nejde o doučování: hrajte si, ptejte se a chvalte postup (
+        {t('„{zkusila|zkusil} jsi to jinak“')}), ne talent. Dítě si splněnou misi odškrtne samo v Knize draků nebo na ostrově.
       </p>
       {islands.map((island) => (
         <section key={island.id}>
           <h2 className="section-title">{island.name}</h2>
           <div className="pm-list">
-            {missionsOf(island.id).map((m) => (
-              <article key={m.id} className={`card pm${done[m.id] ? ' done' : ''}`}>
-                <h3>
-                  <span aria-hidden>{m.emoji}</span> {m.title}
-                  <span className="muted small"> · od {levelLabel(m.level)}</span>
-                </h3>
-                <p>
-                  <strong>Pro dítě:</strong> {m.text}
-                </p>
-                <p>
-                  <strong>Tip:</strong> {m.parentTip}
-                </p>
-                {done[m.id] ? (
-                  <p className="small">
-                    ✓ Splněno {date(done[m.id])}{' '}
-                    <button className="btn btn-ghost btn-small" onClick={() => undo(m.id)}>
-                      Zrušit odškrtnutí
-                    </button>
+            {missionsOf(island.id).map((raw) => {
+              const m = mapStrings(raw, profile.gender);
+              return (
+                <article key={m.id} className={`card pm${done[m.id] ? ' done' : ''}`}>
+                  <h3>
+                    <span aria-hidden>{m.emoji}</span> {m.title}
+                    <span className="muted small"> · od {levelLabel(m.level)}</span>
+                  </h3>
+                  <p>
+                    <strong>Pro dítě:</strong> {m.text}
                   </p>
-                ) : (
-                  <p className="muted small">Zatím nesplněno.</p>
-                )}
-              </article>
-            ))}
+                  <p>
+                    <strong>Tip:</strong> {m.parentTip}
+                  </p>
+                  {done[m.id] ? (
+                    <p className="small">
+                      ✓ Splněno {date(done[m.id])}{' '}
+                      {!demo && (
+                        <button className="btn btn-ghost btn-small" onClick={() => undo(m.id)}>
+                          Zrušit odškrtnutí
+                        </button>
+                      )}
+                    </p>
+                  ) : (
+                    <p className="muted small">Zatím nesplněno.</p>
+                  )}
+                </article>
+              );
+            })}
           </div>
         </section>
       ))}
@@ -357,10 +464,11 @@ function MissionsView() {
   );
 }
 
-function Portfolio({ radar }: { radar: Radar }) {
-  const profile = useGame((s) => s.profile);
+function Portfolio({ view: { profile, radar, demo, t } }: { view: View }) {
   const update = useGame((s) => s.updateSettings);
   const [notes, setNotes] = useState(profile.settings.notes ?? '');
+  useEffect(() => setNotes(profile.settings.notes ?? ''), [profile]);
+  const missions = MISSIONS.filter((m) => profile.missionsDone[m.id]).map((m) => mapStrings(m, profile.gender));
   return (
     <div className="portfolio">
       <div className="no-print row-actions">
@@ -369,9 +477,9 @@ function Portfolio({ radar }: { radar: Radar }) {
         </button>
       </div>
       <div className="print-page card">
-        <h2>Portfolio z hry Dračí ostrovy</h2>
+        <h2>Portfolio z hry Dračí ostrovy{profile.name ? ` – ${profile.name}` : ''}</h2>
         <p className="muted small">
-          Vytištěno {date(Date.now())} · {count(radar.totals.answers, ODPOVED)} za {count(radar.totals.days, DEN)} · orientační údaje z domácí vzdělávací hry, nejde o standardizované měření.
+          {demo ? 'Ukázka se smyšleným dítětem · ' : ''}Vytištěno {date(Date.now())} · {count(radar.totals.answers, ODPOVED)} za {count(radar.totals.days, DEN)} · orientační údaje z domácí vzdělávací hry, nejde o standardizované měření.
         </p>
         <h3>Zvládnuté úrovně podle RVP ZV</h3>
         <table className="conf-table small">
@@ -402,18 +510,14 @@ function Portfolio({ radar }: { radar: Radar }) {
         </table>
         {radar.testLike.length > 0 && (
           <>
-            <h3>Trénované formáty podobné subtestům</h3>
-            <p className="small">{radar.testLike.map((t) => `${t.label} (${t.count}×, ${date(t.first)}–${date(t.last)})`).join('; ')}</p>
+            <h3>Trénované úlohy podobné testům</h3>
+            <p className="small">{radar.testLike.map((x) => `${x.label} (${x.count}×, ${date(x.first)}–${date(x.last)})`).join('; ')}</p>
           </>
         )}
-        {MISSIONS.some((m) => profile.missionsDone[m.id]) && (
+        {missions.length > 0 && (
           <>
             <h3>Splněné společné mise s rodičem</h3>
-            <p className="small">
-              {MISSIONS.filter((m) => profile.missionsDone[m.id])
-                .map((m) => `${m.title} (${date(profile.missionsDone[m.id])})`)
-                .join('; ')}
-            </p>
+            <p className="small">{missions.map((m) => `${m.title} (${date(profile.missionsDone[m.id])})`).join('; ')}</p>
           </>
         )}
         {radar.creativity.samples.length > 0 && (
@@ -433,9 +537,10 @@ function Portfolio({ radar }: { radar: Radar }) {
           className="notes no-print"
           rows={8}
           value={notes}
+          readOnly={demo}
           onChange={(e) => setNotes(e.target.value)}
-          onBlur={() => update({ notes })}
-          placeholder="Např. kdy začala číst a počítat, jaké klade otázky, co ji baví, jak reaguje na těžké úkoly, co říká škola…"
+          onBlur={() => !demo && update({ notes })}
+          placeholder={t('Např. kdy {začala|začal} číst a počítat, jaké klade otázky, co {ji|ho} baví, jak reaguje na těžké úkoly, co říká škola…')}
         />
         <div className="print-only notes-print">{notes || '—'}</div>
       </div>
@@ -443,17 +548,26 @@ function Portfolio({ radar }: { radar: Radar }) {
   );
 }
 
-function SettingsView() {
+function SettingsView({ onDemo }: { onDemo: () => void }) {
   const profile = useGame((s) => s.profile);
+  const device = useGame((s) => s.device);
+  const playerId = useGame((s) => s.playerId);
   const update = useGame((s) => s.updateSettings);
   const setGrade = useGame((s) => s.setGrade);
   const updateDragon = useGame((s) => s.updateDragon);
+  const updatePlayer = useGame((s) => s.updatePlayer);
+  const removePlayer = useGame((s) => s.removePlayer);
+  const setPin = useGame((s) => s.setPin);
   const replace = useGame((s) => s.replaceProfile);
+  const go = useGame((s) => s.go);
   const [look, setLook] = useState(profile.dragon);
   const [name, setName] = useState(profile.dragonName);
+  const [playerName, setPlayerName] = useState(profile.name);
   const [msg, setMsg] = useState('');
-  const [confirmWipe, setConfirmWipe] = useState(false);
+  const [confirm, setConfirm] = useState<'player' | 'all' | null>(null);
   const s = profile.settings;
+  const t = (text: string) => gx(text, profile.gender);
+  const who = profile.name || 'tohoto hráče';
 
   const download = async () => {
     const json = await exportAll(profile);
@@ -461,7 +575,7 @@ function SettingsView() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `draci-ostrovy-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `draci-ostrovy-${profile.name ? `${profile.name.toLocaleLowerCase('cs')}-` : ''}${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -469,9 +583,26 @@ function SettingsView() {
   return (
     <div className="settings">
       <div className="card">
-        <h3>Hra</h3>
+        <h3>Hráč</h3>
         <label className="field">
-          Ročník:{' '}
+          Jméno:{' '}
+          <input className="name-input small-input" value={playerName} maxLength={20} onChange={(e) => setPlayerName(e.target.value)} onBlur={() => updatePlayer({ name: playerName })} />
+        </label>
+        <div className="field">
+          Oslovovat jako:
+          {(
+            [
+              ['f', 'holku'],
+              ['m', 'kluka'],
+            ] as [Gender, string][]
+          ).map(([g, label]) => (
+            <button key={g} className={`chip${profile.gender === g ? ' active' : ''}`} aria-pressed={profile.gender === g} onClick={() => updatePlayer({ gender: g })}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <label className="field">
+          Třída:{' '}
           <select value={profile.grade} onChange={(e) => setGrade(Number(e.target.value))}>
             {[1, 2, 3, 4, 5].map((g) => (
               <option key={g} value={g}>
@@ -480,6 +611,21 @@ function SettingsView() {
             ))}
           </select>
         </label>
+        <p className="muted small">
+          Na tomto zařízení {device.players.length === 1 ? 'hraje 1 hráč' : `hrají ${device.players.length} hráči`}.{' '}
+          <button className="btn btn-ghost btn-small" onClick={() => go('setup')}>
+            Přidat dalšího hráče
+          </button>{' '}
+          {device.players.length > 1 && (
+            <button className="btn btn-ghost btn-small" onClick={() => go('players')}>
+              Přepnout hráče
+            </button>
+          )}
+        </p>
+      </div>
+
+      <div className="card">
+        <h3>Hra</h3>
         <label className="field">
           <input type="checkbox" checked={s.sound} onChange={(e) => update({ sound: e.target.checked })} /> Zvuky
         </label>
@@ -498,12 +644,16 @@ function SettingsView() {
           </select>
         </label>
         <label className="field">
-          Otázka „Jak jistá si jsi?“:{' '}
+          {t('Otázka „Jak {jistá|jistý} si jsi?“')}:{' '}
           <select value={s.confidenceEvery} onChange={(e) => update({ confidenceEvery: Number(e.target.value) })}>
             <option value={0}>vypnuto</option>
             <option value={3}>u každé 3. úlohy</option>
             <option value={5}>u každé 5. úlohy</option>
           </select>
+        </label>
+        <label className="field">
+          <input type="checkbox" checked={!!s.skipTestLike} onChange={(e) => update({ skipTestLike: e.target.checked })} /> Vynechat úlohy podobné testům{' '}
+          <span className="muted small">(viz záložka Testové úlohy)</span>
         </label>
       </div>
 
@@ -521,7 +671,7 @@ function SettingsView() {
       <div className="card">
         <h3>Data</h3>
         <p className="muted small">
-          Vše je uložené jen v tomto zařízení (localStorage a IndexedDB). Nic se neodesílá. Zálohu si můžete stáhnout a nahrát do jiného zařízení.
+          Vše je uložené jen v tomto zařízení (localStorage a IndexedDB). Nic se neodesílá. Zálohu hráče si můžete stáhnout a nahrát do jiného zařízení.
         </p>
         <div className="row-actions">
           <button className="btn btn-ghost" onClick={download}>
@@ -537,7 +687,7 @@ function SettingsView() {
                 const file = e.target.files?.[0];
                 if (!file) return;
                 try {
-                  replace(await importAll(await file.text()));
+                  replace(await importAll(await file.text(), profile));
                   setMsg('Záloha nahrána.');
                 } catch {
                   setMsg('Soubor se nepodařilo načíst.');
@@ -545,26 +695,40 @@ function SettingsView() {
               }}
             />
           </label>
-          {!confirmWipe && (
-            <button className="btn btn-ghost danger" onClick={() => setConfirmWipe(true)}>
-              Smazat vše
-            </button>
+          {!confirm && (
+            <>
+              <button className="btn btn-ghost danger" onClick={() => setConfirm('player')}>
+                Smazat hráče
+              </button>
+              <button className="btn btn-ghost danger" onClick={() => setConfirm('all')}>
+                Smazat vše
+              </button>
+            </>
           )}
         </div>
-        {confirmWipe && (
+        {confirm && (
           <div className="wipe-confirm">
-            <p>Opravdu smazat všechna data hry v tomto zařízení? Nejde to vrátit.</p>
+            <p>
+              {confirm === 'player'
+                ? `Opravdu smazat ${who === 'tohoto hráče' ? who : `hráče ${who}`} – draka, postup i přehled? Nejde to vrátit.`
+                : 'Opravdu smazat všechna data hry v tomto zařízení (všechny hráče i PIN)? Nejde to vrátit.'}
+            </p>
             <div className="row-actions">
               <button
                 className="btn btn-ghost danger"
                 onClick={async () => {
+                  if (confirm === 'player' && playerId) {
+                    await removePlayer(playerId);
+                    setConfirm(null);
+                    return;
+                  }
                   await wipeAll();
                   location.reload();
                 }}
               >
                 Ano, smazat
               </button>
-              <button className="btn btn-ghost" onClick={() => setConfirmWipe(false)}>
+              <button className="btn btn-ghost" onClick={() => setConfirm(null)}>
                 Nechat být
               </button>
             </div>
@@ -572,14 +736,19 @@ function SettingsView() {
         )}
         {msg && <p>{msg}</p>}
       </div>
+
       <div className="card">
-        <h3>PIN</h3>
-        <button className="btn btn-ghost" onClick={() => update({ pin: undefined })}>
-          Zrušit PIN (při dalším vstupu nastavíte nový)
-        </button>
+        <h3>PIN a ukázka</h3>
+        <div className="row-actions">
+          <button className="btn btn-ghost" onClick={() => setPin(undefined)}>
+            Zrušit PIN (při dalším vstupu nastavíte nový)
+          </button>
+          <button className="btn btn-ghost" onClick={onDemo}>
+            Ukázka přehledu se smyšleným dítětem
+          </button>
+        </div>
       </div>
-      <p className="muted small">Ostrovy světa, záhad, trhu a dílny přibudou v další fázi. Předčítání závisí na českém hlasu v zařízení.</p>
-      <p className="muted small">Ostrovy: {ISLANDS.filter((i) => i.available).map((i) => i.name).join(', ')}.</p>
+      <p className="muted small">Předčítání závisí na českém hlasu v zařízení.</p>
     </div>
   );
 }

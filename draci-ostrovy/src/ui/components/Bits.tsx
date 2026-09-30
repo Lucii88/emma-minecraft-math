@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import type { Confidence } from '../../core/types';
 import { hasCzechVoice, speak, stopSpeaking } from '../../core/speech';
 import { useGame } from '../../core/game';
+import { useGx } from '../useGx';
 
 export function SpeakButton({ text, auto = false }: { text: string; auto?: boolean }) {
   const enabled = useGame((s) => s.profile.settings.voice);
@@ -33,14 +34,15 @@ export function SpeakButton({ text, auto = false }: { text: string; auto?: boole
 }
 
 export function ConfidencePicker({ onPick }: { onPick: (c: Confidence) => void }) {
+  const t = useGx();
   const opts: { c: Confidence; label: string; icon: string }[] = [
-    { c: 'hadala', label: 'Hádala jsem', icon: '🥚' },
+    { c: 'hadala', label: t('{Hádala|Hádal} jsem'), icon: '🥚' },
     { c: 'asi', label: 'Asi', icon: '🐣' },
     { c: 'jiste', label: 'Jistě', icon: '🐉' },
   ];
   return (
-    <div className="confidence" role="group" aria-label="Jak jistá si jsi?">
-      <div className="confidence-q">Jak jistá si jsi?</div>
+    <div className="confidence" role="group" aria-label={t('Jak {jistá|jistý} si jsi?')}>
+      <div className="confidence-q">{t('Jak {jistá|jistý} si jsi?')}</div>
       <div className="confidence-opts">
         {opts.map((o) => (
           <button key={o.c} className="btn confidence-btn" onClick={() => onPick(o.c)}>

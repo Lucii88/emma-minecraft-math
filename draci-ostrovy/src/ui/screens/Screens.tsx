@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
-import { TRICKS, islandOf, missionsOf, skillsOf } from '../../content';
+import { TRICKS, islandOf, missionsOf } from '../../content';
 import { useGame, type Gain } from '../../core/game';
 import { masteredLevels } from '../../core/model';
-import { stateOf } from '../../core/planner';
+import { playableSkills, stateOf } from '../../core/planner';
 import { sfx } from '../../core/sound';
 import { Dragon } from '../components/Dragon';
 import { Icon, Sparkles } from '../components/Bits';
 import { IslandArt } from './MapScreen';
 import { MissionCard, islandBookProgress } from './Book';
 import { count } from '../../core/czech';
+import { useGx } from '../useGx';
 
 const ULOHA_ACC = ['úlohu', 'úlohy', 'úloh'] as const;
 
@@ -22,7 +23,7 @@ export function IslandScreen() {
   const startSkill = useGame((s) => s.startSkill);
   if (!island) return null;
   const def = islandOf(island);
-  const skills = skillsOf(island);
+  const skills = playableSkills(profile, island);
   const friend = profile.species.includes(island);
   const missions = missionsOf(island);
   const pages = islandBookProgress(island, profile.best);
@@ -121,6 +122,7 @@ function GainList({ gains }: { gains: Gain[] }) {
 }
 
 export function MissionEnd() {
+  const t = useGx();
   const run = useGame((s) => s.run);
   const profile = useGame((s) => s.profile);
   const next = useGame((s) => s.continueRun);
@@ -145,8 +147,8 @@ export function MissionEnd() {
   const last = run.mIndex + 1 >= run.missions.length;
 
   let line = 'Mise splněna.';
-  if (persisted >= 2) line = `Mise splněna. ${persisted}× jsi to nevzdala a našla správnou cestu.`;
-  else if (mission.kind === 'brave') line = 'Pustila ses do schválně těžkých úloh. To chce odvahu.';
+  if (persisted >= 2) line = t(`Mise splněna. ${persisted}× jsi to {nevzdala|nevzdal} a {našla|našel} správnou cestu.`);
+  else if (mission.kind === 'brave') line = t('{Pustila|Pustil} ses do schválně těžkých úloh. To chce odvahu.');
   else if (firstTry === results.length && results.length > 1) line = 'Mise splněna – všechno napoprvé. Příště můžeš zkusit Bouřkový let.';
 
   return (
@@ -182,6 +184,7 @@ function FireBurst({ color }: { color: string }) {
 // Konec dne
 
 export function DayEnd() {
+  const t = useGx();
   const run = useGame((s) => s.run);
   const profile = useGame((s) => s.profile);
   const quit = useGame((s) => s.quitRun);
@@ -197,7 +200,7 @@ export function DayEnd() {
       {profile.dragon && <Dragon look={profile.dragon} mood="sleep" size={220} />}
       <h1>Dnešní let je u konce</h1>
       <p className="lead">
-        {profile.dragonName || 'Tvůj drak'} spokojeně odpočívá. Vyřešila jsi {count(run.results.length, ULOHA_ACC)}
+        {profile.dragonName || 'Tvůj drak'} spokojeně odpočívá. {t('{Vyřešila|Vyřešil}')} jsi {count(run.results.length, ULOHA_ACC)}
         {later > 0 ? `, z toho ${later} po opravě – i to se počítá` : ''}.
       </p>
       <div className="card journal-mini">
@@ -205,7 +208,7 @@ export function DayEnd() {
         {run.gains.filter((g) => g.kind === 'level').length ? (
           <GainList gains={run.gains.filter((g) => g.kind === 'level')} />
         ) : (
-          <p className="muted">Procvičila jsi {count(firstTry + later, ULOHA_ACC)}. Nové stupně přijdou, když budeš dál zkoušet těžší věci.</p>
+          <p className="muted">{t('{Procvičila|Procvičil}')} jsi {count(firstTry + later, ULOHA_ACC)}. Nové stupně přijdou, když budeš dál zkoušet těžší věci.</p>
         )}
       </div>
       <div className="row-actions">
@@ -226,6 +229,7 @@ export function DayEnd() {
 // Deník
 
 export function Journal() {
+  const t = useGx();
   const profile = useGame((s) => s.profile);
   const go = useGame((s) => s.go);
   const entries = profile.journal.slice().reverse();
@@ -235,9 +239,9 @@ export function Journal() {
         <button className="btn btn-round btn-ghost" onClick={() => go('map')} aria-label="Zpět">
           <Icon name="back" />
         </button>
-        <h1>Deník jezdkyně</h1>
+        <h1>{t('Deník {jezdkyně|jezdce}')}</h1>
       </div>
-      <p className="muted">Tady je všechno, co už umíš a co jsi zažila. Srovnávej se jen sama se sebou – s tou, kterou jsi byla včera.</p>
+      <p className="muted">{t('Tady je všechno, co už umíš a co jsi {zažila|zažil}. Srovnávej se jen {sama|sám} se sebou – s {tou, kterou jsi byla|tím, kterým jsi byl} včera.')}</p>
       <ol className="journal-list">
         {entries.map((e, i) => (
           <li key={i} className={`card journal-entry je-${e.kind}`}>

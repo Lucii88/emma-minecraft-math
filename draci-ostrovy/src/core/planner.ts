@@ -34,15 +34,24 @@ function lastActivity(profile: Profile, island: IslandId): number {
   return Math.max(0, ...skillsOf(island).map((s) => profile.skills[s.id]?.lastSeen ?? 0));
 }
 
-function closedSkills(island: IslandId): SkillDef[] {
-  return skillsOf(island).filter((s) => !s.open);
+/** Dovednosti ostrova, které se dají hrát. Když rodič vypne úlohy podobné
+ *  testům, vynechají se (pokud by na ostrově nezbylo nic, zůstanou). */
+export function playableSkills(profile: Profile, island: IslandId): SkillDef[] {
+  const all = skillsOf(island);
+  if (!profile.settings.skipTestLike) return all;
+  const rest = all.filter((s) => !s.testLike);
+  return rest.some((s) => !s.open) ? rest : all;
+}
+
+function closedSkills(profile: Profile, island: IslandId): SkillDef[] {
+  return playableSkills(profile, island).filter((s) => !s.open);
 }
 
 /** Dovednost k rozvoji: nové a málo procvičené mají přednost, pak ty
  *  nejdéle neviděné. Náhoda zajišťuje pestrost. */
 export function pickGrowthSkill(profile: Profile, island: IslandId, seed = randomSeed()): SkillDef {
   const rng = createRng(seed);
-  const skills = closedSkills(island);
+  const skills = closedSkills(profile, island);
   const now = Date.now();
   const weights = skills.map((s) => {
     const st = profile.skills[s.id];
@@ -62,7 +71,7 @@ export function pickGrowthSkill(profile: Profile, island: IslandId, seed = rando
 /** Dovednosti k opakování: už procvičené, nejdéle neviděné (rozložené
  *  opakování). Pokud žádné nejsou, vrátí nové. */
 export function pickReviewSkills(profile: Profile, island: IslandId, k = 2): SkillDef[] {
-  const seen = closedSkills(island)
+  const seen = closedSkills(profile, island)
     .filter((s) => profile.skills[s.id]?.n)
     .sort((a, b) => (profile.skills[a.id]!.lastSeen ?? 0) - (profile.skills[b.id]!.lastSeen ?? 0));
   if (seen.length >= 1) return seen.slice(0, k);

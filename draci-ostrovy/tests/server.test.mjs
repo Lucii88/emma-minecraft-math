@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createApp } from '../server.mjs';
+import { createApp, parseCodes } from '../server.mjs';
 
 const CODE = 'Ostrov-7k4m';
 const SECRET = 'testovaci-tajemstvi';
@@ -65,7 +65,7 @@ describe('server s přístupovým kódem', () => {
 
     const page = await get(base, '/prihlaseni');
     expect(page.status).toBe(200);
-    expect(await page.text()).toContain('Rodinný kód');
+    expect(await page.text()).toContain('Přístupový kód');
   });
 
   it('špatný kód odmítne, správný (bez ohledu na velikost písmen) přihlásí na dlouho', async () => {
@@ -113,6 +113,30 @@ describe('server s přístupovým kódem', () => {
 
     const changed = await start({ accessCode: 'novy-kod-2026' });
     expect((await get(changed, '/', { cookie })).status).toBe(302);
+  });
+
+  it('další kódy (třeba pro kamarády) jdou zrušit, aniž by se odhlásila rodina', async () => {
+    const base = await start({ guestCodes: ['Kamaradi-2026', ' ', 'DRACI'] });
+    const family = cookieFrom(await login(base, CODE));
+    const guest = cookieFrom(await login(base, 'draci'));
+    expect(family).not.toBe(guest);
+    expect((await get(base, '/', { cookie: guest })).status).toBe(200);
+    expect((await login(base, 'kamaradi-2026')).status).toBe(303);
+
+    // Kód pro kamarády zrušen: kamarádi se odhlásí, rodina ne.
+    const later = await start({ guestCodes: ['Kamaradi-2026'] });
+    expect((await get(later, '/', { cookie: guest })).status).toBe(302);
+    expect((await get(later, '/', { cookie: family })).status).toBe(200);
+    expect((await login(later, 'DRACI')).status).toBe(401);
+
+    // Rodinná cookie je stejná jako bez dalších kódů – přidáním nikoho neodhlásíme.
+    const plain = await start();
+    expect((await get(plain, '/', { cookie: family })).status).toBe(200);
+  });
+
+  it('seznam kódů z proměnné prostředí', () => {
+    expect(parseCodes(' drak, ,Kamaradi ,')).toEqual(['drak', 'Kamaradi']);
+    expect(parseCodes(undefined)).toEqual([]);
   });
 
   it('po deseti chybných pokusech z jedné adresy na čtvrt hodiny zablokuje', async () => {
