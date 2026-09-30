@@ -163,6 +163,8 @@ export interface BankSkillDef {
   ability: AbilityTag;
   testLike?: TestLikeFormat;
   open?: boolean;
+  /** Vysvětlení se ukáže jako zajímavost i po správné odpovědi. */
+  showFact?: boolean;
   /** Ručně psané úlohy podle úrovně. */
   banks?: Partial<Record<Level, Spec[]>>;
   /** Procedurální úlohy podle úrovně. Má-li úroveň banku i generátor,
@@ -215,6 +217,7 @@ export function bankSkill(def: BankSkillDef): SkillDef {
     ability: def.ability,
     ...(def.testLike ? { testLike: def.testLike } : {}),
     ...(def.open ? { open: true } : {}),
+    ...(def.showFact ? { showFact: true } : {}),
     generate: (level: Level, rng: Rng): Item => {
       const lv = levels.includes(level) ? level : nearest(levels, level);
       const bank = def.banks?.[lv] ?? [];

@@ -232,6 +232,9 @@ export interface SkillDef {
   testLike?: TestLikeFormat;
   /** Otevřené tvořivé úlohy nemají správně/špatně a neovlivňují model. */
   open?: boolean;
+  /** Vysvětlení je zajímavost: ukáže se i po správné odpovědi napoprvé
+   *  (znalostní dovednosti). U počítání a hlavolamů jen po chybě. */
+  showFact?: boolean;
   /** Vygeneruje úlohu dané úrovně. Musí být deterministická pro dané rng. */
   generate: (level: Level, rng: Rng) => Item;
 }

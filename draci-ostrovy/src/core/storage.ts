@@ -2,6 +2,7 @@
 // (roste). Všechno zůstává jen v tomto zařízení.
 
 import { createStore, get, set, del } from 'idb-keyval';
+import type { Gender } from './gender';
 import type { AnswerEvent, IslandId, SkillState } from './types';
 
 export interface DragonLook {
@@ -35,6 +36,10 @@ export interface Settings {
 export interface Profile {
   version: 1;
   createdAt: number;
+  /** Jméno hráče (jen v tomto zařízení). */
+  name: string;
+  /** Oslovení: holka, nebo kluk. Starší profily byly psané pro holku. */
+  gender: Gender;
   grade: number;
   dragon: DragonLook | null;
   dragonName: string;
@@ -60,6 +65,8 @@ export function defaultProfile(): Profile {
   return {
     version: 1,
     createdAt: Date.now(),
+    name: '',
+    gender: 'f',
     grade: 2,
     dragon: null,
     dragonName: '',

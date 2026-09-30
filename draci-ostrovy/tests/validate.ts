@@ -1,5 +1,6 @@
 // Společná kontrola úloh pro testy všech ostrovů.
 
+import { GENDERS, genderItem, gx, mapStrings } from '../src/core/gender';
 import { MAX_PROGRAM_STEPS, cellKey, fly, insideGrid, sameCell, shortestProgram } from '../src/core/grid';
 import { createRng } from '../src/core/rng';
 import type { Cell, IslandId, Item, JointMission, KnowledgeCard, Level, SkillDef, Visual } from '../src/core/types';
@@ -89,7 +90,43 @@ export function validateVisual(v: Visual, where: string): string[] {
   return errors;
 }
 
+/** Značky rodu {ženský|mužský}: po nahrazení nesmí zůstat žádná závorka
+ *  (překlep v značce) a značka nepatří do id. */
+export function markupErrors(value: unknown, where: string): string[] {
+  const errors: string[] = [];
+  const walk = (v: unknown) => {
+    if (typeof v === 'string') {
+      for (const g of GENDERS) {
+        if (/[{}]/.test(gx(v, g))) {
+          errors.push(`${where}: neúplná značka rodu v „${v.slice(0, 60)}“`);
+          return;
+        }
+      }
+    } else if (Array.isArray(v)) v.forEach(walk);
+    else if (v && typeof v === 'object') Object.values(v).forEach(walk);
+  };
+  walk(value);
+  return errors;
+}
+
+/** Vysvětlení, které se ukazuje i po správné odpovědi, nesmí znít jako
+ *  hodnocení („Ne, …“, „Správně…“) a má být krátké. */
+const VERDICT_START = /^(ne|správně|špatně|chyba|bohužel|omyl|výborně|přesně)(?=[\s,.!–-])/iu;
+
+/** Úloha musí projít kontrolou pro holku i pro kluka. */
 export function validateItem(item: Item, skill: SkillDef, level: Level): string[] {
+  const errors = markupErrors(item, item.id);
+  if (/[{}|]/.test(item.id)) errors.push(`${item.id}: id obsahuje značku rodu`);
+  for (const g of GENDERS) errors.push(...validateOne(genderItem(item, g), skill, level));
+  if (skill.showFact && !skill.open) {
+    const e = item.explanation.trim();
+    if (e.length > 300) errors.push(`${item.id}: zajímavost má ${e.length} znaků (nejvýš 300)`);
+    if (VERDICT_START.test(e)) errors.push(`${item.id}: zajímavost začíná hodnocením („${e.slice(0, 12)}…“) – ukazuje se i po správné odpovědi`);
+  }
+  return [...new Set(errors)];
+}
+
+function validateOne(item: Item, skill: SkillDef, level: Level): string[] {
   const errors: string[] = [];
   const where = `${item.id}`;
   if (!item.id.startsWith(`${skill.id}:${level}:`)) errors.push(`${where}: id musí začínat „${skill.id}:${level}:“`);
@@ -181,6 +218,12 @@ export function validateItem(item: Item, skill: SkillDef, level: Level): string[
 /** Karty znalostí: id `dovednost.klic`, úroveň, kterou dovednost má, krátký
  *  text ukončený tečkou a u „opravené stránky“ obě části. */
 export function validateCards(cards: KnowledgeCard[], skills: SkillDef[]): string[] {
+  const errors = cards.flatMap((c) => markupErrors(c, `karta ${c.id}`));
+  for (const g of GENDERS) errors.push(...validateCardsOnce(cards.map((c) => mapStrings(c, g)), skills));
+  return [...new Set(errors)];
+}
+
+function validateCardsOnce(cards: KnowledgeCard[], skills: SkillDef[]): string[] {
   const errors: string[] = [];
   const byId = new Map(skills.map((s) => [s.id, s]));
   const seen = new Set<string>();
@@ -212,6 +255,12 @@ export function validateCards(cards: KnowledgeCard[], skills: SkillDef[]): strin
 
 /** Společné mise: id `ostrov.klic`, vyplněné texty a tip pro rodiče. */
 export function validateMissions(missions: JointMission[], island: IslandId): string[] {
+  const errors = missions.flatMap((m) => markupErrors(m, `mise ${m.id}`));
+  for (const g of GENDERS) errors.push(...validateMissionsOnce(missions.map((m) => mapStrings(m, g)), island));
+  return [...new Set(errors)];
+}
+
+function validateMissionsOnce(missions: JointMission[], island: IslandId): string[] {
   const errors: string[] = [];
   const seen = new Set<string>();
   for (const m of missions) {

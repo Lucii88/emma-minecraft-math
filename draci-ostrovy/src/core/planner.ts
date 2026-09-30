@@ -4,6 +4,7 @@
 
 import { ISLANDS, SKILL_BY_ID, skillsOf } from '../content';
 import { createRng, randomSeed } from './rng';
+import { genderItem } from './gender';
 import { chooseLevel, initialState, itemDifficulty, levelDifficulty, targetDifficulty } from './model';
 import type { Profile } from './storage';
 import type { IslandId, Item, SkillDef, SkillState } from './types';
@@ -95,7 +96,7 @@ export function missionForSkill(skill: SkillDef, kind: MissionKind = 'free'): Mi
   };
 }
 
-/** Vybere další úlohu mise. */
+/** Vybere další úlohu mise (s oslovením podle hráče). */
 export function nextItem(profile: Profile, mission: Mission, index: number, seed = randomSeed()): Item {
   const rng = createRng(seed);
   const skillId = mission.skillIds[index % mission.skillIds.length];
@@ -118,7 +119,7 @@ export function nextItem(profile: Profile, mission: Mission, index: number, seed
       bestScore = score;
     }
   }
-  return best!;
+  return genderItem(best!, profile.gender);
 }
 
 /** Popis úrovně pro rodiče. */
