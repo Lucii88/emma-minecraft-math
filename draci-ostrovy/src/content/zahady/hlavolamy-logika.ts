@@ -886,8 +886,8 @@ const MISC_L4: Spec[] = [
 const MISC_L5: Spec[] = [
   num('tata-dcery', 'Tatínek má 4 dcery. Každá z nich má jednoho bratra. Kolik má tatínek dětí?', 5,
     ['Mají všechny dcery stejného bratra?'], 'Všechny dcery mají stejného bratra. Tatínek má 4 dcery a 1 syna, tedy 5 dětí.'),
-  num('mesice-28', 'Kolik měsíců v roce má aspoň 28 dní?', 12,
-    ['Který měsíc je nejkratší? Kolik má dní?'], 'Aspoň 28 dní má každý měsíc, i únor. Je to tedy všech 12 měsíců.'),
+  num('mesice-28', 'Kolik měsíců v roce má méně než 30 dní?', 1,
+    ['Který měsíc je nejkratší? A kolik dní mají ostatní měsíce?'], 'Jen jeden, únor: má 28 dní, v přestupném roce 29. Ostatní měsíce mají 30 nebo 31 dní.'),
   num('cislo-36', 'Myslím si číslo od 1 do 50. Je v násobilce 4 i v násobilce 9. Které to je?', 36,
     ['Projdi násobilku 9 a hledej čísla, která jsou i v násobilce 4.'], '36 = 4 × 9, takže je v obou násobilkách. Žádné jiné číslo do 50 tam není.'),
   num('cislo-45', 'Myslím si číslo z násobilky 9. Je liché a leží mezi 30 a 60. Které to je?', 45,

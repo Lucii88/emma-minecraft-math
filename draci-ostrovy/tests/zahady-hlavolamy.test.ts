@@ -798,7 +798,7 @@ describe('Ostrov záhad – logické hlavolamy', () => {
       'jablka-vezmes': 2,
       'vek-az': 10 - (7 - 4),
       'vek-rozdil': 3,
-      'mesice-28': 12,
+      'mesice-28': 1,
       'tri-draci-jablka': 3,
     };
     for (const [key, value] of Object.entries(misc)) {

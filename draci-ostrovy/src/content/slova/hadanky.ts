@@ -646,11 +646,11 @@ export const RIDDLES: Riddle[] = [
   },
   {
     key: 'mesice-28', lvl: 4,
-    text: 'Kolik měsíců v roce\nmá aspoň 28 dní?',
+    text: 'Který měsíc v roce\nmá méně než 30 dní?',
     ask: 'Vyber správnou odpověď.',
-    answer: 'všech dvanáct', distractors: ['jen jeden', 'šest', 'žádný'],
-    hints: ['Nejkratší měsíc v roce je únor. Kolik dní má on a kolik ostatní měsíce?'],
-    explanation: 'Nejkratší měsíc, únor, má 28 dní (v přestupném roce 29). Ostatní měsíce mají 30 nebo 31 dní, takže aspoň 28 dní má všech dvanáct.',
+    answer: 'únor', distractors: ['duben', 'září', 'listopad'],
+    hints: ['Je to nejkratší měsíc v roce.'],
+    explanation: 'Únor má 28 dní, v přestupném roce 29. Duben, červen, září a listopad mají 30 dní a ostatní měsíce 31.',
   },
 ];
 
