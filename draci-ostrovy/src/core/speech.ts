@@ -51,29 +51,32 @@ export function stopSpeaking() {
 }
 
 // ---------------------------------------------------------------------------
-// Angličtina (školní ostrov): britský ženský hlas, když ho zařízení má.
-// iPad: Kate, Serena, Martha (en-GB); Edge: Libby, Sonia, Maisie; Chrome:
-// „Google UK English Female“. Když britský ženský chybí, vezme se jiný
-// britský, pak americký ženský (Samantha) a nakonec jakýkoli anglický.
+// Angličtina (školní ostrov): americký ženský hlas, když ho zařízení má
+// (škola učí americkou angličtinu). iPad: Samantha, Ava, Allison, Zoe, Nicky;
+// Edge: Aria, Jenny, Michelle; Chrome: „Google US English“. Když americký
+// ženský chybí, vezme se jiný americký, pak britský ženský a nakonec
+// jakýkoli anglický.
 
 let englishVoice: SpeechSynthesisVoice | null = null;
 let englishReady = false;
 
-const EN_FEMALE = ['Libby', 'Sonia', 'Maisie', 'Hazel', 'Kate', 'Serena', 'Martha', 'Stephanie', 'Google UK English Female', 'Susan'];
-const EN_MALE = ['Daniel', 'Arthur', 'Oliver', 'George', 'Ryan', 'Thomas', 'Google UK English Male', 'Alex', 'Fred'];
-const US_FEMALE = ['Samantha', 'Ava', 'Allison', 'Zoe', 'Nicky', 'Aria', 'Jenny', 'Michelle', 'Google US English'];
+const US_FEMALE = ['Samantha', 'Ava', 'Allison', 'Zoe', 'Nicky', 'Aria', 'Jenny', 'Michelle', 'Ana', 'Susan', 'Google US English'];
+const EN_MALE = ['Daniel', 'Arthur', 'Oliver', 'George', 'Ryan', 'Thomas', 'Alex', 'Fred', 'Tom', 'Aaron', 'Guy', 'Eric', 'Christopher', 'Roger', 'Steffan', 'Brian', 'Andrew', 'Male'];
+const GB_FEMALE = ['Libby', 'Sonia', 'Maisie', 'Hazel', 'Kate', 'Serena', 'Martha', 'Stephanie', 'Google UK English Female'];
 
 function pickEnglish() {
   if (typeof speechSynthesis === 'undefined') return;
   const voices = speechSynthesis.getVoices();
-  const gb = voices.filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith('en-gb'));
-  const en = voices.filter((v) => v.lang.toLowerCase().startsWith('en'));
+  const region = (r: string) => voices.filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith(r));
+  const us = region('en-us');
+  const gb = region('en-gb');
+  const en = region('en');
   const byName = (list: SpeechSynthesisVoice[], names: string[]) => names.map((n) => list.find((v) => v.name.includes(n))).find(Boolean);
   englishVoice =
-    byName(gb, EN_FEMALE) ??
-    gb.find((v) => !EN_MALE.some((n) => v.name.includes(n))) ??
-    byName(en, US_FEMALE) ??
-    gb[0] ??
+    byName(us, US_FEMALE) ??
+    us.find((v) => !EN_MALE.some((n) => v.name.includes(n))) ??
+    byName(gb, GB_FEMALE) ??
+    us[0] ??
     en[0] ??
     null;
   englishReady = true;
@@ -113,11 +116,11 @@ export function speakEnglish(text: string, onEnd?: () => void): boolean {
 }
 
 /** Anglické názvy písmen tak, aby je hlas přečetl správně (samotné „A“
- *  by mohl přečíst jako člen). Britsky: Z = zed. */
+ *  by mohl přečíst jako člen). Americky: Z = zee. */
 const LETTER_NAMES: Record<string, string> = {
   a: 'ay', b: 'bee', c: 'see', d: 'dee', e: 'ee', f: 'eff', g: 'gee', h: 'aitch', i: 'eye',
   j: 'jay', k: 'kay', l: 'ell', m: 'em', n: 'en', o: 'oh', p: 'pee', q: 'cue', r: 'ar',
-  s: 'ess', t: 'tee', u: 'you', v: 'vee', w: 'double you', x: 'ex', y: 'why', z: 'zed',
+  s: 'ess', t: 'tee', u: 'you', v: 'vee', w: 'double you', x: 'ex', y: 'why', z: 'zee',
 };
 
 export const letterName = (letter: string) => LETTER_NAMES[letter.toLowerCase()] ?? letter;

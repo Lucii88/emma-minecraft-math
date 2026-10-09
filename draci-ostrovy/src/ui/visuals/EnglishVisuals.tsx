@@ -1,4 +1,4 @@
-// Školní ostrov: anglický poslech (britský hlas) a obrázky „kde to je“
+// Školní ostrov: anglický poslech (americký hlas) a obrázky „kde to je“
 // (in, on, under, next to).
 
 import { useEffect, useState, type ReactNode } from 'react';

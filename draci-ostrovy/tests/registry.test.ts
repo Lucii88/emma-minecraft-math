@@ -101,7 +101,8 @@ describe('napojení na plánovač a radar', () => {
       for (const kind of kinds) {
         const m = missionForSkill(s, kind);
         const item = nextItem(profile, m, 0, 11);
-        expect(item.skillId).toBe(s.id);
+        // Mluvení bez serveru nahradí příbuzná dovednost.
+        expect(item.skillId).toBe(s.needs === 'speech' ? s.fallback : s.id);
       }
     }
   });

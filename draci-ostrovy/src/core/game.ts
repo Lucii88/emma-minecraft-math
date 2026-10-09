@@ -88,6 +88,8 @@ interface GameState {
   chooseIsland: (island: IslandId) => void;
   useHint: () => void;
   registerAttempt: () => void;
+  /** Vymění rozehranou úlohu za jinou (bez záznamu) – když mluvení nejde. */
+  swapItem: () => void;
   completeItem: (outcome: Outcome, extra?: { confidence?: Confidence; text?: string; ideas?: number }) => void;
   continueRun: () => void;
   quitRun: () => void;
@@ -293,6 +295,13 @@ export const useGame = create<GameState>((set, get) => ({
   useHint: () => set((s) => (s.run ? { run: { ...s.run, hints: s.run.hints + 1 } } : {})),
 
   registerAttempt: () => set((s) => (s.run ? { run: { ...s.run, attempts: s.run.attempts + 1 } } : {})),
+
+  swapItem: () => {
+    const { run, profile } = get();
+    if (!run?.item) return;
+    const item = nextItem(profile, run.missions[run.mIndex], run.iIndex);
+    set({ run: { ...run, item, attempts: 0, hints: 0, itemStart: Date.now() } });
+  },
 
   completeItem: (outcome, extra = {}) => {
     const { run } = get();

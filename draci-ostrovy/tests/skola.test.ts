@@ -12,6 +12,11 @@ import { letterName, spellOut } from '../src/core/speech';
 import { defaultProfile, type Profile } from '../src/core/storage';
 import type { Item } from '../src/core/types';
 import { spellMatches } from '../src/ui/components/Answers';
+import { caps } from '../src/core/caps';
+import { judgeSay, matchesSay, normSpeech, type SpeechResult } from '../src/core/saymatch';
+import { downsample, encodeWav } from '../src/core/listen';
+import { playableSkills } from '../src/core/planner';
+import { SKILL_BY_ID } from '../src/content';
 import { sweepSkill, validateMissions } from './validate';
 
 const withSchool = (): Profile => {
@@ -107,19 +112,106 @@ describe('obsah', () => {
     }
     expect(spellOut('bag')).toBe('bee, ay, gee');
     expect(spellOut('Lucy')).toBe('ell, you, see, why');
-    expect(letterName('z')).toBe('zed');
+    expect(letterName('z')).toBe('zee');
   });
 
   it('psaní: velikost písmen nevadí, povolené tvary platí, překlep ne', () => {
     expect(spellMatches('lucy', 'Lucy')).toBe(true);
-    expect(spellMatches(' Grey ', 'grey')).toBe(true);
-    expect(spellMatches('gray', 'grey', ['gray'])).toBe(true);
+    expect(spellMatches(' Gray ', 'gray')).toBe(true);
+    expect(spellMatches('grey', 'gray', ['grey'])).toBe(true);
     expect(spellMatches('pencil  case', 'pencil case')).toBe(true);
-    expect(spellMatches('gery', 'grey', ['gray'])).toBe(false);
+    expect(spellMatches('gary', 'gray', ['grey'])).toBe(false);
   });
 
   it('společné mise projdou kontrolou', () => {
     expect(validateMissions(missions, 'skola')).toEqual([]);
     expect(missions.length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('mluvení s Miss Ember', () => {
+  const heard = (lexical: string, extra: Partial<SpeechResult> = {}): SpeechResult => ({ status: 'ok', text: lexical, lexical, scores: null, words: [], ...extra });
+
+  it('přepis se sjednotí: velikost písmen, interpunkce, stažené tvary, čísla, vycpávky', () => {
+    expect(normSpeech("I'm SEVEN!")).toBe('i am seven');
+    expect(normSpeech('It’s 7.')).toBe('it is seven');
+    expect(normSpeech("um, no, I can't")).toBe('no i can not');
+    expect(normSpeech('I cannot.')).toBe('i can not');
+  });
+
+  it('vzory: celá slova, * a #, kdekoli ve větě', () => {
+    expect(matchesSay("I'm seven years old.", ['i am #'])).toBe(true);
+    expect(matchesSay('I am 7', ['i am #'])).toBe(true);
+    expect(matchesSay('Me seven.', ['i am #'])).toBe(false);
+    expect(matchesSay('My name is Anna.', ['my name is *'])).toBe(true);
+    expect(matchesSay('My name is', ['my name is *'])).toBe(false);
+    expect(matchesSay("It's a pencil.", ['pen'])).toBe(false);
+    expect(matchesSay("It's a pencil case.", ['pencil case'])).toBe(true);
+    expect(matchesSay('next to the box', ['next to the box'])).toBe(true);
+    expect(matchesSay('', ['*'])).toBe(false);
+  });
+
+  it('rozumění podle přepisu, rada k typické chybě, a při opakování i podle výslovnosti', () => {
+    const age = { expect: ['i am #'], tips: [{ when: 'me *', tip: 'me → I' }, { when: '#', tip: 'celou větou' }] };
+    expect(judgeSay(heard("i'm seven"), age).ok).toBe(true);
+    expect(judgeSay(heard('me seven'), age)).toMatchObject({ ok: false, tip: 'me → I' });
+    expect(judgeSay(heard('seven'), age)).toMatchObject({ ok: false, tip: 'celou větou' });
+
+    const rep = { expect: ['give me the pen please'], ref: 'Give me the pen, please.' };
+    const words = (errors: string[]) => ['give', 'me', 'the', 'pen', 'please'].map((word, i) => ({ word, accuracy: errors[i] === 'None' ? 85 : 30, error: errors[i] }));
+    // Přepis se trochu liší, ale hodnocení výslovnosti našlo všechna slova.
+    expect(judgeSay(heard('give me a pen please', { words: words(['None', 'None', 'None', 'None', 'None']) }), rep).ok).toBe(true);
+    const bad = judgeSay(heard('give the pen', { words: words(['None', 'Omission', 'None', 'Mispronunciation', 'None']) }), rep);
+    expect(bad.ok).toBe(false);
+    expect(bad.unclear).toEqual(['me', 'pen']);
+  });
+
+  it('WAV pro server: 16 kHz mono, správná hlavička, převzorkování', () => {
+    const down = downsample(new Float32Array(48000).fill(0.5), 48000);
+    expect(down.length).toBe(16000);
+    expect(down[100]).toBeCloseTo(0.5);
+    const wav = new DataView(encodeWav(down));
+    const str = (at: number) => String.fromCharCode(...[0, 1, 2, 3].map((i) => wav.getUint8(at + i)));
+    expect(str(0)).toBe('RIFF');
+    expect(str(8)).toBe('WAVE');
+    expect(wav.getUint16(22, true)).toBe(1);
+    expect(wav.getUint32(24, true)).toBe(16000);
+    expect(wav.byteLength).toBe(44 + 16000 * 2);
+  });
+
+  it('bez mluvení se nehraje a v rozehrané misi ho nahradí Otázky a odpovědi', () => {
+    const p = withSchool();
+    const mluveni = SKILL_BY_ID['skola.mluveni'];
+    expect(mluveni.needs).toBe('speech');
+    caps.speech = false;
+    expect(playableSkills(p, 'skola').map((s) => s.id)).not.toContain('skola.mluveni');
+    for (let day = 0; day < 40; day++) expect(planDay(p)[0].skillIds).not.toContain('skola.mluveni');
+    const mission = { kind: 'growth' as const, island: 'skola' as const, skillIds: ['skola.mluveni'], count: 5, pTarget: 0.75, title: 'Angličtina' };
+    expect(nextItem(p, mission, 0, 1).skillId).toBe(mluveni.fallback);
+
+    caps.speech = true;
+    try {
+      expect(playableSkills(p, 'skola').map((s) => s.id)).toContain('skola.mluveni');
+      const item = nextItem(p, mission, 0, 1);
+      expect(item.skillId).toBe('skola.mluveni');
+      expect(item.answer.kind).toBe('say');
+    } finally {
+      caps.speech = false;
+    }
+  });
+
+  it('opakování vět cílí na I / me / I am a vzorové odpovědi jsou celé věty', () => {
+    const s = SKILL_BY_ID['skola.mluveni'];
+    const seen = new Set<string>();
+    for (let seed = 1; seed <= 300; seed++) {
+      for (const l of s.levels) {
+        const item = s.generate(l, createRng(seed));
+        if (item.answer.kind !== 'say') throw new Error(item.id);
+        seen.add(item.answer.model);
+        expect(item.answer.model, item.id).toMatch(/^[A-Z].*[.!?…]$/);
+      }
+    }
+    expect([...seen].some((m) => /\bme\b/.test(m))).toBe(true);
+    expect([...seen].some((m) => /\bI am\b|\bI'm\b/.test(m))).toBe(true);
   });
 });

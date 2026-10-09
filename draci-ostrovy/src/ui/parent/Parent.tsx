@@ -6,6 +6,7 @@ import { buildRadar, type Radar } from '../../core/radar';
 import { levelLabel } from '../../core/planner';
 import { exportAll, importAll, loadEvents, wipeAll, type Profile } from '../../core/storage';
 import { englishVoiceName, hasCzechVoice, hasEnglishVoice, voiceName } from '../../core/speech';
+import { caps } from '../../core/caps';
 import type { AnswerEvent } from '../../core/types';
 import { Icon } from '../components/Bits';
 import { count, form } from '../../core/czech';
@@ -689,7 +690,10 @@ function SettingsView({ onDemo }: { onDemo: () => void }) {
           <input type="checkbox" checked={!!s.schoolIsland} onChange={(e) => update({ schoolIsland: e.target.checked })} /> Školní ostrov (angličtina){' '}
           <span className="muted small">
             (učivo ze školy, jen pro tohoto hráče; první mise Dnešního letu bude anglická ·{' '}
-            {hasEnglishVoice() ? `anglický hlas: ${englishVoiceName()}` : 'v tomto zařízení chybí anglický hlas'})
+            {hasEnglishVoice() ? `anglický hlas: ${englishVoiceName()}` : 'v tomto zařízení chybí anglický hlas'} ·{' '}
+            {caps.speech
+              ? 'mluvení s Miss Ember zapnuté: nahrávka hlasu se přepíše v Microsoft Azure a nikde se neukládá'
+              : 'mluvení vypnuté (na serveru chybí klíč Azure Speech)'})
           </span>
         </label>
       </div>

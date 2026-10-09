@@ -3,7 +3,8 @@
 // Starší lekce zůstávají na opakování. Úroveň 3 je navíc nad rámec školy
 // (příprava na dětskou zkoušku Cambridge Pre A1 Starters).
 //
-// Pravidla obsahu: britská angličtina (colour, grey, rubber), malá písmena,
+// Pravidla obsahu: americká angličtina (color, gray, eraser – škola je
+// americká), britské tvary se při psaní uznají také; malá písmena,
 // žádná jména ani údaje konkrétních lidí, škol či tříd.
 
 export type Topic = 'barvy' | 'cisla' | 'trida' | 'zvirata' | 'jidlo' | 'hracky' | 'telo' | 'obleceni' | 'domov';
@@ -28,7 +29,7 @@ export interface Word {
   plural?: string;
   /** Člen „an“ (an apple). */
   an?: boolean;
-  /** Další správné tvary při psaní (rubber/eraser). */
+  /** Další správné tvary při psaní (britské: grey, rubber). */
   accept?: string[];
 }
 
@@ -58,7 +59,7 @@ export const WORDS: Word[] = [
   w('orange', 'oranžová', 'barvy', 1, { unit: 'hello', color: '#ff8a1f' }),
   w('purple', 'fialová', 'barvy', 1, { unit: 'hello', color: '#8e44ad' }),
   w('pink', 'růžová', 'barvy', 1, { unit: 'hello', color: '#ff8fc8' }),
-  w('grey', 'šedá', 'barvy', 1, { unit: 'hello', color: '#9aa0a6', accept: ['gray'] }),
+  w('gray', 'šedá', 'barvy', 1, { unit: 'hello', color: '#9aa0a6', accept: ['grey'] }),
   w('black', 'černá', 'barvy', 1, { unit: 'hello', color: '#222222' }),
   w('white', 'bílá', 'barvy', 1, { unit: 'hello', color: '#ffffff' }),
   w('brown', 'hnědá', 'barvy', 1, { unit: 'hello', color: '#8c5a3c' }),
@@ -80,7 +81,7 @@ export const WORDS: Word[] = [
   w('crayon', 'pastelka', 'trida', 1, { unit: 'school', pic: '🖍️' }),
   w('desk', 'lavice', 'trida', 1, { unit: 'school' }),
   w('pencil case', 'penál', 'trida', 1, { unit: 'school' }),
-  w('rubber', 'guma', 'trida', 1, { unit: 'school', accept: ['eraser'] }),
+  w('eraser', 'guma', 'trida', 1, { unit: 'school', accept: ['rubber'], an: true }),
   w('teacher', 'učitel / učitelka', 'trida', 1, { unit: 'school', pic: '🧑‍🏫' }),
   w('classroom', 'třída (místnost)', 'trida', 2, { unit: 'school' }),
   w('board', 'tabule', 'trida', 2, { unit: 'school' }),
@@ -183,5 +184,5 @@ export const NAMES = ['Sam', 'Ben', 'Tom', 'Nick', 'Dan', 'Kim', 'Anna', 'Lucy',
 /** Česká výslovnost anglických názvů písmen – pro vysvětlení dítěti i rodiči. */
 export const LETTER_CZ: Record<string, string> = {
   A: 'ej', B: 'bí', C: 'sí', D: 'dí', E: 'í', F: 'ef', G: 'dží', H: 'ejč', I: 'aj', J: 'džej', K: 'kej', L: 'el', M: 'em',
-  N: 'en', O: 'ou', P: 'pí', Q: 'kjú', R: 'á', S: 'es', T: 'tí', U: 'jú', V: 'ví', W: 'dabl jú', X: 'eks', Y: 'uaj', Z: 'zed',
+  N: 'en', O: 'ou', P: 'pí', Q: 'kjú', R: 'á', S: 'es', T: 'tí', U: 'jú', V: 'ví', W: 'dabl jú', X: 'eks', Y: 'uaj', Z: 'zí',
 };

@@ -8,6 +8,10 @@ import { Dragon, type DragonMood } from '../components/Dragon';
 import { ChoiceAnswer, LettersAnswer, NumberLineAnswer, NumberPad, OpenAnswer, OrderAnswer, SpellAnswer, spellMatches } from '../components/Answers';
 import { ConfidencePicker, Icon, Progress, SpeakButton } from '../components/Bits';
 import { ProgramAnswer } from '../components/ProgramAnswer';
+import { SayAnswer } from '../components/SayAnswer';
+import { caps } from '../../core/caps';
+import { judgeSay, type SayVerdict, type SpeechResult } from '../../core/saymatch';
+import { speakEnglish } from '../../core/speech';
 import { renderMathVisual } from '../visuals/MathVisuals';
 import { renderWorldVisual, visualSpeech } from '../visuals/WorldVisuals';
 import { EnglishSpeak, renderEnglishVisual } from '../visuals/EnglishVisuals';
@@ -23,6 +27,9 @@ const PRAISE_HARD = ['Tohle byla těžká úloha – a {vyřešila|vyřešil} js
 const PRAISE_RETRY = ['{Nevzdala|Nevzdal} ses – a vyšlo to.', 'Druhý pokus a je to tam.', '{Zkusila|Zkusil} jsi to jinak a povedlo se.'];
 const PRAISE_HINT = ['Nápověda pomohla a zbytek jsi {zvládla sama|zvládl sám}.', 'S malou nápovědou jsi na to {přišla|přišel}.'];
 const RETRY = ['Tohle ještě ne. Zkus to znovu.', 'Skoro! Zkus jinou cestu.', 'Hmm, ještě jednou – podívej se na nápovědu.'];
+// Miss Ember (školní ostrov) hodnotí mluvení anglicky.
+const EN_UNDERSTOOD = ['Great! I understood you.', 'Well done! I understood every word.', 'Yes! I understood you.', 'Perfect! I understood you.'];
+const EN_SORRY = ["Sorry, I didn't understand. Try again!", "Hmm, I didn't catch that. Try again, please!"];
 
 type Phase = 'answer' | 'confidence' | 'feedback' | 'solution' | 'open-done';
 
@@ -46,7 +53,7 @@ export function Play() {
         <span className="spacer" />
         {!choosing && <Progress total={mission.count} done={run.iIndex} />}
       </div>
-      {choosing ? <IslandPicker /> : run.item && <ItemView key={`${run.sessionId}-${run.mIndex}-${run.iIndex}`} item={run.item} />}
+      {choosing ? <IslandPicker /> : run.item && <ItemView key={`${run.sessionId}-${run.mIndex}-${run.iIndex}-${run.item.id}`} item={run.item} />}
     </div>
   );
 }
@@ -77,6 +84,7 @@ function ItemView({ item }: { item: Item }) {
   const useHint = useGame((s) => s.useHint);
   const registerAttempt = useGame((s) => s.registerAttempt);
   const completeItem = useGame((s) => s.completeItem);
+  const swapItem = useGame((s) => s.swapItem);
   const skill = SKILL_BY_ID[item.skillId];
   const mission = run.missions[run.mIndex];
 
@@ -92,9 +100,12 @@ function ItemView({ item }: { item: Item }) {
   const [tapSel, setTapSel] = useState<BodyRegion | null>(null);
   const [reveal, setReveal] = useState<number | null>(null);
   const [openPayload, setOpenPayload] = useState<{ text: string; ideas?: number } | null>(null);
+  const [said, setSaid] = useState<SayVerdict | null>(null);
+  const [sayTrouble, setSayTrouble] = useState(0);
 
   const every = profile.settings.confidenceEvery;
-  const askConfidence = every > 0 && !skill.open && run.answered % every === every - 1;
+  // U mluvení Miss Ember výsledek prozradí hned, otázka na jistotu by nedávala smysl.
+  const askConfidence = every > 0 && !skill.open && item.answer.kind !== 'say' && run.answered % every === every - 1;
   const hard = mission.kind === 'brave' || item.level > profile.grade + 1;
 
   const showHint = () => {
@@ -153,6 +164,30 @@ function ItemView({ item }: { item: Item }) {
     evaluate(correct, c);
   };
 
+  // Mluvení: chyba spojení ani ticho se nepočítají jako pokus.
+  const onSay = (result: SpeechResult) => {
+    if (a.kind !== 'say') return;
+    if (result.status !== 'ok') {
+      setSaid(null);
+      setMood('think');
+      if (result.status === 'error') setSayTrouble((n) => n + 1);
+      setMessage(result.status === 'error' ? 'Miss Ember tě teď neslyší – spojení vypadlo. Zkus to ještě jednou.' : 'Miss Ember tě neslyšela. Mluv nahlas a blíž k tabletu.');
+      return;
+    }
+    const verdict = judgeSay(result, a);
+    setSaid(verdict);
+    speakEnglish(pick(verdict.ok ? EN_UNDERSTOOD : EN_SORRY));
+    submit(verdict.ok);
+  };
+  const onMicError = () => {
+    setSayTrouble(2);
+    setMessage('Mikrofon teď nejde použít. Požádej rodiče, ať ho hře povolí v nastavení tabletu.');
+  };
+  const withoutSpeech = () => {
+    caps.speech = false;
+    swapItem();
+  };
+
   const finish = () => {
     if (openPayload) completeItem('open', openPayload);
     else completeItem(outcome ?? 'failed', { confidence });
@@ -193,7 +228,9 @@ function ItemView({ item }: { item: Item }) {
                   ? a.correct.join(' → ')
                   : a.kind === 'spell'
                     ? a.correct
-                    : '';
+                    : a.kind === 'say'
+                      ? a.model
+                      : '';
 
   // Vysvětlení občas začíná samotnou odpovědí („Fakt. Lékaři…“) – po „Správně
   // je Fakt.“ by se opakovala.
@@ -264,6 +301,17 @@ function ItemView({ item }: { item: Item }) {
           {a.kind === 'spell' && (
             <SpellAnswer disabled={locked} resetKey={`${item.id}-${attempts}`} space={a.correct.includes(' ')} onSubmit={(w) => submit(spellMatches(w, a.correct, a.accept))} />
           )}
+          {a.kind === 'say' && (
+            <>
+              {said && phase === 'answer' && <HeardNote verdict={said} />}
+              <SayAnswer disabled={locked} resetKey={`${item.id}-${attempts}`} refText={a.ref} onResult={onSay} onMicError={onMicError} />
+              {sayTrouble >= 2 && phase === 'answer' && (
+                <button className="btn btn-ghost" onClick={withoutSpeech}>
+                  Pokračovat bez mluvení
+                </button>
+              )}
+            </>
+          )}
           {a.kind === 'open' && phase === 'answer' && (
             <OpenAnswer
               countIdeas={a.countIdeas}
@@ -309,9 +357,11 @@ function ItemView({ item }: { item: Item }) {
       {(phase === 'feedback' || phase === 'solution' || phase === 'open-done') && (
         <div className={`sheet ${phase === 'solution' ? 'sheet-solution' : 'sheet-ok'}`} role="status">
           <p className="sheet-msg">{message}</p>
+          {said && a.kind === 'say' && <HeardNote verdict={said} />}
           {item.sayAfter && (phase === 'feedback' || phase === 'solution') && (
             <div className="sheet-en">
-              <EnglishSpeak text={item.sayAfter} auto big>
+              {/* Po mluvení hlas právě řekl „I understood you“ – vzor se pustí sám jen u řešení. */}
+              <EnglishSpeak text={item.sayAfter} auto={a.kind !== 'say' || phase === 'solution'} big>
                 <span lang="en">{item.sayAfter}</span>
               </EnglishSpeak>
             </div>
@@ -336,6 +386,23 @@ function ItemView({ item }: { item: Item }) {
             {phase === 'solution' ? 'Rozumím' : 'Pokračovat'}
           </button>
         </div>
+      )}
+    </div>
+  );
+}
+
+/** Co Miss Ember slyšela a případná rada k typické chybě. */
+function HeardNote({ verdict }: { verdict: SayVerdict }) {
+  const t = useGx();
+  return (
+    <div className={`heard${verdict.ok ? ' ok' : ''}`}>
+      <span className="heard-who">Miss Ember slyšela:</span>{' '}
+      <span lang="en" className="heard-text">„{verdict.heard || '…'}“</span>
+      {verdict.tip && <p className="heard-tip">{t(verdict.tip)}</p>}
+      {!verdict.tip && verdict.unclear.length > 0 && (
+        <p className="heard-tip">
+          Zkus zřetelněji: <span lang="en">{verdict.unclear.join(', ')}</span>
+        </p>
       )}
     </div>
   );

@@ -87,7 +87,7 @@ export const ISLANDS: IslandDef[] = [
     where: 'na Školním ostrově',
     from: 'ze Školního ostrova',
     tagline: 'Angličtina ze školy: slovíčka, spelling a mluvení',
-    species: { name: 'Miss Ember', description: 'Dračice z Londýna. Mluví jen anglicky, ráda hláskuje a za každou dobrou odpověď si dá šálek čaje.' },
+    species: { name: 'Miss Ember', description: 'Dračice z New Yorku. Mluví jen anglicky, ráda hláskuje a za každou dobrou odpověď si dá palačinku s javorovým sirupem.' },
     available: true,
     optIn: true,
     levelNames: { 1: 'základ ze školy', 2: 'celé učivo', 3: 'navíc ke zkoušce' },

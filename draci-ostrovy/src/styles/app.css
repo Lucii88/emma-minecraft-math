@@ -2994,3 +2994,75 @@ h3 {
   border-radius: 6px;
   padding: 3px 4px;
 }
+
+/* Mluvení s Miss Ember: velký mikrofon, kroužek podle hlasitosti. */
+.say {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 4px auto 0;
+}
+.say-mic {
+  --level: 0;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: var(--sea);
+  box-shadow: 0 6px 0 var(--sea-deep), 0 0 0 calc(var(--level) * 22px) rgba(255, 138, 31, 0.35);
+  cursor: pointer;
+  transition: box-shadow 0.08s linear, transform 0.1s;
+}
+.say-mic:active {
+  transform: translateY(3px);
+}
+.say-mic.on {
+  background: var(--fire);
+  box-shadow: 0 6px 0 #c26f12, 0 0 0 calc(6px + var(--level) * 22px) rgba(255, 138, 31, 0.35);
+}
+.say-mic:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.say-mic:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+.say-label {
+  margin: 0;
+  color: var(--ink-soft);
+  font-weight: 700;
+  text-align: center;
+}
+.heard {
+  margin: 0 auto 10px;
+  max-width: 560px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: var(--oops-soft);
+  text-align: center;
+}
+.heard.ok {
+  background: var(--ok-soft);
+}
+.heard-who {
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.heard-text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+}
+.heard-tip {
+  margin: 6px 0 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .say-mic {
+    transition: none;
+  }
+}

@@ -23,7 +23,7 @@ const BANK_1: Spec[] = [
 const BANK_2: Spec[] = [
   qa('like-apples', 'Do you like apples?', 'Yes, I do.', ['Yes, I am.', 'Yes, it is.'], 'Do you like…? = Máš rád/ráda…? Krátká odpověď: Yes, I do. / No, I don’t.', ['Otázka začíná Do.', 'Na Do you…? se odpovídá Yes, I do.'], '🍎'),
   qa('can-swim', 'Can you swim?', 'Yes, I can.', ['Yes, I do.', 'Yes, I am.'], 'Can you swim? = Umíš plavat? Odpověď: Yes, I can. / No, I can’t.', ['Otázka začíná Can.', 'Na Can you…? se odpovídá Yes, I can.']),
-  qa('pet', 'Have you got a pet?', 'Yes, I have.', ['Yes, I do.', 'Yes, I am.'], 'Have you got a pet? = Máš nějaké zvířátko? Odpověď: Yes, I have. / No, I haven’t.', ['Otázka začíná Have you got.', 'Na Have you got…? se odpovídá Yes, I have.']),
+  qa('pet', 'Do you have a pet?', 'Yes, I do.', ['Yes, I am.', 'Yes, I can.'], 'Do you have a pet? = Máš nějaké zvířátko? Odpověď: Yes, I do. / No, I don’t. (Britové se ptají i Have you got a pet? – Yes, I have.)', ['Otázka začíná Do.', 'Na Do you…? se odpovídá Yes, I do.']),
   qa('is-it-red', 'Is it red?', 'Yes, it is.', ['Yes, I am.', 'Yes, I do.'], 'Is it…? = Je to…? Odpověď: Yes, it is. / No, it isn’t.', ['Otázka začíná Is it.', 'Na Is it…? se odpovídá Yes, it is / No, it isn’t.'], '🔴'),
   qa('is-it-blue', 'Is it blue?', "No, it isn't.", ['Yes, it is.', "No, I'm not."], "Na obrázku je zelená, ne modrá: No, it isn't. (Ne, není.)", ['Podívej se na barvu.', 'Blue = modrá. Je to modrá?'], '🟢'),
   qa('where-from', 'Where are you from?', "I'm from the Czech Republic.", ["I'm seven.", "It's on the desk."], 'Where are you from? = Odkud jsi? Odpověď: I’m from the Czech Republic. (Jsem z Česka.)', ['Where = kde, odkud.', 'From = z (odkud).']),
@@ -31,11 +31,11 @@ const BANK_2: Spec[] = [
 
 const COLOR_PIC: Record<string, string> = { red: '🔴', blue: '🔵', yellow: '🟡', green: '🟢', orange: '🟠', purple: '🟣', black: '⚫', white: '⚪', brown: '🟤' };
 
-function colour(rng: Rng): ChoiceSpec {
+function color(rng: Rng): ChoiceSpec {
   const colors = Object.keys(COLOR_PIC);
   const c = rng.pick(colors);
   const wrong = rng.shuffle(colors.filter((x) => x !== c)).slice(0, 2);
-  return qa(`colour-${c}`, 'What colour is it?', `It's ${c}.`, wrong.map((x) => `It's ${x}.`), `What colour is it? = Jakou to má barvu? Odpověď: It's ${c}.`, ['Colour = barva.', 'Odpověď: It’s + barva.'], COLOR_PIC[c]);
+  return qa(`color-${c}`, 'What color is it?', `It's ${c}.`, wrong.map((x) => `It's ${x}.`), `What color is it? = Jakou to má barvu? Odpověď: It's ${c}.`, ['Color = barva.', 'Odpověď: It’s + barva.'], COLOR_PIC[c]);
 }
 
 /** Slova, ke kterým se nehodí „It's a …“ (nepočitatelná, sun = the sun, brýle). */
@@ -68,12 +68,12 @@ export const rozhovorSkill = bankSkill({
   id: 'skola.rozhovor',
   island: 'skola',
   name: 'Otázky a odpovědi',
-  description: 'Rozumí běžným otázkám (What’s your name? How old are you? What colour…? How many…? Do you like…?) a vybere správnou odpověď – příprava na mluvení.',
+  description: 'Rozumí běžným otázkám (What’s your name? How old are you? What color…? How many…? Do you like…?) a vybere správnou odpověď – příprava na mluvení.',
   rvp: { 1: ['CJ-3-1-01', 'CJ-3-1-04'], 2: ['CJ-5-2-03'] },
   ability: 'slovni',
   banks: { 1: BANK_1, 2: BANK_2 },
   gen: {
-    1: (rng) => (rng.chance(0.4) ? colour(rng) : rng.chance(0.5) ? whatsThis(rng, 1) : howMany(rng)),
+    1: (rng) => (rng.chance(0.4) ? color(rng) : rng.chance(0.5) ? whatsThis(rng, 1) : howMany(rng)),
     2: (rng) => (rng.chance(0.5) ? whatsThis(rng, 3) : howMany(rng)),
   },
   genShare: 0.6,

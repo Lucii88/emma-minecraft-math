@@ -134,7 +134,18 @@ export type AnswerSpec =
   | { kind: 'order'; items: string[]; correct: string[] }
   /** Napsání slova na klávesnici a–z (anglický spelling). Porovnává se bez
    *  ohledu na velikost písmen; `accept` = další správné tvary (grey/gray). */
-  | { kind: 'spell'; correct: string; accept?: string[] };
+  | { kind: 'spell'; correct: string; accept?: string[] }
+  /** Odpověď nahlas (školní ostrov, jen se zapnutým mluvením). Nahrávka se
+   *  přepíše na text a porovná se vzory `expect` (viz core/saymatch.ts).
+   *  `model` = vzorová odpověď, `ref` = věta k opakování (hodnotí se i
+   *  výslovnost), `tips` = typické chyby s radou. */
+  | { kind: 'say'; model: string; expect: string[]; ref?: string; tips?: SayTip[] };
+
+/** Typická chyba v mluvení: když přepis odpovídá vzoru `when`, ukáže se rada. */
+export interface SayTip {
+  when: string;
+  tip: string;
+}
 
 export type Visual =
   | { type: 'clock'; h: number; m: number }
@@ -255,6 +266,10 @@ export interface SkillDef {
   /** Váha při výběru dovednosti k rozvoji (výchozí 1). Vyšší = častěji,
    *  např. spelling před zkouškou. */
   priority?: number;
+  /** Dovednost potřebuje mluvení (mikrofon a převod řeči na text na serveru).
+   *  Bez něj se nehraje a v rozehrané misi ji nahradí `fallback`. */
+  needs?: 'speech';
+  fallback?: string;
   /** Vygeneruje úlohu dané úrovně. Musí být deterministická pro dané rng. */
   generate: (level: Level, rng: Rng) => Item;
 }

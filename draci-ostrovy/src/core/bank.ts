@@ -15,6 +15,7 @@ import type {
   IslandId,
   Item,
   Level,
+  SayTip,
   SkillDef,
   TestLikeFormat,
   Visual,
@@ -88,6 +89,15 @@ export interface LettersSpec extends BaseSpec {
   correct: string;
 }
 
+/** Odpověď nahlas (mluvení na školním ostrově). */
+export interface SaySpec extends BaseSpec {
+  kind: 'say';
+  model: string;
+  expect: string[];
+  ref?: string;
+  tips?: SayTip[];
+}
+
 /** Otevřená tvořivá úloha (jen v dovednosti s `open: true`). */
 export interface OpenSpec extends BaseSpec {
   kind: 'open';
@@ -95,7 +105,7 @@ export interface OpenSpec extends BaseSpec {
   countIdeas?: boolean;
 }
 
-export type Spec = ChoiceSpec | FixedSpec | NumberSpec | OrderSpec | ProgramSpec | OpenSpec | SpellSpec | LettersSpec;
+export type Spec = ChoiceSpec | FixedSpec | NumberSpec | OrderSpec | ProgramSpec | OpenSpec | SpellSpec | LettersSpec | SaySpec;
 
 const toOption = (o: string | ChoiceOption): ChoiceOption => (typeof o === 'string' ? { label: o } : o);
 
@@ -156,6 +166,12 @@ export function buildItem(skillId: string, level: Level, s: Spec, rng: Rng): Ite
         ...(s.visual ? { visual: s.visual } : {}),
         answer: { kind: 'spell', correct: s.correct, ...(s.accept?.length ? { accept: s.accept } : {}) },
       };
+    case 'say':
+      return {
+        ...base,
+        ...(s.visual ? { visual: s.visual } : {}),
+        answer: { kind: 'say', model: s.model, expect: s.expect, ...(s.ref ? { ref: s.ref } : {}), ...(s.tips?.length ? { tips: s.tips } : {}) },
+      };
     case 'letters':
       return {
         ...base,
@@ -195,6 +211,8 @@ export interface BankSkillDef {
   showFact?: boolean;
   /** Váha při výběru dovednosti k rozvoji (výchozí 1). */
   priority?: number;
+  needs?: 'speech';
+  fallback?: string;
   /** Ručně psané úlohy podle úrovně. */
   banks?: Partial<Record<Level, Spec[]>>;
   /** Procedurální úlohy podle úrovně. Má-li úroveň banku i generátor,
@@ -249,6 +267,8 @@ export function bankSkill(def: BankSkillDef): SkillDef {
     ...(def.open ? { open: true } : {}),
     ...(def.showFact ? { showFact: true } : {}),
     ...(def.priority ? { priority: def.priority } : {}),
+    ...(def.needs ? { needs: def.needs } : {}),
+    ...(def.fallback ? { fallback: def.fallback } : {}),
     generate: (level: Level, rng: Rng): Item => {
       const lv = levels.includes(level) ? level : nearest(levels, level);
       const bank = def.banks?.[lv] ?? [];

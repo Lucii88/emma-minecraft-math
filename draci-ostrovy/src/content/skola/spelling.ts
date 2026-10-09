@@ -134,7 +134,7 @@ const NOTE: Record<string, string> = {
   Y: 'Y se čte uaj, skoro jako anglické „why“ (proč).',
   W: 'W je „double U“ – dvojité U.',
   H: 'H se čte ejč.',
-  Z: 'Z se v britské angličtině čte zed.',
+  Z: 'Z se v americké angličtině čte zí (britsky zed).',
 };
 
 function pismeno(rng: Rng): ChoiceSpec {

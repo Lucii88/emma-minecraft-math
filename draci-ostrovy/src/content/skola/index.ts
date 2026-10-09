@@ -6,6 +6,7 @@ import type { SkillDef } from '../../core/types';
 import { abecedaSkill, napisSkill, poskladejSkill } from './spelling';
 import { jaMeSkill, kdeSkill, tohleSkill } from './gramatika';
 import { poslechSkill, rekniToSkill } from './slovicka';
+import { mluveniSkill } from './mluveni';
 import { rozhovorSkill } from './rozhovor';
 
 export const skills: SkillDef[] = [
@@ -18,5 +19,6 @@ export const skills: SkillDef[] = [
   kdeSkill,
   tohleSkill,
   rozhovorSkill,
+  mluveniSkill,
 ];
 export { missions } from './mise';

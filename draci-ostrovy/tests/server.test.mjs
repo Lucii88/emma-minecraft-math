@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createApp, parseCodes } from '../server.mjs';
+import { createApp, parseCodes, speechResult, speechUrl } from '../server.mjs';
 
 const CODE = 'Ostrov-7k4m';
 const SECRET = 'testovaci-tajemstvi';
@@ -166,5 +166,151 @@ describe('server s přístupovým kódem', () => {
     const cookie = cookieFrom(await login(base, CODE));
     const res = await fetch(base + '/', { method: 'POST', headers: { cookie }, redirect: 'manual' });
     expect(res.status).toBe(405);
+  });
+});
+
+/** Nejmenší platný WAV (hlavička + trocha ticha). */
+function wav(samples = 1600) {
+  const buf = Buffer.alloc(44 + samples * 2);
+  buf.write('RIFF', 0, 'ascii');
+  buf.writeUInt32LE(36 + samples * 2, 4);
+  buf.write('WAVEfmt ', 8, 'ascii');
+  buf.writeUInt32LE(16, 16);
+  buf.writeUInt16LE(1, 20);
+  buf.writeUInt16LE(1, 22);
+  buf.writeUInt32LE(16000, 24);
+  buf.writeUInt32LE(32000, 28);
+  buf.writeUInt16LE(2, 32);
+  buf.writeUInt16LE(16, 34);
+  buf.write('data', 36, 'ascii');
+  buf.writeUInt32LE(samples * 2, 40);
+  return buf;
+}
+
+const AZURE_OK = {
+  RecognitionStatus: 'Success',
+  DisplayText: "I'm seven.",
+  NBest: [{
+    Lexical: "i'm seven", Display: "I'm seven.",
+    AccuracyScore: 91.2, FluencyScore: 80, CompletenessScore: 100, PronScore: 87.6,
+    Words: [{ Word: "i'm", AccuracyScore: 95, ErrorType: 'None' }, { Word: 'seven', AccuracyScore: 88.4, ErrorType: 'None' }],
+  }],
+};
+
+describe('mluvení přes Azure Speech', () => {
+  const fakeAzure = (reply = { status: 200, body: AZURE_OK }) => {
+    const calls = [];
+    const fetchFn = async (url, init) => {
+      calls.push({ url, init });
+      if (reply instanceof Error) throw reply;
+      return new Response(JSON.stringify(reply.body ?? {}), { status: reply.status });
+    };
+    return { calls, fetchFn };
+  };
+  const speak = (base, cookie, body = wav(), path = '/api/mluveni') =>
+    fetch(base + path, { method: 'POST', headers: { cookie, 'Content-Type': 'audio/wav' }, body });
+
+  it('adresa služby podle oblasti nebo vlastního prostředku', () => {
+    expect(speechUrl({ region: 'westeurope' })).toBe('https://westeurope.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US&format=detailed');
+    expect(speechUrl({ endpoint: 'https://draci.cognitiveservices.azure.com/' })).toBe('https://draci.cognitiveservices.azure.com/stt/speech/recognition/conversation/cognitiveservices/v1?language=en-US&format=detailed');
+    expect(speechUrl({})).toBeNull();
+    expect(() => speechUrl({ region: 'west europe/../x' })).toThrow();
+    expect(() => speechUrl({ endpoint: 'http://draci.example' })).toThrow();
+  });
+
+  it('bez klíče je vypnuté a hra o tom ví', async () => {
+    const base = await start();
+    expect((await get(base, '/api/mluveni')).status).toBe(401);
+    const cookie = cookieFrom(await login(base, CODE));
+    const res = await get(base, '/api/mluveni', { cookie });
+    expect(await res.json()).toEqual({ enabled: false });
+    expect((await speak(base, cookie)).status).toBe(403);
+  });
+
+  it('chybné nastavení mluvení hru neshodí', async () => {
+    const base = await start({ speech: { key: 'k', region: 'špatně' } });
+    const cookie = cookieFrom(await login(base, CODE));
+    expect(await (await get(base, '/api/mluveni', { cookie })).json()).toEqual({ enabled: false });
+  });
+
+  it('pošle nahrávku do Azure a vrátí zjednodušený výsledek s hodnocením výslovnosti', async () => {
+    const azure = fakeAzure();
+    const base = await start({ speech: { key: 'tajny-klic', region: 'westeurope', fetch: azure.fetchFn } });
+    const cookie = cookieFrom(await login(base, CODE));
+    expect(await (await get(base, '/api/mluveni', { cookie })).json()).toEqual({ enabled: true });
+
+    const res = await speak(base, cookie, wav(), "/api/mluveni?ref=I'm%20seven.");
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      status: 'ok', text: "I'm seven.", lexical: "i'm seven",
+      scores: { accuracy: 91, fluency: 80, completeness: 100, pron: 88 },
+      words: [{ word: "i'm", accuracy: 95, error: 'None' }, { word: 'seven', accuracy: 88, error: 'None' }],
+    });
+    expect(azure.calls).toHaveLength(1);
+    const { url, init } = azure.calls[0];
+    expect(url).toContain('westeurope.stt.speech.microsoft.com');
+    expect(url).toContain('language=en-US');
+    expect(init.headers['Ocp-Apim-Subscription-Key']).toBe('tajny-klic');
+    expect(init.headers['Content-Type']).toContain('samplerate=16000');
+    const pa = JSON.parse(Buffer.from(init.headers['Pronunciation-Assessment'], 'base64').toString());
+    expect(pa).toMatchObject({ ReferenceText: "I'm seven.", GradingSystem: 'HundredMark', EnableMiscue: 'True' });
+  });
+
+  it('bez referenčního textu (nebo s podivným) jen přepisuje', async () => {
+    const azure = fakeAzure();
+    const base = await start({ speech: { key: 'k', region: 'westeurope', fetch: azure.fetchFn } });
+    const cookie = cookieFrom(await login(base, CODE));
+    await speak(base, cookie);
+    await speak(base, cookie, wav(), '/api/mluveni?ref=%3Cscript%3E');
+    expect(azure.calls.map((c) => c.init.headers['Pronunciation-Assessment'])).toEqual([undefined, undefined]);
+  });
+
+  it('host s kódem pro kamarády mluvení nemá – jeho hlas se nikam neposílá', async () => {
+    const azure = fakeAzure();
+    const base = await start({ guestCodes: ['kamarad-1'], speech: { key: 'k', region: 'westeurope', fetch: azure.fetchFn } });
+    const cookie = cookieFrom(await login(base, 'kamarad-1'));
+    expect(await (await get(base, '/api/mluveni', { cookie })).json()).toEqual({ enabled: false });
+    expect((await speak(base, cookie)).status).toBe(403);
+    expect(azure.calls).toHaveLength(0);
+  });
+
+  it('odmítne jiný formát, příliš velkou nahrávku a hlídá hodinový limit', async () => {
+    const azure = fakeAzure();
+    const base = await start({ speech: { key: 'k', region: 'westeurope', fetch: azure.fetchFn, limit: 2 } });
+    const cookie = cookieFrom(await login(base, CODE));
+    const mp3 = await fetch(base + '/api/mluveni', { method: 'POST', headers: { cookie, 'Content-Type': 'audio/mpeg' }, body: Buffer.alloc(100) });
+    expect(mp3.status).toBe(415);
+    expect((await speak(base, cookie, Buffer.from('RIFF....nope'))).status).toBe(415);
+    const big = await speak(base, cookie, Buffer.concat([wav(), Buffer.alloc(1024 * 1024)])).catch(() => ({ status: 413 }));
+    expect(big.status).toBe(413);
+    expect((await speak(base, cookie)).status).toBe(200);
+    expect((await speak(base, cookie)).status).toBe(200);
+    expect((await speak(base, cookie)).status).toBe(429);
+    clock += 61 * 60 * 1000;
+    expect((await speak(base, cookie)).status).toBe(200);
+    expect(azure.calls).toHaveLength(3);
+  });
+
+  it('chyba nebo výpadek Azure vrátí „error“ a klíč neprozradí', async () => {
+    for (const reply of [{ status: 401, body: { error: 'bad key' } }, new Error('síť')]) {
+      const azure = fakeAzure(reply);
+      const base = await start({ speech: { key: 'tajny-klic', region: 'westeurope', fetch: azure.fetchFn } });
+      const cookie = cookieFrom(await login(base, CODE));
+      const res = await speak(base, cookie);
+      expect(res.status).toBe(502);
+      const text = await res.text();
+      expect(JSON.parse(text).status).toBe('error');
+      expect(text).not.toContain('tajny-klic');
+    }
+  });
+
+  it('ticho a nesrozumitelná řeč jsou „nomatch“, ne chyba', () => {
+    expect(speechResult({ RecognitionStatus: 'InitialSilenceTimeout' }).status).toBe('nomatch');
+    expect(speechResult({ RecognitionStatus: 'NoMatch' }).status).toBe('nomatch');
+    expect(speechResult({ RecognitionStatus: 'Error' }).status).toBe('error');
+    // Výsledky hodnocení mohou být i vnořené.
+    const nested = speechResult({ RecognitionStatus: 'Success', NBest: [{ Lexical: 'red', PronunciationAssessment: { AccuracyScore: 70 }, Words: [{ Word: 'red', PronunciationAssessment: { AccuracyScore: 70, ErrorType: 'Mispronunciation' } }] }] });
+    expect(nested.scores?.accuracy).toBe(70);
+    expect(nested.words[0]).toEqual({ word: 'red', accuracy: 70, error: 'Mispronunciation' });
   });
 });

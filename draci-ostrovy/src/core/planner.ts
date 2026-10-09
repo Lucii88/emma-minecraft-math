@@ -3,6 +3,7 @@
 // kolem 45 %), bez opakování nedávných úloh.
 
 import { ISLANDS, SKILL_BY_ID, islandsFor, skillsOf } from '../content';
+import { skillReady } from './caps';
 import { createRng, randomSeed } from './rng';
 import { genderItem } from './gender';
 import { chooseLevel, initialState, itemDifficulty, levelDifficulty, targetDifficulty } from './model';
@@ -38,9 +39,10 @@ function lastActivity(profile: Profile, island: IslandId): number {
 }
 
 /** Dovednosti ostrova, které se dají hrát. Když rodič vypne úlohy podobné
- *  testům, vynechají se (pokud by na ostrově nezbylo nic, zůstanou). */
+ *  testům, vynechají se (pokud by na ostrově nezbylo nic, zůstanou).
+ *  Mluvení jen tehdy, když ho server i zařízení umí. */
 export function playableSkills(profile: Profile, island: IslandId): SkillDef[] {
-  const all = skillsOf(island);
+  const all = skillsOf(island).filter(skillReady);
   if (!profile.settings.skipTestLike) return all;
   const rest = all.filter((s) => !s.testLike);
   return rest.some((s) => !s.open) ? rest : all;
@@ -126,8 +128,10 @@ export function missionForSkill(skill: SkillDef, kind: MissionKind = 'free'): Mi
 /** Vybere další úlohu mise (s oslovením podle hráče). */
 export function nextItem(profile: Profile, mission: Mission, index: number, seed = randomSeed()): Item {
   const rng = createRng(seed);
-  const skillId = mission.skillIds[index % mission.skillIds.length];
-  const skill = SKILL_BY_ID[skillId];
+  const planned = SKILL_BY_ID[mission.skillIds[index % mission.skillIds.length]];
+  // Mluvení, které mezitím přestalo fungovat, nahradí příbuzná dovednost.
+  const skill = skillReady(planned) || !planned.fallback ? planned : SKILL_BY_ID[planned.fallback];
+  const skillId = skill.id;
   const state = stateOf(profile, skillId);
   // Vstupní let: prvních pár úloh nové dovednosti je o něco náročnějších,
   // aby odhad rychle našel skutečnou úroveň.

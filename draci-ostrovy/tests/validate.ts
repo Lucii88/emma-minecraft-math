@@ -5,6 +5,7 @@ import { MAX_PROGRAM_STEPS, cellKey, fly, insideGrid, sameCell, shortestProgram 
 import { createRng } from '../src/core/rng';
 import type { Cell, IslandId, Item, JointMission, KnowledgeCard, Level, SkillDef, Visual } from '../src/core/types';
 import { BODY_REGIONS } from '../src/core/types';
+import { matchesSay, normSpeech } from '../src/core/saymatch';
 
 /** Jména a pojmy z filmů, které nesmí být v kódu (veřejný repozitář). */
 export const FORBIDDEN_WORDS = [
@@ -221,6 +222,19 @@ function validateOne(item: Item, skill: SkillDef, level: Level): string[] {
         if (!/^[A-Za-z]+( [A-Za-z]+)*$/.test(w)) errors.push(`${where}: „${w}“ nejde napsat na klávesnici a–z`);
       }
       if (a.correct.length < 2 || a.correct.length > 20) errors.push(`${where}: délka slova ${a.correct.length}`);
+      break;
+    }
+    case 'say': {
+      for (const t of [a.model, ...a.expect, ...(a.ref ? [a.ref] : []), ...(a.tips ?? []).map((x) => x.when)]) {
+        if (CZECH.test(t)) errors.push(`${where}: česká diakritika v mluvení „${t}“`);
+      }
+      if (!a.expect.length || a.expect.some((p) => !normSpeech(p))) errors.push(`${where}: prázdný vzor odpovědi`);
+      // Vzorová odpověď musí projít vlastním vzorem (kromě „My name is …“).
+      if (!a.model.includes('…') && !matchesSay(a.model, a.expect)) errors.push(`${where}: vzor neodpovídá vzorové odpovědi „${a.model}“`);
+      // Server pustí k hodnocení výslovnosti jen krátkou větu z těchto znaků.
+      if (a.ref && (a.ref.length > 200 || !/^[A-Za-z0-9 .,!?'’-]+$/.test(a.ref))) errors.push(`${where}: věta k opakování „${a.ref}“ by se nehodnotila`);
+      if (a.ref && !matchesSay(a.ref, a.expect)) errors.push(`${where}: věta k opakování neodpovídá vzoru`);
+      for (const t of a.tips ?? []) if (!t.tip.trim() || !normSpeech(t.when)) errors.push(`${where}: prázdná rada k mluvení`);
       break;
     }
     case 'order': {
