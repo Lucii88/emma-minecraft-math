@@ -3,7 +3,7 @@
 
 import type { Rng } from './rng';
 
-export type IslandId = 'cisla' | 'slova' | 'telo' | 'svet' | 'zahady' | 'trh' | 'dilna';
+export type IslandId = 'cisla' | 'slova' | 'telo' | 'svet' | 'zahady' | 'trh' | 'dilna' | 'skola';
 
 /** L1–L5 = očekávání RVP pro 1.–5. ročník, L6 = nad rámec 1. stupně. */
 export type Level = 1 | 2 | 3 | 4 | 5 | 6;
@@ -93,6 +93,9 @@ export interface ChoiceOption {
   label: string;
   /** Co přečíst nahlas, pokud se liší od label (např. u emoji). */
   speak?: string;
+  /** Barevný vzorek místo textu (anglické barvy); `label` zůstává pro
+   *  čtečky a ukázku řešení. */
+  color?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -128,7 +131,10 @@ export type AnswerSpec =
   | { kind: 'program'; maxSteps: number; collect?: Cell[] }
   /** Seřazení: dítě klepe na položky ve správném pořadí. `items` jsou už
    *  zamíchané, `correct` je správné pořadí týchž (navzájem různých) položek. */
-  | { kind: 'order'; items: string[]; correct: string[] };
+  | { kind: 'order'; items: string[]; correct: string[] }
+  /** Napsání slova na klávesnici a–z (anglický spelling). Porovnává se bez
+   *  ohledu na velikost písmen; `accept` = další správné tvary (grey/gray). */
+  | { kind: 'spell'; correct: string; accept?: string[] };
 
 export type Visual =
   | { type: 'clock'; h: number; m: number }
@@ -154,6 +160,14 @@ export type Visual =
    *  BODY_REGIONS. `highlight` zvýrazní oblast (u otázek „co je tohle?“). */
   | { type: 'body'; mode: 'outside' | 'inside'; highlight?: BodyRegion }
   | { type: 'reading'; title: string; text: string }
+  /** Anglický text nebo poslech: `say` přečte anglický hlas (tlačítko
+   *  s reproduktorem), `text` se ukáže (u čistého poslechu chybí), `pic` =
+   *  obrázek (emoji) nad textem. `auto` = přečte se samo, jakmile se úloha
+   *  objeví. */
+  | { type: 'english'; say: string; text?: string; pic?: string; auto?: boolean }
+  /** Kde to je: věc (emoji) v krabici, na ní, pod lavicí nebo vedle.
+   *  `ask` = anglická otázka nad obrázkem (přečte se sama). */
+  | { type: 'place'; thing: string; ref: 'box' | 'desk'; where: 'in' | 'on' | 'under' | 'next'; ask?: string }
   | { type: 'big'; text: string }
   /** Mřížka (mapa moře, dílna): drak, cíl, skály, pojmenovaná místa, případně
    *  nakreslená cesta a růžice světových stran. */
@@ -211,6 +225,9 @@ export interface Item {
   explanation: string;
   /** Jemné posunutí obtížnosti v rámci úrovně (−0,5 až +0,5). */
   difficulty?: number;
+  /** Anglické slovo nebo věta, kterou si dítě po odpovědi může poslechnout
+   *  (správná výslovnost vedle správného zápisu). */
+  sayAfter?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -235,6 +252,9 @@ export interface SkillDef {
   /** Vysvětlení je zajímavost: ukáže se i po správné odpovědi napoprvé
    *  (znalostní dovednosti). U počítání a hlavolamů jen po chybě. */
   showFact?: boolean;
+  /** Váha při výběru dovednosti k rozvoji (výchozí 1). Vyšší = častěji,
+   *  např. spelling před zkouškou. */
+  priority?: number;
   /** Vygeneruje úlohu dané úrovně. Musí být deterministická pro dané rng. */
   generate: (level: Level, rng: Rng) => Item;
 }
@@ -281,6 +301,11 @@ export interface IslandDef {
   /** Dračí druh, se kterým se hráčka na ostrově spřátelí. */
   species: { name: string; description: string };
   available: boolean;
+  /** Ostrov „na přání“: hráč ho uvidí, jen když ho rodič zapne (školní
+   *  učivo jednoho dítěte). Do přehledu podle ročníku se nepočítá. */
+  optIn?: boolean;
+  /** Popisky úrovní, pokud neodpovídají ročníkům (školní ostrov). */
+  levelNames?: Partial<Record<Level, string>>;
 }
 
 // ---------------------------------------------------------------------------

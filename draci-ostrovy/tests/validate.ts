@@ -23,6 +23,9 @@ function textErrors(value: unknown, where: string): string[] {
   return errors;
 }
 
+/** Česká diakritika – v anglických textech nemá co dělat. */
+const CZECH = /[áčďéěíňóřšťúůýž]/i;
+
 /** Kontrola vizuálů, které se kreslí z dat (mřížka, karty, graf, postup, tabulka). */
 export function validateVisual(v: Visual, where: string): string[] {
   const errors: string[] = [];
@@ -79,6 +82,20 @@ export function validateVisual(v: Visual, where: string): string[] {
       if (v.steps.some((x) => !x.trim())) errors.push(`${where}: prázdný krok postupu`);
       if (v.highlight !== undefined && (v.highlight < 0 || v.highlight >= v.steps.length)) errors.push(`${where}: zvýrazněný krok mimo postup`);
       break;
+    case 'english': {
+      if (!v.say.trim()) errors.push(`${where}: anglický poslech bez textu`);
+      if (CZECH.test(v.say) || (v.text && CZECH.test(v.text))) errors.push(`${where}: v angličtině je česká diakritika („${v.text ?? v.say}“)`);
+      if (/_/.test(v.say)) errors.push(`${where}: hlas by přečetl podtržítko`);
+      if (v.text && /_/.test(v.text) && !/…/.test(v.say)) errors.push(`${where}: mezera v textu bez pauzy v hlase`);
+      break;
+    }
+    case 'place': {
+      const allowed = v.ref === 'box' ? ['in', 'on', 'next'] : ['on', 'under', 'next'];
+      if (!allowed.includes(v.where)) errors.push(`${where}: ${v.where} u ${v.ref} se nedá nakreslit`);
+      if (!v.thing.trim()) errors.push(`${where}: chybí věc`);
+      if (v.ask && CZECH.test(v.ask)) errors.push(`${where}: česká diakritika v anglické otázce`);
+      break;
+    }
     case 'table': {
       const rows = v.cells.length / v.cols;
       if (v.cols < 2 || v.cols > 6 || !Number.isInteger(rows) || rows < 1 || rows > 6) errors.push(`${where}: tabulka ${v.cols} sloupců × ${rows} řádků`);
@@ -199,6 +216,13 @@ function validateOne(item: Item, skill: SkillDef, level: Level): string[] {
       else if (best.length > a.maxSteps) errors.push(`${where}: nejkratší let má ${best.length} kroků, povoleno ${a.maxSteps}`);
       break;
     }
+    case 'spell': {
+      for (const w of [a.correct, ...(a.accept ?? [])]) {
+        if (!/^[A-Za-z]+( [A-Za-z]+)*$/.test(w)) errors.push(`${where}: „${w}“ nejde napsat na klávesnici a–z`);
+      }
+      if (a.correct.length < 2 || a.correct.length > 20) errors.push(`${where}: délka slova ${a.correct.length}`);
+      break;
+    }
     case 'order': {
       if (a.items.length < 3 || a.items.length > 6) errors.push(`${where}: ${a.items.length} položek k seřazení (povoleno 3–6)`);
       if (new Set(a.items).size !== a.items.length) errors.push(`${where}: opakovaná položka k seřazení`);
@@ -210,6 +234,7 @@ function validateOne(item: Item, skill: SkillDef, level: Level): string[] {
   }
 
   if (item.visual) errors.push(...validateVisual(item.visual, where));
+  if (item.sayAfter && (CZECH.test(item.sayAfter) || /_/.test(item.sayAfter))) errors.push(`${where}: anglický poslech po odpovědi „${item.sayAfter}“`);
   errors.push(...textErrors(item, where));
   if (/\s{2,}/.test(item.prompt)) errors.push(`${where}: dvojitá mezera v zadání`);
   return errors;

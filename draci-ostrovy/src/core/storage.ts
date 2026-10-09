@@ -39,6 +39,8 @@ export interface Settings {
   pppDate?: string;
   /** Poznámky rodiče do portfolia (jen v zařízení). */
   notes?: string;
+  /** Školní ostrov (učivo jednoho dítěte) – jen pro hráče, kterému ho rodič zapne. */
+  schoolIsland?: boolean;
 }
 
 export interface Profile {

@@ -35,6 +35,8 @@ interface BaseSpec {
   explain: string;
   /** Jemné posunutí obtížnosti v rámci úrovně (−0,5 až +0,5). */
   difficulty?: number;
+  /** Anglické slovo či věta k poslechu po odpovědi (školní ostrov). */
+  sayAfter?: string;
 }
 
 /** Výběr z možností: správná a 2–5 chybných; zamíchá se a ukážou se nejvýš 4. */
@@ -73,6 +75,19 @@ export interface ProgramSpec extends Omit<BaseSpec, 'visual'> {
   maxSteps?: number;
 }
 
+/** Napsání slova na klávesnici (anglický spelling). */
+export interface SpellSpec extends BaseSpec {
+  kind: 'spell';
+  correct: string;
+  accept?: string[];
+}
+
+/** Složení slova z přeházených písmen (písmena se zamíchají sama). */
+export interface LettersSpec extends BaseSpec {
+  kind: 'letters';
+  correct: string;
+}
+
 /** Otevřená tvořivá úloha (jen v dovednosti s `open: true`). */
 export interface OpenSpec extends BaseSpec {
   kind: 'open';
@@ -80,7 +95,7 @@ export interface OpenSpec extends BaseSpec {
   countIdeas?: boolean;
 }
 
-export type Spec = ChoiceSpec | FixedSpec | NumberSpec | OrderSpec | ProgramSpec | OpenSpec;
+export type Spec = ChoiceSpec | FixedSpec | NumberSpec | OrderSpec | ProgramSpec | OpenSpec | SpellSpec | LettersSpec;
 
 const toOption = (o: string | ChoiceOption): ChoiceOption => (typeof o === 'string' ? { label: o } : o);
 
@@ -104,6 +119,7 @@ export function buildItem(skillId: string, level: Level, s: Spec, rng: Rng): Ite
     explanation: s.explain,
     ...(s.speak ? { speak: s.speak } : {}),
     ...(s.difficulty !== undefined ? { difficulty: s.difficulty } : {}),
+    ...(s.sayAfter ? { sayAfter: s.sayAfter } : {}),
   };
   switch (s.kind) {
     case 'program': {
@@ -133,6 +149,18 @@ export function buildItem(skillId: string, level: Level, s: Spec, rng: Rng): Ite
         ...base,
         ...(s.visual ? { visual: s.visual } : {}),
         answer: { kind: 'order', items: shuffleAway(rng, s.correct), correct: s.correct },
+      };
+    case 'spell':
+      return {
+        ...base,
+        ...(s.visual ? { visual: s.visual } : {}),
+        answer: { kind: 'spell', correct: s.correct, ...(s.accept?.length ? { accept: s.accept } : {}) },
+      };
+    case 'letters':
+      return {
+        ...base,
+        ...(s.visual ? { visual: s.visual } : {}),
+        answer: { kind: 'letters', letters: shuffleAway(rng, [...s.correct]), correct: s.correct },
       };
     case 'open':
       return {
@@ -165,6 +193,8 @@ export interface BankSkillDef {
   open?: boolean;
   /** Vysvětlení se ukáže jako zajímavost i po správné odpovědi. */
   showFact?: boolean;
+  /** Váha při výběru dovednosti k rozvoji (výchozí 1). */
+  priority?: number;
   /** Ručně psané úlohy podle úrovně. */
   banks?: Partial<Record<Level, Spec[]>>;
   /** Procedurální úlohy podle úrovně. Má-li úroveň banku i generátor,
@@ -218,6 +248,7 @@ export function bankSkill(def: BankSkillDef): SkillDef {
     ...(def.testLike ? { testLike: def.testLike } : {}),
     ...(def.open ? { open: true } : {}),
     ...(def.showFact ? { showFact: true } : {}),
+    ...(def.priority ? { priority: def.priority } : {}),
     generate: (level: Level, rng: Rng): Item => {
       const lv = levels.includes(level) ? level : nearest(levels, level);
       const bank = def.banks?.[lv] ?? [];

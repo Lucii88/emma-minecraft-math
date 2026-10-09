@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react';
-import { ISLANDS, SKILL_BY_ID } from '../../content';
+import { SKILL_BY_ID, islandsFor } from '../../content';
 import { useGame } from '../../core/game';
 import { sfx } from '../../core/sound';
 import type { BodyRegion, Confidence, Item } from '../../core/types';
 import { capitalize, count, formatNumber } from '../../core/czech';
 import { Dragon, type DragonMood } from '../components/Dragon';
-import { ChoiceAnswer, LettersAnswer, NumberLineAnswer, NumberPad, OpenAnswer, OrderAnswer } from '../components/Answers';
+import { ChoiceAnswer, LettersAnswer, NumberLineAnswer, NumberPad, OpenAnswer, OrderAnswer, SpellAnswer, spellMatches } from '../components/Answers';
 import { ConfidencePicker, Icon, Progress, SpeakButton } from '../components/Bits';
 import { ProgramAnswer } from '../components/ProgramAnswer';
 import { renderMathVisual } from '../visuals/MathVisuals';
 import { renderWorldVisual, visualSpeech } from '../visuals/WorldVisuals';
+import { EnglishSpeak, renderEnglishVisual } from '../visuals/EnglishVisuals';
 import { BodyMap, labelOf } from '../visuals/BodyMap';
 import { arrows, shortestProgram } from '../../core/grid';
 import { IslandArt } from './MapScreen';
@@ -52,11 +53,12 @@ export function Play() {
 
 function IslandPicker() {
   const choose = useGame((s) => s.chooseIsland);
+  const settings = useGame((s) => s.profile.settings);
   return (
     <div className="center picker">
       <h2>Třetí mise je podle tebe. Kam poletíme?</h2>
       <div className="picker-grid">
-        {ISLANDS.filter((i) => i.available).map((i) => (
+        {islandsFor(settings).filter((i) => i.available).map((i) => (
           <button key={i.id} className="card picker-card" onClick={() => choose(i.id)}>
             <IslandArt id={i.id} size={120} />
             <strong>{i.name}</strong>
@@ -163,7 +165,7 @@ function ItemView({ item }: { item: Item }) {
     if (item.visual.type === 'body') return null; // mapa těla se vykreslí v odpovědi
     if (a.kind === 'numberline' && item.visual.type === 'numberline') return null;
     if (a.kind === 'program') return null; // mřížka s letícím drakem je součástí odpovědi
-    return renderMathVisual(item.visual) ?? renderWorldVisual(item.visual);
+    return renderMathVisual(item.visual) ?? renderWorldVisual(item.visual) ?? renderEnglishVisual(item.visual);
   }, [item, a.kind]);
 
   // Nejkratší let pro ukázku řešení (úlohy s programem).
@@ -189,7 +191,9 @@ function ItemView({ item }: { item: Item }) {
                 ? `například ${arrows(solutionMoves ?? [])}`
                 : a.kind === 'order'
                   ? a.correct.join(' → ')
-                  : '';
+                  : a.kind === 'spell'
+                    ? a.correct
+                    : '';
 
   // Vysvětlení občas začíná samotnou odpovědí („Fakt. Lékaři…“) – po „Správně
   // je Fakt.“ by se opakovala.
@@ -257,6 +261,9 @@ function ItemView({ item }: { item: Item }) {
             />
           )}
           {a.kind === 'order' && <OrderAnswer items={a.items} disabled={locked} onSubmit={(order) => submit(order.every((x, i) => x === a.correct[i]))} />}
+          {a.kind === 'spell' && (
+            <SpellAnswer disabled={locked} resetKey={`${item.id}-${attempts}`} space={a.correct.includes(' ')} onSubmit={(w) => submit(spellMatches(w, a.correct, a.accept))} />
+          )}
           {a.kind === 'open' && phase === 'answer' && (
             <OpenAnswer
               countIdeas={a.countIdeas}
@@ -302,6 +309,13 @@ function ItemView({ item }: { item: Item }) {
       {(phase === 'feedback' || phase === 'solution' || phase === 'open-done') && (
         <div className={`sheet ${phase === 'solution' ? 'sheet-solution' : 'sheet-ok'}`} role="status">
           <p className="sheet-msg">{message}</p>
+          {item.sayAfter && (phase === 'feedback' || phase === 'solution') && (
+            <div className="sheet-en">
+              <EnglishSpeak text={item.sayAfter} auto big>
+                <span lang="en">{item.sayAfter}</span>
+              </EnglishSpeak>
+            </div>
+          )}
           {phase === 'solution' && (
             <p className="sheet-expl">
               Správně je <strong>{solutionText}</strong>. {explanation}

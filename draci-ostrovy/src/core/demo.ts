@@ -3,7 +3,7 @@
 // odpovědi „dává“ simulace podle předem zvolených silných a slabších stránek.
 // Nic z toho se neukládá a nemíchá se s daty skutečného hráče.
 
-import { MISSIONS, SKILLS } from '../content';
+import { MISSIONS, SKILLS, islandsFor } from '../content';
 import { missionForSkill, nextItem, stateOf } from './planner';
 import { itemDifficulty, pCorrect, scoreOf, updateState } from './model';
 import { createRng } from './rng';
@@ -42,8 +42,10 @@ export interface Demo {
  *  (až na posun dat k dnešku). */
 export function buildDemo(seed = 20260930, now = Date.now()): Demo {
   const rng = createRng(seed);
-  const closed = SKILLS.filter((s) => !s.open);
-  const open = SKILLS.filter((s) => s.open);
+  // Ukázka je jen z ostrovů pro všechny (školní ostrov je učivo jednoho dítěte).
+  const shared = new Set(islandsFor(undefined).map((i) => i.id));
+  const closed = SKILLS.filter((s) => !s.open && shared.has(s.island));
+  const open = SKILLS.filter((s) => s.open && shared.has(s.island));
   // Oblíbené dovednosti hraje často, některé jen zkusí, zbytek zatím ne.
   const shuffled = rng.shuffle(closed);
   const favourites = shuffled.slice(0, 20);
@@ -139,7 +141,7 @@ export function buildDemo(seed = 20260930, now = Date.now()): Demo {
     }
   }
 
-  const done = rng.shuffle(MISSIONS).slice(0, 5);
+  const done = rng.shuffle(MISSIONS.filter((m) => shared.has(m.island))).slice(0, 5);
   profile = {
     ...profile,
     sessions,

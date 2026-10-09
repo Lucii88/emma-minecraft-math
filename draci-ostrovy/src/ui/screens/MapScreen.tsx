@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { ISLANDS } from '../../content';
+import { islandsFor } from '../../content';
 import { useGame } from '../../core/game';
 import type { IslandId } from '../../core/types';
 import { Dragon } from '../components/Dragon';
@@ -54,6 +54,15 @@ export function IslandArt({ id, size = 140, locked = false }: { id: IslandId; si
         ))}
       </g>
     ),
+    skola: (
+      <g>
+        <rect x="54" y="40" width="34" height="24" fill="#f4a261" stroke="#8c5a3c" strokeWidth="3" />
+        <path d="M50,42 L71,26 L92,42 Z" fill="#e63946" stroke="#9d0208" strokeWidth="3" strokeLinejoin="round" />
+        <rect x="66" y="50" width="10" height="14" fill="#8c5a3c" />
+        <path d="M98,30 H126 A6,6 0 0 1 132,36 V48 A6,6 0 0 1 126,54 H108 L100,62 L102,54 H98 A6,6 0 0 1 92,48 V36 A6,6 0 0 1 98,30 Z" fill="#fff" stroke="#1d4e73" strokeWidth="3" />
+        <text x="112" y="48" textAnchor="middle" fontFamily="Baloo 2" fontWeight="800" fontSize="15" fill="#1d4e73">Hi!</text>
+      </g>
+    ),
   };
   return (
     <svg viewBox="0 0 172 110" width={size} height={(size * 110) / 172} aria-hidden className={locked ? 'island-art locked' : 'island-art'}>
@@ -74,6 +83,19 @@ const POS: Record<IslandId, { x: number; y: number }> = {
   trh: { x: 33, y: 34 },
   dilna: { x: 67, y: 34 },
   svet: { x: 90, y: 44 },
+  skola: { x: 90, y: 44 },
+};
+
+/** Se Školním ostrovem je ostrovů osm: čtyři nahoře, čtyři pod nimi. */
+const POS_8: Record<IslandId, { x: number; y: number }> = {
+  cisla: { x: 13, y: 16 },
+  slova: { x: 38, y: 7 },
+  telo: { x: 62, y: 7 },
+  svet: { x: 87, y: 16 },
+  zahady: { x: 10, y: 44 },
+  trh: { x: 34, y: 34 },
+  dilna: { x: 66, y: 34 },
+  skola: { x: 90, y: 44 },
 };
 
 export function MapScreen() {
@@ -81,6 +103,8 @@ export function MapScreen() {
   const players = useGame((s) => s.device.players.length);
   const go = useGame((s) => s.go);
   const startDay = useGame((s) => s.startDay);
+  const islands = islandsFor(profile.settings);
+  const pos = islands.length > 7 ? POS_8 : POS;
 
   return (
     <div className="map-screen">
@@ -107,11 +131,11 @@ export function MapScreen() {
       </div>
 
       <div className="island-layer">
-        {ISLANDS.map((i) => (
+        {islands.map((i) => (
           <button
             key={i.id}
             className={`map-island${i.available ? '' : ' locked'}${profile.species.includes(i.id) ? ' friend' : ''}`}
-            style={{ ['--x' as string]: `${POS[i.id].x}%`, ['--y' as string]: `${POS[i.id].y}%` }}
+            style={{ ['--x' as string]: `${pos[i.id].x}%`, ['--y' as string]: `${pos[i.id].y}%` }}
             disabled={!i.available}
             onClick={() => go('island', i.id)}
             aria-label={i.available ? i.name : `${i.name} – brzy`}

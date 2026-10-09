@@ -108,7 +108,8 @@ describe('napojení na plánovač a radar', () => {
 
   it('radar zvládne prázdný profil se všemi ostrovy', () => {
     const r = buildRadar(defaultProfile(), []);
-    expect(r.islands.map((i) => i.island.id)).toEqual(ISLANDS.filter((i) => i.available).map((i) => i.id));
+    expect(r.islands.map((i) => i.island.id)).toEqual(ISLANDS.filter((i) => i.available && !i.optIn).map((i) => i.id));
+    expect(r.extra).toEqual([]);
     expect(r.totals.answers).toBe(0);
   });
 });
