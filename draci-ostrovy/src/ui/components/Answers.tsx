@@ -185,20 +185,25 @@ export function spellMatches(typed: string, correct: string, accept: string[] = 
   return [correct, ...accept].some((w) => norm(w) === norm(typed));
 }
 
-export function SpellAnswer({ disabled, resetKey, space, onSubmit }: { disabled: boolean; resetKey: string; space?: boolean; onSubmit: (word: string) => void }) {
+/** Psaní slova: prázdná okénka ukazují, kolik má slovo písmen (mezera ve
+ *  dvouslovném výrazu je mezera mezi okénky a píše se sama). */
+export function SpellAnswer({ disabled, resetKey, pattern, onSubmit }: { disabled: boolean; resetKey: string; pattern: string; onSubmit: (word: string) => void }) {
   const [value, setValue] = useState('');
   useEffect(() => setValue(''), [resetKey]);
+  const slots = [...pattern.trim()];
+  const total = slots.filter((c) => c !== ' ').length;
+  const full = value.length === total;
 
   const press = (k: string) => {
     if (disabled) return;
     sfx.tap();
     if (k === '⌫') return setValue((v) => v.slice(0, -1));
-    if (k === ' ') return setValue((v) => (v && !v.endsWith(' ') ? `${v} ` : v));
-    setValue((v) => (v.length >= 20 ? v : v + k));
+    setValue((v) => (v.length >= total ? v : v + k));
   };
   const submit = () => {
-    if (!value.trim() || disabled) return;
-    onSubmit(value);
+    if (!full || disabled) return;
+    let i = 0;
+    onSubmit(slots.map((c) => (c === ' ' ? ' ' : value[i++])).join(''));
   };
 
   const submitRef = useRef(submit);
@@ -208,43 +213,44 @@ export function SpellAnswer({ disabled, resetKey, space, onSubmit }: { disabled:
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (/^[a-zA-Z]$/.test(e.key)) press(e.key.toLowerCase());
       else if (e.key === 'Backspace') press('⌫');
-      else if (e.key === ' ' && space) press(' ');
       else if (e.key === 'Enter') submitRef.current();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [disabled, space]);
+  }, [disabled, total]);
 
+  let letter = 0;
   return (
     <div className="spell">
-      <div className={`spell-display${value ? '' : ' empty'}`} lang="en" aria-live="polite">
-        {value || '?'}
+      <div className="spell-boxes" lang="en" aria-label={`${value || 'nic'} – ${value.length} z ${total}`} aria-live="polite">
+        {slots.map((c, idx) => {
+          if (c === ' ') return <span key={idx} className="spell-gap" />;
+          const i = letter++;
+          return (
+            <span key={idx} className={`spell-box${value[i] ? ' filled' : ''}${i === value.length ? ' current' : ''}`}>
+              {value[i] ?? ''}
+            </span>
+          );
+        })}
       </div>
       <div className="spell-keys">
         {ABC_ROWS.map((row) => (
           <div key={row} className="spell-row">
             {[...row].map((k) => (
-              <button key={k} className="key spell-key" onClick={() => press(k)} disabled={disabled}>
+              <button key={k} className="key spell-key" onClick={() => press(k)} disabled={disabled || full}>
                 {k}
               </button>
             ))}
             {row === 'vwxyz' && (
-              <button className="key key-fn spell-key" onClick={() => press('⌫')} disabled={disabled} aria-label="smazat">
+              <button className="key key-fn spell-key" onClick={() => press('⌫')} disabled={disabled || !value} aria-label="smazat">
                 ⌫
               </button>
             )}
           </div>
         ))}
-        {space && (
-          <div className="spell-row">
-            <button className="key key-fn spell-space" onClick={() => press(' ')} disabled={disabled} aria-label="mezera">
-              mezera
-            </button>
-          </div>
-        )}
       </div>
-      <button className="btn btn-primary" onClick={submit} disabled={disabled || !value.trim()}>
+      <button className="btn btn-primary" onClick={submit} disabled={disabled || !full}>
         Hotovo
       </button>
     </div>

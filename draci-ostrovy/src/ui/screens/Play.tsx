@@ -301,7 +301,7 @@ function ItemView({ item }: { item: Item }) {
           )}
           {a.kind === 'order' && <OrderAnswer items={a.items} disabled={locked} onSubmit={(order) => submit(order.every((x, i) => x === a.correct[i]))} />}
           {a.kind === 'spell' && (
-            <SpellAnswer disabled={locked} resetKey={`${item.id}-${attempts}`} space={a.correct.includes(' ')} onSubmit={(w) => submit(spellMatches(w, a.correct, a.accept))} />
+            <SpellAnswer disabled={locked} resetKey={`${item.id}-${attempts}`} pattern={a.correct} onSubmit={(w) => submit(spellMatches(w, a.correct, a.accept))} />
           )}
           {a.kind === 'say' && parentJudges && (
             <ParentJudge disabled={locked} explanation={item.explanation} onJudge={submit} />

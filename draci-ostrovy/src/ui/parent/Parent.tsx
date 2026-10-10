@@ -5,7 +5,7 @@ import { gx, mapStrings, type Gender } from '../../core/gender';
 import { buildRadar, type Radar } from '../../core/radar';
 import { levelLabel } from '../../core/planner';
 import { exportAll, importAll, loadEvents, wipeAll, type Profile } from '../../core/storage';
-import { englishVoiceName, hasCzechVoice, hasEnglishVoice, voiceName } from '../../core/speech';
+import { PAUSE, englishVoiceName, hasCzechVoice, hasEnglishVoice, speakEnglish, spellOut, voiceName } from '../../core/speech';
 import { caps } from '../../core/caps';
 import type { AnswerEvent } from '../../core/types';
 import { Icon } from '../components/Bits';
@@ -694,6 +694,15 @@ function SettingsView({ onDemo }: { onDemo: () => void }) {
             {caps.speech && ' · rozpoznávání řeči zapnuté: nahrávka hlasu se přepíše v Microsoft Azure a nikde se neukládá'})
           </span>
         </label>
+        {s.schoolIsland && hasEnglishVoice() && (
+          <p className="field muted small">
+            <button type="button" className="btn btn-ghost btn-small" onClick={() => speakEnglish(`Hello! Let's spell.${PAUSE}${spellOut('aeigjr')}`)}>
+              ▶ Vyzkoušet anglický hlas
+            </button>{' '}
+            Má říct A, E, I, G, J, R (ej, í, aj, dží, džej, á). Zní nezřetelně? V Nastavení iPadu vyhledejte „Hlasy“ (Zpřístupnění), vyberte angličtinu
+            a stáhněte hlas s označením Premium nebo Vylepšený (třeba Ava). Hra ho po restartu vybere sama.
+          </p>
+        )}
         {s.schoolIsland && (
           <label className="field">
             <input type="checkbox" checked={!!s.parentSpeaking} onChange={(e) => update({ parentSpeaking: e.target.checked })} /> Mluvení se mnou{' '}
