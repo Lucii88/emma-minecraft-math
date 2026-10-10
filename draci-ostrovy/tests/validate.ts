@@ -1,7 +1,7 @@
 // Společná kontrola úloh pro testy všech ostrovů.
 
 import { GENDERS, genderItem, gx, mapStrings } from '../src/core/gender';
-import { MAX_PROGRAM_STEPS, cellKey, fly, insideGrid, sameCell, shortestProgram } from '../src/core/grid';
+import { MAX_LOOP_STEPS, MAX_PROGRAM_STEPS, cellKey, fewestBlocks, fly, insideGrid, repeatPattern, runsOf, sameCell, shortestProgram } from '../src/core/grid';
 import { createRng } from '../src/core/rng';
 import type { Cell, IslandId, Item, JointMission, KnowledgeCard, Level, SkillDef, Visual } from '../src/core/types';
 import { BODY_REGIONS } from '../src/core/types';
@@ -33,7 +33,7 @@ export function validateVisual(v: Visual, where: string): string[] {
   switch (v.type) {
     case 'grid': {
       if (v.cols < 2 || v.cols > 8 || v.rows < 2 || v.rows > 8) errors.push(`${where}: mřížka ${v.cols}×${v.rows} mimo rozsah 2–8`);
-      const all: Cell[] = [v.dragon, v.goal, ...(v.rocks ?? []), ...(v.eggs ?? []), ...(v.places ?? [])].filter((c): c is Cell => !!c);
+      const all: Cell[] = [v.dragon, v.goal, v.key, v.gate, ...(v.rocks ?? []), ...(v.eggs ?? []), ...(v.places ?? [])].filter((c): c is Cell => !!c);
       for (const c of all) {
         if (!Number.isInteger(c.x) || !Number.isInteger(c.y) || !insideGrid(v, c)) errors.push(`${where}: políčko ${c.x},${c.y} mimo mřížku`);
       }
@@ -50,6 +50,9 @@ export function validateVisual(v: Visual, where: string): string[] {
       put(v.goal, 'cíl');
       v.rocks?.forEach((c) => put(c, 'skála'));
       v.eggs?.forEach((c) => put(c, 'vajíčko'));
+      put(v.key, 'klíč');
+      put(v.gate, 'brána');
+      if (!v.key !== !v.gate) errors.push(`${where}: klíč bez brány nebo brána bez klíče`);
       const rocks = new Set((v.rocks ?? []).map(cellKey));
       const places = new Set<string>();
       for (const p of v.places ?? []) {
@@ -205,16 +208,39 @@ function validateOne(item: Item, skill: SkillDef, level: Level): string[] {
       if (sameCell(v.dragon, v.goal)) errors.push(`${where}: drak už je v cíli`);
       const collect = a.collect ?? [];
       // Nakreslená cesta smí být jen chybný program k opravě, ne řešení.
-      const world = { cols: v.cols, rows: v.rows, dragon: v.dragon, goal: v.goal, rocks: v.rocks };
+      const world = { cols: v.cols, rows: v.rows, dragon: v.dragon, goal: v.goal, rocks: v.rocks, key: v.key, gate: v.gate };
       if (v.path && fly(world, v.path, collect).ok) errors.push(`${where}: nakreslená cesta by prozradila řešení`);
       const eggs = v.eggs ?? [];
       if (collect.length !== eggs.length || collect.some((c) => !eggs.some((e) => sameCell(e, c)))) {
         errors.push(`${where}: vajíčka k sebrání neodpovídají mřížce`);
       }
-      if (a.maxSteps < 1 || a.maxSteps > MAX_PROGRAM_STEPS) errors.push(`${where}: maxSteps ${a.maxSteps} mimo 1–${MAX_PROGRAM_STEPS}`);
-      const best = shortestProgram(world, collect);
-      if (!best) errors.push(`${where}: do cíle se nedá doletět`);
-      else if (best.length > a.maxSteps) errors.push(`${where}: nejkratší let má ${best.length} kroků, povoleno ${a.maxSteps}`);
+      const limit = a.loop || a.maxBlocks ? MAX_LOOP_STEPS : MAX_PROGRAM_STEPS;
+      if (a.maxSteps < 1 || a.maxSteps > limit) errors.push(`${where}: maxSteps ${a.maxSteps} mimo 1–${limit}`);
+      if (a.loop && a.maxBlocks) errors.push(`${where}: Opakuj i příkazy najednou`);
+      const sol = a.solution;
+      if ((a.loop || a.maxBlocks) && !sol) errors.push(`${where}: chybí vzorové řešení`);
+      if (sol && (!fly(world, sol, collect).ok || sol.length > a.maxSteps)) errors.push(`${where}: vzorové řešení nedoletí`);
+      if (a.maxBlocks) {
+        // Řešení má přesně tolik příkazů, kolik je povoleno, a míň to nejde.
+        const fewest = fewestBlocks(world, collect);
+        if (!fewest) errors.push(`${where}: do cíle se nedá doletět`);
+        else if (runsOf(fewest).length !== a.maxBlocks) errors.push(`${where}: nejméně příkazů je ${runsOf(fewest).length}, povoleno ${a.maxBlocks}`);
+        if (sol && runsOf(sol).length !== a.maxBlocks) errors.push(`${where}: vzorové řešení má ${runsOf(sol).length} příkazů`);
+      } else if (a.loop) {
+        // Řešení je jeden vzor zopakovaný 2–maxRepeat×.
+        const { maxPattern, maxRepeat } = a.loop;
+        if (maxPattern * maxRepeat > a.maxSteps) errors.push(`${where}: Opakuj by se nevešlo do maxSteps`);
+        const fits = !!sol && Array.from({ length: maxPattern }, (_, i) => i + 1).some((len) => {
+          const times = sol.length / len;
+          return Number.isInteger(times) && times >= 2 && times <= maxRepeat && repeatPattern(sol.slice(0, len), times).join() === sol.join();
+        });
+        if (sol && !fits) errors.push(`${where}: vzorové řešení není opakovaný vzor`);
+      } else {
+        const best = shortestProgram(world, collect);
+        if (!best) errors.push(`${where}: do cíle se nedá doletět`);
+        else if (best.length > a.maxSteps) errors.push(`${where}: nejkratší let má ${best.length} kroků, povoleno ${a.maxSteps}`);
+        if (sol && sol.length !== best?.length) errors.push(`${where}: vzorové řešení není nejkratší`);
+      }
       break;
     }
     case 'spell': {

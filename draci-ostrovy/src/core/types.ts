@@ -128,7 +128,17 @@ export type AnswerSpec =
    *  (vizuál 'grid'). Správně je KAŽDÝ program, který doletí do cíle, cestou
    *  nenarazí na skálu ani nevyletí z mapy, sebere všechna `collect` a má
    *  nejvýš `maxSteps` kroků. */
-  | { kind: 'program'; maxSteps: number; collect?: Cell[] }
+  | {
+      kind: 'program';
+      maxSteps: number;
+      collect?: Cell[];
+      /** Program z příkazů „krok × počet“ (→ ×3): nejvýš tolik příkazů. */
+      maxBlocks?: number;
+      /** Program „Opakuj n× (vzor)“: vzor nejvýš maxPattern šipek, n ≤ maxRepeat. */
+      loop?: { maxPattern: number; maxRepeat: number };
+      /** Vzorové řešení k nakreslení (u příkazů a opakování). */
+      solution?: Move[];
+    }
   /** Seřazení: dítě klepe na položky ve správném pořadí. `items` jsou už
    *  zamíchané, `correct` je správné pořadí týchž (navzájem různých) položek. */
   | { kind: 'order'; items: string[]; correct: string[] }
@@ -196,6 +206,9 @@ export type Visual =
        *  v programu“). U odpovědi 'program' smí být jen chybný, k opravě. */
       path?: Move[];
       compass?: boolean;
+      /** Klíč a brána: branou drak proletí, až když sebral klíč. */
+      key?: Cell;
+      gate?: Cell;
     }
   /** Karty vedle sebe (zvířata, zboží s cenou, draci s vlastnostmi).
    *  `tag` = štítek na kartě (cena, skupina), `mark` = zvýrazněná karta. */

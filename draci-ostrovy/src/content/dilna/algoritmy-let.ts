@@ -5,12 +5,13 @@
 
 import { bankSkill, type ProgramSpec } from '../../core/bank';
 import { count } from '../../core/czech';
-import { fly } from '../../core/grid';
+import { MAX_LOOP_STEPS, MOVE_WORD, arrows, fewestBlocks, fly, repeatPattern, runsOf, sameCell } from '../../core/grid';
 import type { Rng } from '../../core/rng';
-import type { KnowledgeCard, Move } from '../../core/types';
+import type { Cell, KnowledgeCard, Move } from '../../core/types';
 import {
   KROK,
   describeFlight,
+  describeRuns,
   distance,
   gridOf,
   lengthDifficulty,
@@ -28,6 +29,9 @@ import {
 const ID = 'dilna.let';
 
 type LetLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
+const PRIKAZ = ['příkaz', 'příkazy', 'příkazů'] as const;
+const SIPKA = ['šipku', 'šipky', 'šipek'] as const;
 
 interface Found {
   w: World;
@@ -206,20 +210,226 @@ function letSpec(level: LetLevel, rng: Rng): ProgramSpec {
 
 const gen = (level: LetLevel) => (rng: Rng) => letSpec(level, rng);
 
+// ---------------------------------------------------------------------------
+// Nejvyšší úroveň: příkazy „krok × počet“ (→ ×3) – stejné šipky za sebou se spojí
+// do jednoho příkazu a příkazů je málo. Napůl s klíčem a branou.
+
+/** Svět pro příkazy: velká mapa s chodbami, nejméně příkazů 4–7, aspoň dva
+ *  dlouhé rovné úseky; s branou jen tehdy, když klíč opravdu musí sebrat. */
+export function checkBlocks(w: World): Move[] | null {
+  if (w.cols < 7 || w.rows < 7 || w.eggs.length > 2) return null;
+  const best = fewestBlocks(w, w.eggs);
+  if (!best || best.length < 10 || best.length > 30) return null;
+  const runs = runsOf(best);
+  if (runs.length < 4 || runs.length > 7 || runs.filter((r) => r.times >= 3).length < 2) return null;
+  if (!w.key !== !w.gate) return null;
+  if (w.key && w.gate) {
+    // Klíč i brána na volném políčku (cestou může drak přeletět i start nebo hnízdo).
+    const taken = [w.dragon, w.goal, ...w.rocks, ...w.eggs];
+    if (sameCell(w.key, w.gate) || taken.some((c) => sameCell(c, w.key!) || sameCell(c, w.gate!))) return null;
+    // Brána musí být na cestě a bez ní by stačilo méně (nebo kratší let).
+    let pos = w.dragon;
+    const cells = [pos];
+    for (const m of best) cells.push((pos = { x: pos.x + (m === 'R' ? 1 : m === 'L' ? -1 : 0), y: pos.y + (m === 'D' ? 1 : m === 'U' ? -1 : 0) }));
+    if (!cells.some((c) => sameCell(c, w.gate!))) return null;
+    const open = fewestBlocks({ ...w, key: undefined, gate: undefined }, w.eggs);
+    if (!open || (runsOf(open).length === runs.length && open.length === best.length)) return null;
+    if (sameCell(w.key, w.dragon)) return null;
+  }
+  return best;
+}
+
+function blocksWorld(rng: Rng): World {
+  const size = rng.pick([7, 8]);
+  const w = randomWorld(rng, size, size, rng.int(10, 18), rng.pick([0, 1, 1, 2]));
+  if (!rng.chance(0.55)) return w;
+  // Brána na úzkém místě cesty (bez ní se do hnízda nedá), klíč stranou od cesty.
+  const best = fewestBlocks(w, w.eggs);
+  if (!best) return w;
+  let pos = w.dragon;
+  const path = [pos];
+  for (const m of best) path.push((pos = { x: pos.x + (m === 'R' ? 1 : m === 'L' ? -1 : 0), y: pos.y + (m === 'D' ? 1 : m === 'U' ? -1 : 0) }));
+  const onPath = new Set(path.map((c) => `${c.x},${c.y}`));
+  const free = (c: Cell) => ![w.dragon, w.goal, ...w.eggs].some((t) => sameCell(t, c));
+  const chokes = path.slice(2, -2).filter((c) => free(c) && !fewestBlocks({ ...w, rocks: [...w.rocks, c] }, w.eggs));
+  if (!chokes.length) return w;
+  const gate = rng.pick(chokes);
+  const taken = new Set([w.dragon, w.goal, ...w.rocks, ...w.eggs].map((c) => `${c.x},${c.y}`));
+  const keys: Cell[] = [];
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const c = { x, y };
+      if (taken.has(`${x},${y}`) || onPath.has(`${x},${y}`)) continue;
+      // Klíč musí jít sebrat, aniž by drak proletěl branou.
+      if (fewestBlocks({ ...w, goal: c, rocks: [...w.rocks, gate] })) keys.push(c);
+    }
+  }
+  if (!keys.length) return w;
+  return { ...w, key: rng.pick(keys), gate };
+}
+
+/** Had: tři chodby tam a zpět, šest příkazů. */
+export const BLOCKS_FALLBACK: World = {
+  cols: 7, rows: 7, dragon: { x: 0, y: 0 }, goal: { x: 6, y: 6 },
+  rocks: [
+    { x: 0, y: 1 }, { x: 1, y: 1 }, { x: 2, y: 1 }, { x: 3, y: 1 }, { x: 4, y: 1 }, { x: 5, y: 1 },
+    { x: 1, y: 3 }, { x: 2, y: 3 }, { x: 3, y: 3 }, { x: 4, y: 3 }, { x: 5, y: 3 }, { x: 6, y: 3 },
+    { x: 0, y: 5 }, { x: 1, y: 5 }, { x: 2, y: 5 }, { x: 3, y: 5 }, { x: 4, y: 5 }, { x: 5, y: 5 },
+  ],
+  eggs: [{ x: 3, y: 2 }],
+};
+
+function blocksSpec(rng: Rng): ProgramSpec {
+  let found: { w: World; best: Move[] } | null = null;
+  for (let attempt = 0; attempt < 3000 && !found; attempt++) {
+    const w = blocksWorld(rng);
+    const best = checkBlocks(w);
+    if (best) found = { w, best };
+  }
+  const { w, best } = found ?? { w: BLOCKS_FALLBACK, best: checkBlocks(BLOCKS_FALLBACK)! };
+  const n = runsOf(best).length;
+  const eggs = w.eggs.length === 0 ? '' : w.eggs.length === 1 ? ', cestou seber vajíčko' : ', cestou seber obě vajíčka';
+  const key = w.key ? ' Nejdřív seber klíč – zavřená brána drak bez klíče nepustí.' : '';
+  return {
+    kind: 'program',
+    key: `prikazy-${worldKey(w)}`,
+    prompt: `Doleť do hnízda${eggs}. Máš jen ${count(n, PRIKAZ)}: stejné šipky za sebou se spojí do jednoho příkazu, třeba → ×3.${key}`,
+    speak: `Doleť do hnízda${eggs}. Máš jen ${count(n, PRIKAZ)}. Stejné šipky za sebou se spojí do jednoho příkazu, třeba doprava třikrát.${key}`,
+    grid: gridOf(w),
+    maxSteps: MAX_LOOP_STEPS,
+    maxBlocks: n,
+    solution: best,
+    hints: [
+      'Hledej dlouhé rovné chodby – jeden příkaz může letět přes víc políček.',
+      'Každá zatáčka je nový příkaz. Čím méně zatáček, tím lépe.',
+      w.key ? 'Brána je zavřená, dokud drak nesebere klíč.' : 'Zkus cestu projet prstem a počítej zatáčky.',
+    ],
+    explain: `Stačí ${count(n, PRIKAZ)}${w.key ? ', nejdřív pro klíč' : ''}: ${describeRuns(best)}.`,
+    difficulty: lengthDifficulty(n, 4, 7),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Nejvyšší úroveň: Opakuj vzor – cesta je schody nebo vlnka, program je jeden blok
+// „Opakuj n× (vzor)“. Dítě musí najít, co se opakuje.
+
+/** Vzory, které dávají hezké schody a vlnky (bez otočky zpět). */
+const PATTERNS: Move[][] = [
+  ['R', 'D'], ['D', 'R'], ['R', 'U'], ['U', 'R'], ['L', 'D'], ['D', 'L'],
+  ['R', 'R', 'D'], ['R', 'D', 'D'], ['D', 'R', 'R'], ['D', 'D', 'R'], ['R', 'R', 'U'], ['U', 'U', 'R'], ['L', 'L', 'D'],
+  ['R', 'D', 'R', 'U'], ['R', 'U', 'R', 'D'], ['D', 'R', 'U', 'R'], ['D', 'L', 'D', 'R'], ['R', 'R', 'D', 'D'], ['D', 'D', 'R', 'R'],
+];
+export const LOOP = { maxPattern: 4, maxRepeat: 6 };
+
+/** Nejkratší vzor (a počet opakování), kterým se dá doletět – pro kontrolu. */
+export function findLoop(w: World): { pattern: Move[]; times: number } | null {
+  const moves: Move[] = ['U', 'R', 'D', 'L'];
+  const all: Move[][] = [[]];
+  for (let len = 1; len <= LOOP.maxPattern; len++) {
+    const next: Move[][] = [];
+    for (const p of all.filter((x) => x.length === len - 1)) for (const m of moves) next.push([...p, m]);
+    all.push(...next);
+  }
+  for (const pattern of all.filter((p) => p.length)) {
+    for (let times = 2; times <= LOOP.maxRepeat; times++) {
+      if (fly(w, repeatPattern(pattern, times), w.eggs).ok) return { pattern, times };
+    }
+  }
+  return null;
+}
+
+function loopWorld(rng: Rng): { w: World; pattern: Move[]; times: number } | null {
+  const size = rng.pick([7, 8]);
+  const pattern = rng.pick(PATTERNS);
+  const times = rng.int(3, 5);
+  const program = repeatPattern(pattern, times);
+  if (program.length < 8 || program.length > 24) return null;
+  // Start tak, aby se celá cesta vešla do mapy.
+  let x = 0;
+  let y = 0;
+  const rel = [{ x, y }];
+  for (const m of program) {
+    x += m === 'R' ? 1 : m === 'L' ? -1 : 0;
+    y += m === 'D' ? 1 : m === 'U' ? -1 : 0;
+    rel.push({ x, y });
+  }
+  const [minX, maxX] = [Math.min(...rel.map((c) => c.x)), Math.max(...rel.map((c) => c.x))];
+  const [minY, maxY] = [Math.min(...rel.map((c) => c.y)), Math.max(...rel.map((c) => c.y))];
+  if (maxX - minX >= size || maxY - minY >= size) return null;
+  const ox = rng.int(-minX, size - 1 - maxX);
+  const oy = rng.int(-minY, size - 1 - maxY);
+  const path = rel.map((c) => ({ x: c.x + ox, y: c.y + oy }));
+  const onPath = new Set(path.map((c) => `${c.x},${c.y}`));
+  if (onPath.size !== path.length) return null;
+  // Skály kolem cesty, aby byly vidět schody, a pár dalších.
+  const rocks: Cell[] = [];
+  for (let yy = 0; yy < size; yy++) {
+    for (let xx = 0; xx < size; xx++) {
+      if (onPath.has(`${xx},${yy}`)) continue;
+      const near = path.some((c) => Math.abs(c.x - xx) + Math.abs(c.y - yy) === 1);
+      if (rng.chance(near ? 0.45 : 0.08)) rocks.push({ x: xx, y: yy });
+    }
+  }
+  const inner = path.slice(2, -2);
+  const eggs = rng.shuffle(inner).slice(0, rng.pick([1, 2]));
+  const w: World = { cols: size, rows: size, dragon: path[0], goal: path[path.length - 1], rocks, eggs };
+  return fly(w, program, eggs).ok ? { w, pattern, times } : null;
+}
+
+export const LOOP_FALLBACK: { w: World; pattern: Move[]; times: number } = {
+  w: { cols: 7, rows: 7, dragon: { x: 0, y: 0 }, goal: { x: 4, y: 4 }, rocks: [{ x: 0, y: 1 }, { x: 2, y: 0 }, { x: 1, y: 2 }, { x: 3, y: 1 }, { x: 2, y: 3 }, { x: 4, y: 2 }, { x: 3, y: 4 }], eggs: [{ x: 2, y: 2 }] },
+  pattern: ['R', 'D'],
+  times: 4,
+};
+
+function loopSpec(rng: Rng): ProgramSpec {
+  let found: { w: World; pattern: Move[]; times: number } | null = null;
+  for (let attempt = 0; attempt < 500 && !found; attempt++) found = loopWorld(rng);
+  const { w, pattern, times } = found ?? LOOP_FALLBACK;
+  const words = pattern.map((m) => MOVE_WORD[m]).join(', ');
+  return {
+    kind: 'program',
+    key: `opakuj-${worldKey(w)}`,
+    prompt: 'Najdi, co se na cestě opakuje. Poskládej vzor do bloku Opakuj a nastav, kolikrát se má opakovat.',
+    grid: gridOf(w),
+    maxSteps: LOOP.maxPattern * LOOP.maxRepeat,
+    loop: LOOP,
+    solution: repeatPattern(pattern, times),
+    hints: [
+      'Podívej se na tvar cesty – jsou to schody, nebo vlnka?',
+      `Vzor má ${count(pattern.length, SIPKA)}.`,
+      `Vzor začíná ${MOVE_WORD[pattern[0]]}.`,
+    ],
+    explain: `Vzor ${arrows(pattern)} se opakuje ${times}×: Opakuj ${times}× (${words}).`,
+    difficulty: lengthDifficulty(pattern.length * times, 8, 20),
+  };
+}
+
+
 export const letSkill = bankSkill({
   id: ID,
   island: 'dilna',
   name: 'Naprogramuj let draka',
-  description: 'Skládá z šipek program pro let po mřížce, obletí skály, sbírá vajíčka a hledá nejkratší cestu.',
+  description: 'Skládá z šipek program pro let po mřížce, obletí skály, sbírá vajíčka, hledá nejkratší cestu, šetří příkazy (→ ×3), sbírá klíč k bráně a hledá opakující se vzor (Opakuj 4×).',
   rvp: {
     1: ['I-5-2-01'],
     2: ['I-5-2-01'],
     3: ['I-5-2-01'],
     4: ['I-5-2-01', 'I-5-2-03'],
     5: ['I-5-2-01', 'I-5-2-03'],
+    6: ['I-5-2-03'],
   },
   ability: 'prostorove',
-  gen: { 1: gen(1), 2: gen(2), 3: gen(3), 4: gen(4), 5: gen(5), 6: gen(6) },
+  // Úroveň 5 = bludiště a vajíčka s přesným počtem kroků (dřívější 5 a 6),
+  // úroveň 6 = příkazy „→ ×3“ s klíčem a branou, nebo blok Opakuj.
+  gen: {
+    1: gen(1),
+    2: gen(2),
+    3: gen(3),
+    4: gen(4),
+    5: (rng) => (rng.chance(0.5) ? letSpec(5, rng) : letSpec(6, rng)),
+    6: (rng) => (rng.chance(0.5) ? blocksSpec(rng) : loopSpec(rng)),
+  },
 });
 
 export const letCards: KnowledgeCard[] = [

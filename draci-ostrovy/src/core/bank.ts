@@ -15,6 +15,7 @@ import type {
   IslandId,
   Item,
   Level,
+  Move,
   SayTip,
   SkillDef,
   TestLikeFormat,
@@ -74,6 +75,10 @@ export interface ProgramSpec extends Omit<BaseSpec, 'visual'> {
   kind: 'program';
   grid: Omit<GridVisual, 'type'> & { dragon: Cell; goal: Cell };
   maxSteps?: number;
+  /** Příkazy „krok × počet“ (viz AnswerSpec program). */
+  maxBlocks?: number;
+  loop?: { maxPattern: number; maxRepeat: number };
+  solution?: Move[];
 }
 
 /** Napsání slova na klávesnici (anglický spelling). */
@@ -139,7 +144,14 @@ export function buildItem(skillId: string, level: Level, s: Spec, rng: Rng): Ite
       return {
         ...base,
         visual: { type: 'grid', ...s.grid },
-        answer: { kind: 'program', maxSteps, ...(collect.length ? { collect } : {}) },
+        answer: {
+          kind: 'program',
+          maxSteps,
+          ...(collect.length ? { collect } : {}),
+          ...(s.maxBlocks ? { maxBlocks: s.maxBlocks } : {}),
+          ...(s.loop ? { loop: s.loop } : {}),
+          ...(s.solution ? { solution: s.solution } : {}),
+        },
       };
     }
     case 'fixed':
