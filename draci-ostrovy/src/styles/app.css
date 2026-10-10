@@ -2830,3 +2830,239 @@ h3 {
   color: var(--fire);
   border-width: 4px;
 }
+
+/* ---------- Školní ostrov: angličtina ---------- */
+
+.en-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 6px;
+}
+
+.en-text {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.7rem;
+  line-height: 1.25;
+  color: var(--sea-deep);
+  text-align: center;
+}
+
+.en-listen {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+  padding: 14px 26px;
+  border-radius: 999px;
+}
+
+.en-listen.on,
+.en-speak.on {
+  outline: 4px solid var(--gold);
+}
+
+.sheet-en {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 10px;
+}
+
+.sheet-en .en-listen {
+  font-size: 1.15rem;
+  padding: 10px 20px;
+}
+
+.place-scene {
+  display: block;
+  width: min(100%, 340px);
+  height: auto;
+  margin: 0 auto;
+}
+
+.choice .swatch {
+  display: inline-block;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 3px solid rgba(43, 45, 66, 0.35);
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.12);
+}
+
+.spell {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.spell-display {
+  min-height: 62px;
+  border-radius: 16px;
+  background: #fff;
+  border: 3px solid var(--parchment-edge);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2rem;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  padding: 0 10px;
+}
+
+.spell-display.empty {
+  color: #c4c8d4;
+}
+
+.spell-keys {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.spell-row {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+}
+
+.spell-key {
+  flex: 1 1 0;
+  max-width: 64px;
+  min-width: 0;
+  min-height: 52px;
+  font-size: 1.45rem;
+  padding: 0;
+}
+
+.spell-space {
+  flex: 0 1 60%;
+  min-height: 46px;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 420px) {
+  .spell-row {
+    gap: 5px;
+  }
+  .spell-key {
+    min-height: 46px;
+    font-size: 1.25rem;
+    border-radius: 12px;
+  }
+  .en-text {
+    font-size: 1.45rem;
+  }
+}
+
+.en-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.en-pic {
+  font-size: 3.4rem;
+  line-height: 1.1;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+/* Anglický reproduktor má štítek EN, ať se neplete s českým předčítáním. */
+.en-speak {
+  position: relative;
+}
+
+.en-speak::after {
+  content: 'EN';
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  font: 800 0.62rem/1 var(--font-body);
+  background: #e63946;
+  color: #fff;
+  border-radius: 6px;
+  padding: 3px 4px;
+}
+
+/* Mluvení s Miss Ember: velký mikrofon, kroužek podle hlasitosti. */
+.say {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 4px auto 0;
+}
+.say-mic {
+  --level: 0;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: var(--sea);
+  box-shadow: 0 6px 0 var(--sea-deep), 0 0 0 calc(var(--level) * 22px) rgba(255, 138, 31, 0.35);
+  cursor: pointer;
+  transition: box-shadow 0.08s linear, transform 0.1s;
+}
+.say-mic:active {
+  transform: translateY(3px);
+}
+.say-mic.on {
+  background: var(--fire);
+  box-shadow: 0 6px 0 #c26f12, 0 0 0 calc(6px + var(--level) * 22px) rgba(255, 138, 31, 0.35);
+}
+.say-mic:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.say-mic:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+.say-label {
+  margin: 0;
+  color: var(--ink-soft);
+  font-weight: 700;
+  text-align: center;
+}
+.heard {
+  margin: 0 auto 10px;
+  max-width: 560px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: var(--oops-soft);
+  text-align: center;
+}
+.heard.ok {
+  background: var(--ok-soft);
+}
+.heard-who {
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.heard-text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+}
+.heard-tip {
+  margin: 6px 0 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .say-mic {
+    transition: none;
+  }
+}

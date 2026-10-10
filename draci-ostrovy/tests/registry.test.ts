@@ -101,14 +101,16 @@ describe('napojení na plánovač a radar', () => {
       for (const kind of kinds) {
         const m = missionForSkill(s, kind);
         const item = nextItem(profile, m, 0, 11);
-        expect(item.skillId).toBe(s.id);
+        // Mluvení bez serveru nahradí příbuzná dovednost.
+        expect(item.skillId).toBe(s.needs === 'speech' ? s.fallback : s.id);
       }
     }
   });
 
   it('radar zvládne prázdný profil se všemi ostrovy', () => {
     const r = buildRadar(defaultProfile(), []);
-    expect(r.islands.map((i) => i.island.id)).toEqual(ISLANDS.filter((i) => i.available).map((i) => i.id));
+    expect(r.islands.map((i) => i.island.id)).toEqual(ISLANDS.filter((i) => i.available && !i.optIn).map((i) => i.id));
+    expect(r.extra).toEqual([]);
     expect(r.totals.answers).toBe(0);
   });
 });

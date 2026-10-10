@@ -1,7 +1,7 @@
 // Rodičovský radar: souhrny ze záznamu odpovědí. Vše jsou orientační
 // signály, ne diagnóza – ukazujeme rozpětí a počty, žádné IQ ani percentily.
 
-import { ISLANDS, SKILLS } from '../content';
+import { SKILLS, islandsFor } from '../content';
 import { levelDifficulty, masteredLevels } from './model';
 import type { Profile } from './storage';
 import { TEST_LIKE_LABELS, type AbilityTag, type AnswerEvent, type IslandDef, type SkillDef, type SkillState, type TestLikeFormat } from './types';
@@ -16,7 +16,10 @@ export interface SkillRadar {
 
 export interface Radar {
   totals: { answers: number; sessions: number; minutes: number; days: number };
+  /** Ostrovy s úrovněmi podle ročníků (RVP). */
   islands: { island: IslandDef; skills: SkillRadar[] }[];
+  /** Ostrovy „na přání“ (školní učivo) – vlastní popisky úrovní, bez ročníků. */
+  extra: { island: IslandDef; skills: SkillRadar[] }[];
   potential: { novelTasks: number; hintsPerNovel: number | null; novelFirstTry: number | null };
   commitment: { braveItems: number; braveSolved: number; errorItems: number; solvedAfterError: number | null };
   creativity: { openAnswers: number; avgIdeas: number | null; samples: { t: number; text: string }[] };
@@ -46,7 +49,8 @@ export function buildRadar(profile: Profile, events: AnswerEvent[]): Radar {
   const closed = events.filter((e) => e.outcome !== 'open');
   const days = new Set(events.map((e) => new Date(e.t).toDateString())).size;
 
-  const islands = ISLANDS.filter((i) => i.available).map((island) => ({
+  const visible = islandsFor(profile.settings).filter((i) => i.available);
+  const all = visible.map((island) => ({
     island,
     skills: SKILLS.filter((s) => s.island === island.id && !s.open).map((skill) => {
       const state = profile.skills[skill.id] ?? null;
@@ -60,6 +64,8 @@ export function buildRadar(profile: Profile, events: AnswerEvent[]): Radar {
       };
     }),
   }));
+  const islands = all.filter((i) => !i.island.optIn);
+  const extra = all.filter((i) => i.island.optIn);
 
   const novel = closed.filter((e) => e.novel);
   const brave = closed.filter((e) => e.brave);
@@ -91,9 +97,11 @@ export function buildRadar(profile: Profile, events: AnswerEvent[]): Radar {
 
   const gradeD = levelDifficulty(Math.min(6, Math.max(1, profile.grade)) as 1);
   const abilityMap = new Map<AbilityTag, number[]>();
+  // Úrovně školního ostrova nejsou ročníky – do profilu silných stránek nepatří.
+  const graded = new Set(islandsFor(undefined).map((i) => i.id));
   for (const skill of SKILLS) {
     const st = profile.skills[skill.id];
-    if (!st || st.n < 10 || skill.open) continue;
+    if (!st || st.n < 10 || skill.open || !graded.has(skill.island)) continue;
     abilityMap.set(skill.ability, [...(abilityMap.get(skill.ability) ?? []), st.theta - gradeD]);
   }
 
@@ -105,6 +113,7 @@ export function buildRadar(profile: Profile, events: AnswerEvent[]): Radar {
       days,
     },
     islands,
+    extra,
     potential: {
       novelTasks: novel.length,
       hintsPerNovel: novel.length ? novel.reduce((a, e) => a + e.hintsUsed, 0) / novel.length : null,

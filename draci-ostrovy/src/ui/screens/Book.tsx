@@ -2,7 +2,7 @@
 // společné mise a vlastní výtvory. Kniha roste s tím, co hráčka zvládne.
 
 import { useEffect, useState } from 'react';
-import { CARDS, ISLANDS, MISSIONS, SKILL_BY_ID, TRICKS, cardsOf, missionsOf } from '../../content';
+import { ISLANDS, SKILL_BY_ID, TRICKS, cardsFor, cardsOf, islandsFor, missionsFor, missionsOf } from '../../content';
 import { useGame } from '../../core/game';
 import { mapStrings } from '../../core/gender';
 import { sfx } from '../../core/sound';
@@ -133,7 +133,7 @@ function DragonsTab() {
       </div>
       <h2 className="section-title">Dračí druhy ze souostroví</h2>
       <div className="species-grid">
-        {ISLANDS.map((i) => {
+        {islandsFor(profile.settings).map((i) => {
           const has = profile.species.includes(i.id);
           return (
             <div key={i.id} className={`card species-card${has ? '' : ' locked'}`}>
@@ -150,7 +150,8 @@ function DragonsTab() {
 
 function KnowledgeTab() {
   const best = useGame((s) => s.profile.best);
-  const islands = ISLANDS.filter((i) => i.available && cardsOf(i.id).length > 0);
+  const settings = useGame((s) => s.profile.settings);
+  const islands = islandsFor(settings).filter((i) => i.available && cardsOf(i.id).length > 0);
   return (
     <>
       <p className="muted">
@@ -212,7 +213,8 @@ function NextPages({ island, locked, best }: { island: IslandId; locked: Knowled
 }
 
 function MissionsTab() {
-  const islands = ISLANDS.filter((i) => i.available && missionsOf(i.id).length > 0);
+  const settings = useGame((s) => s.profile.settings);
+  const islands = islandsFor(settings).filter((i) => i.available && missionsOf(i.id).length > 0);
   return (
     <>
       <p className="muted">Úkoly do opravdového světa – s mámou, s tátou nebo s někým, kdo tě má rád. Až misi splníte, odškrtni ji.</p>
@@ -274,13 +276,16 @@ export function Book() {
   const go = useGame((s) => s.go);
   const best = useGame((s) => s.profile.best);
   const done = useGame((s) => s.profile.missionsDone);
+  const settings = useGame((s) => s.profile.settings);
   const [tab, setTab] = useState<Tab>('znalosti');
-  const openCards = CARDS.filter((c) => isUnlocked(c, best)).length;
-  const doneMissions = MISSIONS.filter((m) => done[m.id]).length;
+  const cards = cardsFor(settings);
+  const missions = missionsFor(settings);
+  const openCards = cards.filter((c) => isUnlocked(c, best)).length;
+  const doneMissions = missions.filter((m) => done[m.id]).length;
   const tabs: [Tab, string][] = [
-    ['znalosti', `Znalosti ${openCards}/${CARDS.length}`],
+    ['znalosti', `Znalosti ${openCards}/${cards.length}`],
     ['draci', 'Draci a kousky'],
-    ['mise', `Společné mise ${doneMissions}/${MISSIONS.length}`],
+    ['mise', `Společné mise ${doneMissions}/${missions.length}`],
     ['vytvory', 'Moje výtvory'],
   ];
   return (

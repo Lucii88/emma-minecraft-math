@@ -81,6 +81,17 @@ export const ISLANDS: IslandDef[] = [
     species: { name: 'Ozubenec', description: 'Napůl drak, napůl stroj. Rád se nechá opravovat.' },
     available: true,
   },
+  {
+    id: 'skola',
+    name: 'Školní ostrov',
+    where: 'na Školním ostrově',
+    from: 'ze Školního ostrova',
+    tagline: 'Angličtina ze školy: slovíčka, spelling a mluvení',
+    species: { name: 'Miss Ember', description: 'Dračice z New Yorku. Mluví jen anglicky, ráda hláskuje a za každou dobrou odpověď si dá palačinku s javorovým sirupem.' },
+    available: true,
+    optIn: true,
+    levelNames: { 1: 'základ ze školy', 2: 'celé učivo', 3: 'navíc ke zkoušce' },
+  },
 ];
 
 // Ostrov je dostupný, jen pokud má obsah (bez dovedností zůstává v mlze).
@@ -93,6 +104,22 @@ export const SKILL_BY_ID: Record<string, SkillDef> = Object.fromEntries(SKILLS.m
 export const skillsOf = (island: IslandId) => SKILLS.filter((s) => s.island === island);
 
 export const islandOf = (id: IslandId) => ISLANDS.find((i) => i.id === id)!;
+
+/** Ostrovy, které hráč vidí: ostrovy „na přání“ (školní učivo jednoho
+ *  dítěte) jen tehdy, když mu je rodič zapnul. */
+export function islandsFor(settings: { schoolIsland?: boolean } | undefined): IslandDef[] {
+  return ISLANDS.filter((i) => !i.optIn || (i.id === 'skola' && !!settings?.schoolIsland));
+}
+
+/** Karty znalostí a společné mise ostrovů, které hráč vidí. */
+export const cardsFor = (settings: { schoolIsland?: boolean } | undefined) => {
+  const ids = new Set(islandsFor(settings).map((i) => i.id));
+  return CARDS.filter((c) => ids.has(SKILL_BY_ID[c.skillId]?.island));
+};
+export const missionsFor = (settings: { schoolIsland?: boolean } | undefined) => {
+  const ids = new Set(islandsFor(settings).map((i) => i.id));
+  return MISSIONS.filter((m) => ids.has(m.island));
+};
 
 const AVAILABLE = ISLANDS.filter((i) => i.available);
 

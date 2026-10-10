@@ -33,13 +33,14 @@ export function ChoiceAnswer({
   disabled: boolean;
   onPick: (index: number) => void;
 }) {
-  const long = options.some((o) => o.label.length > 18);
+  const swatches = options.every((o) => o.color);
+  const long = !swatches && options.some((o) => o.label.length > 18);
   // Samé obrázky (sudoku, matice, řady) chtějí větší písmo.
   const pictures = options.every((o) => !/[\p{L}\p{N}]/u.test(o.label));
   // Víc obrázků v jedné možnosti (🔥🔥🔥🔥) se na telefonu musí vejít na řádek.
   const many = pictures && options.some((o) => [...o.label].length > 3);
   return (
-    <div className={`choices${long && !pictures ? ' long' : ''}${options.length === 2 ? ' two' : ''}${pictures ? ' pictures' : ''}${many ? ' many' : ''}`}>
+    <div className={`choices${long && !pictures ? ' long' : ''}${options.length === 2 ? ' two' : ''}${pictures || swatches ? ' pictures' : ''}${many ? ' many' : ''}`}>
       {options.map((o, i) => {
         const isWrong = wrong.includes(i);
         const isOk = correctShown === i;
@@ -53,7 +54,7 @@ export function ChoiceAnswer({
               onPick(i);
             }}
           >
-            <Label text={o.label} />
+            {o.color ? <span className="swatch" style={{ background: o.color }} role="img" aria-label={o.label} /> : <Label text={o.label} />}
           </button>
         );
       })}
@@ -167,6 +168,83 @@ export function LettersAnswer({ letters, disabled, resetKey, onSubmit }: { lette
         ))}
       </div>
       <button className="btn btn-primary" disabled={disabled || !full} onClick={() => onSubmit(word)}>
+        Hotovo
+      </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Psaní slova (anglický spelling) na klávesnici a–z
+
+const ABC_ROWS = ['abcdefg', 'hijklmn', 'opqrstu', 'vwxyz'];
+
+/** Porovná napsané slovo se správným (a dalšími povolenými tvary). */
+export function spellMatches(typed: string, correct: string, accept: string[] = []): boolean {
+  const norm = (w: string) => w.trim().toLowerCase().replace(/\s+/g, ' ');
+  return [correct, ...accept].some((w) => norm(w) === norm(typed));
+}
+
+export function SpellAnswer({ disabled, resetKey, space, onSubmit }: { disabled: boolean; resetKey: string; space?: boolean; onSubmit: (word: string) => void }) {
+  const [value, setValue] = useState('');
+  useEffect(() => setValue(''), [resetKey]);
+
+  const press = (k: string) => {
+    if (disabled) return;
+    sfx.tap();
+    if (k === '⌫') return setValue((v) => v.slice(0, -1));
+    if (k === ' ') return setValue((v) => (v && !v.endsWith(' ') ? `${v} ` : v));
+    setValue((v) => (v.length >= 20 ? v : v + k));
+  };
+  const submit = () => {
+    if (!value.trim() || disabled) return;
+    onSubmit(value);
+  };
+
+  const submitRef = useRef(submit);
+  submitRef.current = submit;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (/^[a-zA-Z]$/.test(e.key)) press(e.key.toLowerCase());
+      else if (e.key === 'Backspace') press('⌫');
+      else if (e.key === ' ' && space) press(' ');
+      else if (e.key === 'Enter') submitRef.current();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [disabled, space]);
+
+  return (
+    <div className="spell">
+      <div className={`spell-display${value ? '' : ' empty'}`} lang="en" aria-live="polite">
+        {value || '?'}
+      </div>
+      <div className="spell-keys">
+        {ABC_ROWS.map((row) => (
+          <div key={row} className="spell-row">
+            {[...row].map((k) => (
+              <button key={k} className="key spell-key" onClick={() => press(k)} disabled={disabled}>
+                {k}
+              </button>
+            ))}
+            {row === 'vwxyz' && (
+              <button className="key key-fn spell-key" onClick={() => press('⌫')} disabled={disabled} aria-label="smazat">
+                ⌫
+              </button>
+            )}
+          </div>
+        ))}
+        {space && (
+          <div className="spell-row">
+            <button className="key key-fn spell-space" onClick={() => press(' ')} disabled={disabled} aria-label="mezera">
+              mezera
+            </button>
+          </div>
+        )}
+      </div>
+      <button className="btn btn-primary" onClick={submit} disabled={disabled || !value.trim()}>
         Hotovo
       </button>
     </div>

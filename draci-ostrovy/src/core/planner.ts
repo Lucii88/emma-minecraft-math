@@ -2,7 +2,8 @@
 // adaptivního modelu – cíl je úspěšnost kolem 70–85 % (u Bouřkového letu
 // kolem 45 %), bez opakování nedávných úloh.
 
-import { ISLANDS, SKILL_BY_ID, skillsOf } from '../content';
+import { ISLANDS, SKILL_BY_ID, islandsFor, skillsOf } from '../content';
+import { skillReady } from './caps';
 import { createRng, randomSeed } from './rng';
 import { genderItem } from './gender';
 import { chooseLevel, initialState, itemDifficulty, levelDifficulty, targetDifficulty } from './model';
@@ -28,16 +29,20 @@ export function stateOf(profile: Profile, skillId: string): SkillState {
   return profile.skills[skillId] ?? initialState(profile.grade);
 }
 
-export const availableIslands = () => ISLANDS.filter((i) => i.available).map((i) => i.id);
+/** Dostupné ostrovy hráče (školní ostrov jen se zapnutím od rodiče). Bez
+ *  profilu jen ostrovy pro všechny. */
+export const availableIslands = (profile?: Profile): IslandId[] =>
+  (profile ? islandsFor(profile.settings) : ISLANDS.filter((i) => !i.optIn)).filter((i) => i.available).map((i) => i.id);
 
 function lastActivity(profile: Profile, island: IslandId): number {
   return Math.max(0, ...skillsOf(island).map((s) => profile.skills[s.id]?.lastSeen ?? 0));
 }
 
 /** Dovednosti ostrova, které se dají hrát. Když rodič vypne úlohy podobné
- *  testům, vynechají se (pokud by na ostrově nezbylo nic, zůstanou). */
+ *  testům, vynechají se (pokud by na ostrově nezbylo nic, zůstanou).
+ *  Mluvení jen tehdy, když ho server i zařízení umí. */
 export function playableSkills(profile: Profile, island: IslandId): SkillDef[] {
-  const all = skillsOf(island);
+  const all = skillsOf(island).filter(skillReady);
   if (!profile.settings.skipTestLike) return all;
   const rest = all.filter((s) => !s.testLike);
   return rest.some((s) => !s.open) ? rest : all;
@@ -55,9 +60,10 @@ export function pickGrowthSkill(profile: Profile, island: IslandId, seed = rando
   const now = Date.now();
   const weights = skills.map((s) => {
     const st = profile.skills[s.id];
-    if (!st) return 3;
+    const priority = s.priority ?? 1;
+    if (!st) return 3 * priority;
     const days = (now - st.lastSeen) / DAY;
-    return (st.n < 10 ? 2 : 1) + Math.min(3, days / 2);
+    return ((st.n < 10 ? 2 : 1) + Math.min(3, days / 2)) * priority;
   });
   const total = weights.reduce((a, b) => a + b, 0);
   let r = rng.next() * total;
@@ -78,19 +84,33 @@ export function pickReviewSkills(profile: Profile, island: IslandId, k = 2): Ski
   return [pickGrowthSkill(profile, island)];
 }
 
+/** Mise na školním ostrově: nová nebo dlouho neviděná dovednost, střídaná
+ *  s opakováním jiné (rozložené opakování před testem a zkouškou). */
+function schoolMission(profile: Profile): Mission {
+  const growth = pickGrowthSkill(profile, 'skola');
+  const review = pickReviewSkills(profile, 'skola', 1)[0];
+  const skillIds = review && review.id !== growth.id ? [growth.id, review.id] : [growth.id];
+  return { kind: 'growth', island: 'skola', skillIds, count: MISSION_LENGTH, pTarget: 0.75, title: 'Angličtina' };
+}
+
 /** Dnešní let: rozvoj na nejdéle nenavštíveném ostrově, opakování na
- *  dalším a třetí mise podle volby dítěte. */
+ *  dalším a třetí mise podle volby dítěte. Se zapnutým školním ostrovem je
+ *  první misí angličtina a místo opakování jiného ostrova. */
 export function planDay(profile: Profile): Mission[] {
-  const islands = availableIslands().sort((a, b) => lastActivity(profile, a) - lastActivity(profile, b));
+  const available = availableIslands(profile);
+  const islands = available.filter((i) => i !== 'skola').sort((a, b) => lastActivity(profile, a) - lastActivity(profile, b));
   const growthIsland = islands[0];
   const reviewIsland = islands[1] ?? islands[0];
   const growth = pickGrowthSkill(profile, growthIsland);
-  const review = pickReviewSkills(profile, reviewIsland);
-  const missions: Mission[] = [
-    { kind: 'growth', island: growthIsland, skillIds: [growth.id], count: MISSION_LENGTH, pTarget: 0.72, title: growth.name },
-    { kind: 'review', island: reviewIsland, skillIds: review.map((s) => s.id), count: MISSION_LENGTH, pTarget: 0.82, title: 'Opakování' },
-    { kind: 'choice', island: islands[2] ?? growthIsland, skillIds: [], count: MISSION_LENGTH, pTarget: 0.72, title: 'Podle tebe' },
-  ];
+  const growthMission: Mission = { kind: 'growth', island: growthIsland, skillIds: [growth.id], count: MISSION_LENGTH, pTarget: 0.72, title: growth.name };
+  const choice: Mission = { kind: 'choice', island: islands[2] ?? growthIsland, skillIds: [], count: MISSION_LENGTH, pTarget: 0.72, title: 'Podle tebe' };
+  const missions: Mission[] = available.includes('skola')
+    ? [schoolMission(profile), growthMission, choice]
+    : [
+        growthMission,
+        { kind: 'review', island: reviewIsland, skillIds: pickReviewSkills(profile, reviewIsland).map((s) => s.id), count: MISSION_LENGTH, pTarget: 0.82, title: 'Opakování' },
+        choice,
+      ];
   return missions.slice(0, Math.max(1, Math.min(3, profile.settings.missions)));
 }
 
@@ -108,8 +128,10 @@ export function missionForSkill(skill: SkillDef, kind: MissionKind = 'free'): Mi
 /** Vybere další úlohu mise (s oslovením podle hráče). */
 export function nextItem(profile: Profile, mission: Mission, index: number, seed = randomSeed()): Item {
   const rng = createRng(seed);
-  const skillId = mission.skillIds[index % mission.skillIds.length];
-  const skill = SKILL_BY_ID[skillId];
+  const planned = SKILL_BY_ID[mission.skillIds[index % mission.skillIds.length]];
+  // Mluvení, které mezitím přestalo fungovat, nahradí příbuzná dovednost.
+  const skill = skillReady(planned) || !planned.fallback ? planned : SKILL_BY_ID[planned.fallback];
+  const skillId = skill.id;
   const state = stateOf(profile, skillId);
   // Vstupní let: prvních pár úloh nové dovednosti je o něco náročnějších,
   // aby odhad rychle našel skutečnou úroveň.

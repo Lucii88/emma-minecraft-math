@@ -10,8 +10,16 @@
 //   SESSION_SECRET  tajemství pro podpis cookie (doporučené). Změna tajemství
 //                   odhlásí všechna zařízení.
 //   PORT            port (Railway nastavuje sám)
+//   AZURE_SPEECH_KEY     klíč služby Azure Speech (nepovinný). Zapne mluvení
+//                        na Školním ostrově: nahrávka se přepíše na text
+//                        a hra pozná, jestli dítěti rozuměla.
+//   AZURE_SPEECH_REGION  oblast služby, např. westeurope (k AZURE_SPEECH_KEY)
+//   AZURE_SPEECH_ENDPOINT  místo oblasti celá adresa prostředku, např.
+//                        https://nazev.cognitiveservices.azure.com (nepovinné)
 //
-// Data hry se na server nikdy neposílají – zůstávají v prohlížeči.
+// Data hry se na server nikdy neposílají – zůstávají v prohlížeči. Jedinou
+// výjimkou je zapnuté mluvení: krátká nahrávka hlasu projde serverem do
+// Azure k přepisu na text a nikde se neukládá.
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
@@ -27,6 +35,10 @@ const LOGOUT = '/odhlasit';
 const HEALTH = '/zdravi';
 const MAX_FAILS = 10; // chybných pokusů z jedné adresy…
 const FAIL_WINDOW = 15 * 60 * 1000; // …za 15 minut
+const SPEECH = '/api/mluveni';
+const MAX_AUDIO = 1024 * 1024; // 16 kHz mono WAV ≈ 32 kB za sekundu, tedy ~30 s
+const SPEECH_LIMIT = 300; // nahrávek za hodinu (pojistka pro bezplatný tarif Azure)
+const SPEECH_WINDOW = 60 * 60 * 1000;
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -156,11 +168,61 @@ export const parseCodes = (value) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
+/** Adresa převodu řeči na text (REST pro krátké nahrávky), nebo null. */
+export function speechUrl({ region, endpoint } = {}) {
+  const path = 'speech/recognition/conversation/cognitiveservices/v1?language=en-US&format=detailed';
+  if (endpoint) {
+    const url = new URL(endpoint);
+    if (url.protocol !== 'https:') throw new Error('AZURE_SPEECH_ENDPOINT musí začínat https://');
+    return `${url.origin}/stt/${path}`;
+  }
+  if (region) {
+    if (!/^[a-z0-9]+$/.test(region)) throw new Error(`Neplatná oblast AZURE_SPEECH_REGION: ${region}`);
+    return `https://${region}.stt.speech.microsoft.com/${path}`;
+  }
+  return null;
+}
+
+/** Referenční text pro hodnocení výslovnosti: krátká anglická věta, jinak nic. */
+const cleanRef = (value) => {
+  const ref = String(value ?? '').trim();
+  return ref.length <= 200 && /^[A-Za-z0-9 .,!?'’-]+$/.test(ref) ? ref.replace(/’/g, "'") : '';
+};
+
+const score = (value) => (typeof value === 'number' && Number.isFinite(value) ? Math.round(value) : null);
+
+/** Zjednoduší odpověď Azure na to, co hra potřebuje. */
+export function speechResult(body) {
+  const status = body?.RecognitionStatus;
+  const best = Array.isArray(body?.NBest) ? body.NBest[0] : undefined;
+  if (status !== 'Success' || !best) {
+    const silent = status === 'NoMatch' || status === 'InitialSilenceTimeout' || status === 'BabbleTimeout' || status === 'Success';
+    return { status: silent ? 'nomatch' : 'error', text: '', lexical: '', scores: null, words: [] };
+  }
+  // Výsledky hodnocení výslovnosti bývají přímo v položce, nebo v PronunciationAssessment.
+  const pa = (o) => o?.PronunciationAssessment ?? o ?? {};
+  const scores = pa(best);
+  return {
+    status: 'ok',
+    text: String(best.Display ?? body.DisplayText ?? ''),
+    lexical: String(best.Lexical ?? ''),
+    scores: scores.AccuracyScore === undefined
+      ? null
+      : { accuracy: score(scores.AccuracyScore), fluency: score(scores.FluencyScore), completeness: score(scores.CompletenessScore), pron: score(scores.PronScore) },
+    words: (Array.isArray(best.Words) ? best.Words : []).map((w) => ({
+      word: String(w.Word ?? ''),
+      accuracy: score(pa(w).AccuracyScore),
+      error: String(pa(w).ErrorType ?? 'None'),
+    })),
+  };
+}
+
 /**
  * Vytvoří HTTP server (zatím neposlouchá).
- * @param {{ root: string, accessCode: string, guestCodes?: string[], secret?: string, now?: () => number }} options
+ * @param {{ root: string, accessCode: string, guestCodes?: string[], secret?: string, now?: () => number,
+ *   speech?: { key?: string, region?: string, endpoint?: string, fetch?: typeof fetch, limit?: number } }} options
  */
-export function createApp({ root, accessCode, guestCodes = [], secret, now = Date.now }) {
+export function createApp({ root, accessCode, guestCodes = [], secret, now = Date.now, speech = {} }) {
   if (!accessCode) throw new Error('Chybí přístupový kód (ACCESS_CODE).');
   const files = loadFiles(root);
   const index = files.get('/index.html');
@@ -175,6 +237,16 @@ export function createApp({ root, accessCode, guestCodes = [], secret, now = Dat
     token: Buffer.from(mac(`draci-ostrovy/v1/${code}`).toString('base64url')),
   }));
   const fails = new Map();
+  let speechTarget = null;
+  try {
+    speechTarget = speech.key ? speechUrl(speech) : null;
+  } catch (err) {
+    // Chybné nastavení mluvení nesmí shodit celou hru.
+    console.warn(`${err.message} – mluvení zůstane vypnuté.`);
+  }
+  const speechFetch = speech.fetch ?? globalThis.fetch;
+  const speechLimit = speech.limit ?? SPEECH_LIMIT;
+  let speechUse = { first: 0, count: 0 };
 
   const cookieOf = (req) => {
     for (const part of (req.headers.cookie ?? '').split(';')) {
@@ -188,6 +260,8 @@ export function createApp({ root, accessCode, guestCodes = [], secret, now = Dat
     const cookie = Buffer.from(cookieOf(req));
     return codes.some((c) => same(cookie, c.token));
   };
+  // Mluvení jen pro rodinný kód: hlas kamarádů se nikam neposílá.
+  const family = (req) => same(Buffer.from(cookieOf(req)), codes[0].token);
 
   // Railway předává adresu klienta v X-Forwarded-For (poslední položku
   // doplňuje jeho proxy, ty předchozí si může klient vymyslet).
@@ -237,6 +311,72 @@ export function createApp({ root, accessCode, guestCodes = [], secret, now = Dat
       req.on('error', reject);
     });
 
+  const json = (res, status, data) =>
+    send(res, status, { 'Content-Type': TYPES['.json'], 'Cache-Control': 'no-store' }, JSON.stringify(data));
+
+  const readBody = (req, limit) =>
+    new Promise((resolveBody, reject) => {
+      let size = 0;
+      const chunks = [];
+      req.on('data', (chunk) => {
+        size += chunk.length;
+        if (size > limit) {
+          reject(Object.assign(new Error('příliš velká nahrávka'), { status: 413 }));
+          req.destroy();
+          return;
+        }
+        chunks.push(chunk);
+      });
+      req.on('end', () => resolveBody(Buffer.concat(chunks)));
+      req.on('error', reject);
+    });
+
+  const speechAllowed = () => {
+    if (now() - speechUse.first > SPEECH_WINDOW) speechUse = { first: now(), count: 0 };
+    speechUse.count++;
+    return speechUse.count <= speechLimit;
+  };
+
+  const handleSpeech = async (req, res, method, url) => {
+    if (!authed(req)) return json(res, 401, { error: 'login' });
+    const enabled = Boolean(speechTarget) && family(req);
+    if (method === 'GET' || method === 'HEAD') return json(res, 200, { enabled });
+    if (method !== 'POST') return send(res, 405, { Allow: 'GET, HEAD, POST' }, '');
+    if (!enabled) return json(res, 403, { error: 'off' });
+    if (!String(req.headers['content-type'] ?? '').startsWith('audio/wav')) return json(res, 415, { error: 'wav' });
+    if (Number(req.headers['content-length'] ?? 0) > MAX_AUDIO) return json(res, 413, { error: 'size' });
+    let audio;
+    try {
+      audio = await readBody(req, MAX_AUDIO);
+    } catch (err) {
+      return json(res, err.status ?? 400, { error: 'body' });
+    }
+    if (audio.length < 44 || audio.toString('ascii', 0, 4) !== 'RIFF' || audio.toString('ascii', 8, 12) !== 'WAVE') return json(res, 415, { error: 'wav' });
+    if (!speechAllowed()) return json(res, 429, { error: 'limit' });
+
+    const headers = {
+      'Ocp-Apim-Subscription-Key': speech.key,
+      'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000',
+      Accept: 'application/json',
+    };
+    const ref = cleanRef(url.searchParams.get('ref'));
+    if (ref) {
+      const params = { ReferenceText: ref, GradingSystem: 'HundredMark', Granularity: 'Word', Dimension: 'Comprehensive', EnableMiscue: 'True' };
+      headers['Pronunciation-Assessment'] = Buffer.from(JSON.stringify(params)).toString('base64');
+    }
+    try {
+      const reply = await speechFetch(speechTarget, { method: 'POST', headers, body: audio, signal: AbortSignal.timeout(20_000) });
+      if (!reply.ok) {
+        console.warn(`Azure Speech odpověděl ${reply.status}.`);
+        return json(res, 502, { status: 'error', text: '', lexical: '', scores: null, words: [] });
+      }
+      return json(res, 200, speechResult(await reply.json()));
+    } catch (err) {
+      console.warn(`Azure Speech nedostupný: ${err?.name ?? 'chyba'}.`);
+      return json(res, 502, { status: 'error', text: '', lexical: '', scores: null, words: [] });
+    }
+  };
+
   const serveFile = (req, res, file) => {
     const accept = String(req.headers['accept-encoding'] ?? '');
     const headers = { 'Content-Type': file.type, 'Cache-Control': file.cache, Vary: 'Accept-Encoding, Cookie' };
@@ -255,8 +395,10 @@ export function createApp({ root, accessCode, guestCodes = [], secret, now = Dat
   return createServer(async (req, res) => {
     try {
       let path;
+      let url;
       try {
-        path = decodeURIComponent(new URL(req.url ?? '/', 'http://x').pathname);
+        url = new URL(req.url ?? '/', 'http://x');
+        path = decodeURIComponent(url.pathname);
       } catch {
         return send(res, 400, { 'Content-Type': TYPES['.txt'] }, 'Neplatná adresa.');
       }
@@ -284,6 +426,8 @@ export function createApp({ root, accessCode, guestCodes = [], secret, now = Dat
         recordFail(ip);
         return html(res, 401, loginPage('Kód nesedí. Zkuste to znovu.'));
       }
+
+      if (path === SPEECH) return await handleSpeech(req, res, method, url);
 
       if (path === LOGOUT && read) {
         return send(res, 303, { Location: LOGIN, 'Set-Cookie': cookie('', 0), 'Cache-Control': 'no-store' }, '');
@@ -323,8 +467,18 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   }
   if (!process.env.SESSION_SECRET) console.warn('SESSION_SECRET není nastavený – cookie se podepisuje přístupovým kódem.');
   const guestCodes = parseCodes(process.env.GUEST_CODES);
-  const server = createApp({ root, accessCode, guestCodes, secret: process.env.SESSION_SECRET });
+  const speech = {
+    key: process.env.AZURE_SPEECH_KEY?.trim() || undefined,
+    region: process.env.AZURE_SPEECH_REGION?.trim().toLowerCase() || undefined,
+    endpoint: process.env.AZURE_SPEECH_ENDPOINT?.trim() || undefined,
+  };
+  if (speech.key && !speech.region && !speech.endpoint) {
+    console.warn('AZURE_SPEECH_KEY je nastavený, ale chybí AZURE_SPEECH_REGION – mluvení zůstane vypnuté.');
+    speech.key = undefined;
+  }
+  const server = createApp({ root, accessCode, guestCodes, secret: process.env.SESSION_SECRET, speech });
   if (guestCodes.length) console.log(`Další přístupové kódy: ${guestCodes.length}.`);
+  console.log(speech.key ? 'Mluvení (Azure Speech) je zapnuté.' : 'Mluvení je vypnuté (chybí AZURE_SPEECH_KEY).');
   const port = Number(process.env.PORT ?? 3000);
   // Bez adresy: Node poslouchá na IPv6 i IPv4 (::), kde IPv6 není, jen na IPv4.
   server.listen(port, () => console.log(`Dračí ostrovy běží na portu ${port}.`));

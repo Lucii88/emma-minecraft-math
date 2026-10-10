@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ISLANDS, MISSIONS, missionsOf } from '../../content';
+import { MISSIONS, islandsFor, missionsOf } from '../../content';
 import { useGame } from '../../core/game';
 import { gx, mapStrings, type Gender } from '../../core/gender';
 import { buildRadar, type Radar } from '../../core/radar';
 import { levelLabel } from '../../core/planner';
 import { exportAll, importAll, loadEvents, wipeAll, type Profile } from '../../core/storage';
-import { hasCzechVoice, voiceName } from '../../core/speech';
+import { englishVoiceName, hasCzechVoice, hasEnglishVoice, voiceName } from '../../core/speech';
+import { caps } from '../../core/caps';
 import type { AnswerEvent } from '../../core/types';
 import { Icon } from '../components/Bits';
 import { count, form } from '../../core/czech';
@@ -274,6 +275,33 @@ function RadarView({ view: { profile, radar, t } }: { view: View }) {
         </div>
       ))}
 
+      {radar.extra.map(({ island, skills }) => (
+        <div key={island.id} className="card radar-island">
+          <h3>{island.name}</h3>
+          <p className="muted small">Učivo ze školy a příprava navíc. Stupně nejsou ročníky: {Object.values(island.levelNames ?? {}).join(' → ')}.</p>
+          <table className="lv-table">
+            <tbody>
+              {skills.map((s) => (
+                <tr key={s.skill.id}>
+                  <td className="lv-name">{s.skill.name}</td>
+                  <td className="lv-text small">
+                    {!s.levels ? (
+                      <span className="muted">{t('zatím {nehrála|nehrál}')}</span>
+                    ) : (
+                      <>
+                        {s.levels.mid > 0 ? (island.levelNames?.[s.levels.mid as 1] ?? `stupeň ${s.levels.mid}`) : 'zatím začíná'}
+                        <span className="muted"> · {s.answers} odp. · napoprvé {pct(s.firstTryRate)}</span>
+                        {s.answers < 10 && <span className="muted"> · málo dat</span>}
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+
       {radar.abilities.length > 0 && (
         <div className="card">
           <h3>Silné stránky (v rámci dítěte, ne srovnání s ostatními)</h3>
@@ -420,7 +448,7 @@ function TestLikeView({ view: { profile, radar, demo } }: { view: View }) {
 function MissionsView({ view: { profile, demo, t } }: { view: View }) {
   const undo = useGame((s) => s.undoMission);
   const done = profile.missionsDone;
-  const islands = ISLANDS.filter((i) => i.available && missionsOf(i.id).length > 0);
+  const islands = islandsFor(profile.settings).filter((i) => i.available && missionsOf(i.id).length > 0);
   return (
     <div className="parent-missions">
       <p className="lead">
@@ -657,6 +685,16 @@ function SettingsView({ onDemo }: { onDemo: () => void }) {
         <label className="field">
           <input type="checkbox" checked={!!s.skipTestLike} onChange={(e) => update({ skipTestLike: e.target.checked })} /> Vynechat úlohy podobné testům{' '}
           <span className="muted small">(viz záložka Testové úlohy)</span>
+        </label>
+        <label className="field">
+          <input type="checkbox" checked={!!s.schoolIsland} onChange={(e) => update({ schoolIsland: e.target.checked })} /> Školní ostrov (angličtina){' '}
+          <span className="muted small">
+            (učivo ze školy, jen pro tohoto hráče; první mise Dnešního letu bude anglická ·{' '}
+            {hasEnglishVoice() ? `anglický hlas: ${englishVoiceName()}` : 'v tomto zařízení chybí anglický hlas'} ·{' '}
+            {caps.speech
+              ? 'mluvení s Miss Ember zapnuté: nahrávka hlasu se přepíše v Microsoft Azure a nikde se neukládá'
+              : 'mluvení vypnuté (na serveru chybí klíč Azure Speech)'})
+          </span>
         </label>
       </div>
 

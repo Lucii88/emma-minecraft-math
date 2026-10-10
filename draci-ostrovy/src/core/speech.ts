@@ -49,3 +49,96 @@ export function speak(text: string, onEnd?: () => void): boolean {
 export function stopSpeaking() {
   if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
 }
+
+// ---------------------------------------------------------------------------
+// Angličtina (školní ostrov): americký ženský hlas, když ho zařízení má
+// (škola učí americkou angličtinu). iPad: Samantha, Ava, Allison, Zoe, Nicky;
+// Edge: Aria, Jenny, Michelle; Chrome: „Google US English“. Když americký
+// ženský chybí, vezme se jiný americký, pak britský ženský a nakonec
+// jakýkoli anglický.
+
+let englishVoice: SpeechSynthesisVoice | null = null;
+let englishReady = false;
+
+const US_FEMALE = ['Samantha', 'Ava', 'Allison', 'Zoe', 'Nicky', 'Aria', 'Jenny', 'Michelle', 'Ana', 'Susan', 'Google US English'];
+const EN_MALE = ['Daniel', 'Arthur', 'Oliver', 'George', 'Ryan', 'Thomas', 'Alex', 'Fred', 'Tom', 'Aaron', 'Guy', 'Eric', 'Christopher', 'Roger', 'Steffan', 'Brian', 'Andrew', 'Male'];
+const GB_FEMALE = ['Libby', 'Sonia', 'Maisie', 'Hazel', 'Kate', 'Serena', 'Martha', 'Stephanie', 'Google UK English Female'];
+
+function pickEnglish() {
+  if (typeof speechSynthesis === 'undefined') return;
+  const voices = speechSynthesis.getVoices();
+  const region = (r: string) => voices.filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith(r));
+  const us = region('en-us');
+  const gb = region('en-gb');
+  const en = region('en');
+  const byName = (list: SpeechSynthesisVoice[], names: string[]) => names.map((n) => list.find((v) => v.name.includes(n))).find(Boolean);
+  englishVoice =
+    byName(us, US_FEMALE) ??
+    us.find((v) => !EN_MALE.some((n) => v.name.includes(n))) ??
+    byName(gb, GB_FEMALE) ??
+    us[0] ??
+    en[0] ??
+    null;
+  englishReady = true;
+}
+
+if (typeof speechSynthesis !== 'undefined') {
+  pickEnglish();
+  speechSynthesis.addEventListener?.('voiceschanged', pickEnglish);
+}
+
+export function hasEnglishVoice(): boolean {
+  if (!englishReady) pickEnglish();
+  return englishVoice !== null;
+}
+
+export function englishVoiceName(): string | null {
+  return englishVoice?.name ?? null;
+}
+
+/** Přečte anglický text. Pomaleji než běžná řeč – je pro začínající děti. */
+export function speakEnglish(text: string, onEnd?: () => void): boolean {
+  if (typeof speechSynthesis === 'undefined') return false;
+  if (!englishReady) pickEnglish();
+  if (!englishVoice) return false;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.voice = englishVoice;
+  u.lang = englishVoice.lang;
+  u.rate = 0.82;
+  u.pitch = 1.05;
+  if (onEnd) {
+    u.onend = onEnd;
+    u.onerror = onEnd;
+  }
+  speechSynthesis.speak(u);
+  return true;
+}
+
+/** Anglické názvy písmen tak, aby je hlas přečetl správně (samotné „A“
+ *  by mohl přečíst jako člen). Americky: Z = zee. */
+const LETTER_NAMES: Record<string, string> = {
+  a: 'ay', b: 'bee', c: 'see', d: 'dee', e: 'ee', f: 'eff', g: 'gee', h: 'aitch', i: 'eye',
+  j: 'jay', k: 'kay', l: 'ell', m: 'em', n: 'en', o: 'oh', p: 'pee', q: 'cue', r: 'ar',
+  s: 'ess', t: 'tee', u: 'you', v: 'vee', w: 'double you', x: 'ex', y: 'why', z: 'zee',
+};
+
+export const letterName = (letter: string) => LETTER_NAMES[letter.toLowerCase()] ?? letter;
+
+/** Hláskování slova pro hlas: „bag“ → „bee, ay, gee“. */
+export function spellOut(word: string): string {
+  return [...word.toLowerCase()].filter((c) => c in LETTER_NAMES).map((c) => LETTER_NAMES[c]).join(', ');
+}
+
+/** iOS pustí předčítání až po prvním dotyku. Prázdná promluva při prvním
+ *  klepnutí kamkoli hlas „odemkne“, aby se pak poslech spustil sám. */
+export function unlockSpeech() {
+  if (typeof speechSynthesis === 'undefined' || typeof window === 'undefined') return;
+  const unlock = () => {
+    const u = new SpeechSynthesisUtterance(' ');
+    u.volume = 0;
+    speechSynthesis.speak(u);
+    window.removeEventListener('pointerdown', unlock);
+  };
+  window.addEventListener('pointerdown', unlock, { once: true });
+}
