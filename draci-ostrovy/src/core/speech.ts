@@ -35,6 +35,8 @@ export function speak(text: string, onEnd?: () => void): boolean {
   if (typeof speechSynthesis === 'undefined') return false;
   if (!ready) pickVoice();
   if (!czechVoice) return false;
+  englishRun++;
+  stopClips();
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text.replace(/_/g, ' ').replace(/☐/g, ' '));
   u.voice = czechVoice;
@@ -48,6 +50,7 @@ export function speak(text: string, onEnd?: () => void): boolean {
 
 export function stopSpeaking() {
   englishRun++; // zastaví i rozehrané hláskování (pauzy mezi písmeny)
+  stopClips();
   if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
 }
 
@@ -98,11 +101,13 @@ if (typeof speechSynthesis !== 'undefined') {
 }
 
 export function hasEnglishVoice(): boolean {
+  if (clips) return true;
   if (!englishReady) pickEnglish();
   return englishVoice !== null;
 }
 
 export function englishVoiceName(): string | null {
+  if (clips) return 'Miss Ember (nahraný hlas)';
   return englishVoice?.name ?? null;
 }
 
@@ -115,21 +120,38 @@ const LETTER_RATE = 0.7;
 const LETTER_GAP = 500; // ms mezi písmeny
 const PART_GAP = 700; // ms mezi větou a hláskováním
 
-/** Přečte anglický text. Pomaleji než běžná řeč – je pro začínající děti.
- *  Části oddělené `PAUSE` čte zvlášť s pauzou (hláskování po písmenech). */
+const isLetter = (part: string | undefined) => !!part && /^[a-z]$/.test(part);
+
+/** Části promluvy: oddělené `PAUSE`, samotné písmeno malým písmenem. */
+export const speechParts = (text: string) =>
+  text
+    .split('|')
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => (/^[a-z]$/i.test(p) ? p.toLowerCase() : p));
+
+/** Přečte anglický text: nahrávkou Miss Ember, a co nahrané není, hlasem
+ *  zařízení. Části oddělené `PAUSE` čte zvlášť s pauzou (hláskování). */
 export function speakEnglish(text: string, onEnd?: () => void): boolean {
+  const parts = speechParts(text);
+  if (!parts.length) return false;
+  const run = ++englishRun;
+  stopClips();
+  if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+  return playClips(parts, run, onEnd) || speakTts(parts, run, onEnd);
+}
+
+/** Hlas zařízení (záloha): pomaleji než běžná řeč, každá část zvlášť. */
+function speakTts(parts: string[], run: number, onEnd?: () => void): boolean {
   if (typeof speechSynthesis === 'undefined') return false;
   if (!englishReady) pickEnglish();
   const voice = englishVoice;
   if (!voice) return false;
-  const run = ++englishRun;
-  speechSynthesis.cancel();
-  const parts = text.split('|').map((p) => p.trim()).filter(Boolean);
   const say = (i: number) => {
     if (run !== englishRun) return;
     if (i >= parts.length) return onEnd?.();
-    const letter = /^[a-z]$/i.test(parts[i]);
-    const u = new SpeechSynthesisUtterance(letter ? parts[i].toLowerCase() : parts[i]);
+    const letter = isLetter(parts[i]);
+    const u = new SpeechSynthesisUtterance(parts[i]);
     u.voice = voice;
     u.lang = voice.lang;
     u.rate = letter ? LETTER_RATE : RATE;
@@ -139,11 +161,106 @@ export function speakEnglish(text: string, onEnd?: () => void): boolean {
       if (done || run !== englishRun) return;
       done = true;
       if (i + 1 >= parts.length) return onEnd?.();
-      setTimeout(() => say(i + 1), letter && /^[a-z]$/i.test(parts[i + 1]) ? LETTER_GAP : PART_GAP);
+      setTimeout(() => say(i + 1), letter && isLetter(parts[i + 1]) ? LETTER_GAP : PART_GAP);
     };
     speechSynthesis.speak(u);
   };
   say(0);
+  return true;
+}
+
+// ---------------------------------------------------------------------------
+// Nahraný hlas Miss Ember (public/hlas, vyrábí ho scripts/hlas). Zní na
+// každém zařízení stejně a písmena čte jako jejich názvy. Přehrává se přes
+// Web Audio – to iOS po prvním klepnutí pustí i bez dalšího dotyku.
+
+let clips: Record<string, string> | null = null;
+let clipsLoad: Promise<void> | null = null;
+let voiceCtx: AudioContext | null = null;
+const buffers = new Map<string, Promise<AudioBuffer | null>>();
+let playing: AudioBufferSourceNode[] = [];
+const HLAS = `${import.meta.env.BASE_URL}hlas/`;
+
+/** Načte seznam nahrávek (při startu hry). Bez něj čte hlas zařízení. */
+export function loadVoiceClips(): Promise<void> {
+  if (typeof fetch === 'undefined') return Promise.resolve();
+  clipsLoad ??= fetch(`${HLAS}index.json`)
+    .then((r) => (r.ok && String(r.headers.get('content-type')).includes('json') ? r.json() : null))
+    .then((data: { clips?: Record<string, string> } | null) => {
+      clips = data?.clips ?? null;
+    })
+    .catch(() => {
+      clips = null;
+    });
+  return clipsLoad;
+}
+
+export const hasVoiceClips = () => clips !== null;
+
+function audioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!Ctor) return null;
+  voiceCtx ??= new Ctor();
+  if (voiceCtx.state !== 'running') void voiceCtx.resume().catch(() => undefined);
+  return voiceCtx;
+}
+
+function clipBuffer(ctx: AudioContext, file: string): Promise<AudioBuffer | null> {
+  let buffer = buffers.get(file);
+  if (!buffer) {
+    buffer = fetch(`${HLAS}${file}`)
+      .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${r.status}`))))
+      .then((data) => new Promise<AudioBuffer>((resolve, reject) => void ctx.decodeAudioData(data, resolve, reject)))
+      .catch(() => {
+        buffers.delete(file);
+        return null;
+      });
+    buffers.set(file, buffer);
+  }
+  return buffer;
+}
+
+function stopClips() {
+  for (const src of playing) {
+    src.onended = null;
+    try {
+      src.stop();
+    } catch {
+      /* už dohrálo */
+    }
+  }
+  playing = [];
+}
+
+/** Přehraje nahrávky částí za sebou s pauzami. false = některá chybí. */
+function playClips(parts: string[], run: number, onEnd?: () => void): boolean {
+  const files = clips;
+  if (!files || !parts.every((p) => files[p])) return false;
+  const ctx = audioContext();
+  if (!ctx) return false;
+  void Promise.all(parts.map((p) => clipBuffer(ctx, files[p]))).then((loaded) => {
+    if (run !== englishRun) return;
+    if (loaded.some((b) => !b)) {
+      speakTts(parts, run, onEnd); // nahrávka se nenačetla – přečte hlas zařízení
+      return;
+    }
+    let t = ctx.currentTime + 0.05;
+    playing = loaded.map((b, i) => {
+      const src = ctx.createBufferSource();
+      src.buffer = b;
+      src.connect(ctx.destination);
+      src.start(t);
+      const gap = i + 1 < parts.length ? (isLetter(parts[i]) && isLetter(parts[i + 1]) ? LETTER_GAP : PART_GAP) : 0;
+      t += b!.duration + gap / 1000;
+      return src;
+    });
+    playing[playing.length - 1].onended = () => {
+      if (run !== englishRun) return;
+      playing = [];
+      onEnd?.();
+    };
+  });
   return true;
 }
 
@@ -155,12 +272,28 @@ export function spellOut(word: string): string {
 /** iOS pustí předčítání až po prvním dotyku. Prázdná promluva při prvním
  *  klepnutí kamkoli hlas „odemkne“, aby se pak poslech spustil sám. */
 export function unlockSpeech() {
-  if (typeof speechSynthesis === 'undefined' || typeof window === 'undefined') return;
+  if (typeof window === 'undefined') return;
   const unlock = () => {
-    const u = new SpeechSynthesisUtterance(' ');
-    u.volume = 0;
-    speechSynthesis.speak(u);
-    window.removeEventListener('pointerdown', unlock);
+    if (typeof speechSynthesis !== 'undefined') {
+      const u = new SpeechSynthesisUtterance(' ');
+      u.volume = 0;
+      speechSynthesis.speak(u);
+    }
+    // Nahrávky: zvuk hraje i v tichém režimu (jako předčítání) a Web Audio
+    // se odemkne krátkým tichem.
+    const session = (navigator as unknown as { audioSession?: { type: string } }).audioSession;
+    if (session) session.type = 'playback';
+    const ctx = audioContext();
+    if (ctx) {
+      const src = ctx.createBufferSource();
+      src.buffer = ctx.createBuffer(1, 1, 22050);
+      src.connect(ctx.destination);
+      src.start();
+    }
   };
   window.addEventListener('pointerdown', unlock, { once: true });
+  // iOS uspí zvuk, když je hra na pozadí – probudí ho další klepnutí.
+  window.addEventListener('pointerdown', () => {
+    if (voiceCtx && voiceCtx.state !== 'running') void voiceCtx.resume().catch(() => undefined);
+  });
 }

@@ -8,7 +8,8 @@ import { buildDemo } from '../src/core/demo';
 import { availableIslands, nextItem, planDay } from '../src/core/planner';
 import { buildRadar } from '../src/core/radar';
 import { createRng } from '../src/core/rng';
-import { spellOut } from '../src/core/speech';
+import { speechParts, spellOut } from '../src/core/speech';
+import { allSpeech } from '../src/content/skola/hlas';
 import { defaultProfile, type Profile } from '../src/core/storage';
 import type { Item } from '../src/core/types';
 import { spellMatches } from '../src/ui/components/Answers';
@@ -111,6 +112,16 @@ describe('obsah', () => {
     // (dřívější přepis „ay“ zněl jako „aj“).
     expect(spellOut('bag')).toBe('b | a | g');
     expect(spellOut('Lucy')).toBe('l | u | c | y');
+  });
+
+  it('nahraný hlas Miss Ember: každá anglická promluva má nahrávku', () => {
+    expect(speechParts('My name is Lucy. | L | u')).toEqual(['My name is Lucy.', 'l', 'u']);
+    const json = import.meta.glob<{ clips: Record<string, string> }>('../public/hlas/index.json', { eager: true, import: 'default' });
+    const index = Object.values(json)[0] ?? { clips: {} };
+    const files = new Set(Object.keys(import.meta.glob('../public/hlas/*.mp3')).map((f) => f.split('/').pop()));
+    const missing = allSpeech(skills, 300).filter((t) => !index.clips[t] || !files.has(index.clips[t]));
+    // Chybí-li něco, doplň nahrávky: scripts/hlas/nahraj.py (viz README).
+    expect(missing).toEqual([]);
   });
 
   it('psaní: velikost písmen nevadí, povolené tvary platí, překlep ne', () => {

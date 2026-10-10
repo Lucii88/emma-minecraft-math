@@ -62,6 +62,7 @@ export const poslechSkill = bankSkill({
   description: 'Uslyší anglické slovo a pozná, co znamená – obrázek, barvu nebo český význam.',
   rvp: { 1: ['CJ-3-1-05'], 2: ['CJ-3-1-05', 'CJ-3-1-04'], 3: ['CJ-5-1-02'] },
   ability: 'slovni',
+  priority: 2,
   gen: { 1: poslech(1), 2: poslech(2), 3: poslech(3) },
 });
 
@@ -72,5 +73,6 @@ export const rekniToSkill = bankSkill({
   description: 'Vidí obrázek nebo české slovo a vybere správné anglické slovíčko.',
   rvp: { 1: ['CJ-3-1-02', 'CJ-3-1-05'], 2: ['CJ-3-1-02', 'CJ-3-1-03'], 3: ['CJ-5-1-02'] },
   ability: 'slovni',
+  priority: 2,
   gen: { 1: rekniTo(1), 2: rekniTo(2), 3: rekniTo(3) },
 });
