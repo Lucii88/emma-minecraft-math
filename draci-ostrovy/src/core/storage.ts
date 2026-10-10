@@ -41,6 +41,8 @@ export interface Settings {
   notes?: string;
   /** Školní ostrov (učivo jednoho dítěte) – jen pro hráče, kterému ho rodič zapne. */
   schoolIsland?: boolean;
+  /** Mluvení se mnou: odpovědi nahlas hodnotí rodič (bez mikrofonu). */
+  parentSpeaking?: boolean;
 }
 
 export interface Profile {

@@ -690,12 +690,18 @@ function SettingsView({ onDemo }: { onDemo: () => void }) {
           <input type="checkbox" checked={!!s.schoolIsland} onChange={(e) => update({ schoolIsland: e.target.checked })} /> Školní ostrov (angličtina){' '}
           <span className="muted small">
             (učivo ze školy, jen pro tohoto hráče; první mise Dnešního letu bude anglická ·{' '}
-            {hasEnglishVoice() ? `anglický hlas: ${englishVoiceName()}` : 'v tomto zařízení chybí anglický hlas'} ·{' '}
-            {caps.speech
-              ? 'mluvení s Miss Ember zapnuté: nahrávka hlasu se přepíše v Microsoft Azure a nikde se neukládá'
-              : 'mluvení vypnuté (na serveru chybí klíč Azure Speech)'})
+            {hasEnglishVoice() ? `anglický hlas: ${englishVoiceName()}` : 'v tomto zařízení chybí anglický hlas'}
+            {caps.speech && ' · rozpoznávání řeči zapnuté: nahrávka hlasu se přepíše v Microsoft Azure a nikde se neukládá'})
           </span>
         </label>
+        {s.schoolIsland && (
+          <label className="field">
+            <input type="checkbox" checked={!!s.parentSpeaking} onChange={(e) => update({ parentSpeaking: e.target.checked })} /> Mluvení se mnou{' '}
+            <span className="muted small">
+              (Miss Ember se zeptá nahlas anglicky, dítě odpoví vám a vy klepnete, jestli to řeklo dobře. Mikrofon se nepoužívá. Dává smysl, když hrajete spolu.)
+            </span>
+          </label>
+        )}
       </div>
 
       {look && (

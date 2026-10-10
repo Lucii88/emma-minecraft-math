@@ -200,6 +200,27 @@ describe('mluvení s Miss Ember', () => {
     }
   });
 
+  it('s „Mluvením se mnou“ se hraje i bez rozpoznávání řeči (hodnotí rodič)', () => {
+    caps.speech = false;
+    const p = withSchool();
+    const together = { ...p, settings: { ...p.settings, parentSpeaking: true } };
+    expect(playableSkills(p, 'skola').map((s) => s.id)).not.toContain('skola.mluveni');
+    expect(playableSkills(together, 'skola').map((s) => s.id)).toContain('skola.mluveni');
+    const mission = { kind: 'growth' as const, island: 'skola' as const, skillIds: ['skola.mluveni'], count: 5, pTarget: 0.75, title: 'Angličtina' };
+    const item = nextItem(together, mission, 0, 1);
+    expect(item.skillId).toBe('skola.mluveni');
+    expect(item.answer.kind).toBe('say');
+    // Rodič hodnotí podle vysvětlení – musí v něm být vzorová odpověď.
+    const plain = (x: string) => x.replace(/’/g, "'").replace(/[.!?]$/, '');
+    const s = SKILL_BY_ID['skola.mluveni'];
+    for (const l of s.levels) {
+      for (let seed = 1; seed <= 200; seed++) {
+        const it = s.generate(l, createRng(seed));
+        if (it.answer.kind === 'say') expect(plain(it.explanation), it.id).toContain(plain(it.answer.model));
+      }
+    }
+  });
+
   it('opakování vět cílí na I / me / I am a vzorové odpovědi jsou celé věty', () => {
     const s = SKILL_BY_ID['skola.mluveni'];
     const seen = new Set<string>();

@@ -40,9 +40,9 @@ function lastActivity(profile: Profile, island: IslandId): number {
 
 /** Dovednosti ostrova, které se dají hrát. Když rodič vypne úlohy podobné
  *  testům, vynechají se (pokud by na ostrově nezbylo nic, zůstanou).
- *  Mluvení jen tehdy, když ho server i zařízení umí. */
+ *  Mluvení jen s rozpoznáváním řeči, nebo když ho hodnotí rodič. */
 export function playableSkills(profile: Profile, island: IslandId): SkillDef[] {
-  const all = skillsOf(island).filter(skillReady);
+  const all = skillsOf(island).filter((s) => skillReady(s, profile.settings));
   if (!profile.settings.skipTestLike) return all;
   const rest = all.filter((s) => !s.testLike);
   return rest.some((s) => !s.open) ? rest : all;
@@ -130,7 +130,7 @@ export function nextItem(profile: Profile, mission: Mission, index: number, seed
   const rng = createRng(seed);
   const planned = SKILL_BY_ID[mission.skillIds[index % mission.skillIds.length]];
   // Mluvení, které mezitím přestalo fungovat, nahradí příbuzná dovednost.
-  const skill = skillReady(planned) || !planned.fallback ? planned : SKILL_BY_ID[planned.fallback];
+  const skill = skillReady(planned, profile.settings) || !planned.fallback ? planned : SKILL_BY_ID[planned.fallback];
   const skillId = skill.id;
   const state = stateOf(profile, skillId);
   // Vstupní let: prvních pár úloh nové dovednosti je o něco náročnějších,
