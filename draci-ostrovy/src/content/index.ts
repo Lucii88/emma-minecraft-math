@@ -136,8 +136,9 @@ export const missionsOf = (island: IslandId) => MISSIONS.filter((m) => m.island 
 export interface Trick {
   id: string;
   name: string;
-  anim: 'loop' | 'spin' | 'dive' | 'hop' | 'fire' | 'smoke' | 'flip' | 'glide';
-  fire?: string; // barva ohně
+  /** Pohyb draka a efekt kolem něj (viz ui/components/TrickShow.tsx). */
+  anim: 'hop' | 'fire' | 'smoke' | 'spin' | 'spin2' | 'dive' | 'flip' | 'glide' | 'dance' | 'loop' | 'starloop';
+  fire?: string; // barva ohně, 'rainbow' = duha
 }
 
 /** Kousky, které se drak postupně naučí (v tomto pořadí). */
@@ -152,10 +153,10 @@ export const TRICKS: Trick[] = [
   { id: 'klouzani', name: 'Klouzání po větru', anim: 'glide' },
   { id: 'smycka', name: 'Velká smyčka', anim: 'loop' },
   { id: 'zeleny', name: 'Zelený oheň', anim: 'fire', fire: '#80ed99' },
-  { id: 'dvojita', name: 'Dvojitá vývrtka', anim: 'spin' },
+  { id: 'dvojita', name: 'Dvojitá vývrtka', anim: 'spin2' },
   { id: 'fialovy', name: 'Fialový oheň', anim: 'fire', fire: '#c77dff' },
-  { id: 'tanec', name: 'Tanec v oblacích', anim: 'glide' },
+  { id: 'tanec', name: 'Tanec v oblacích', anim: 'dance' },
   { id: 'zlaty', name: 'Zlatý oheň', anim: 'fire', fire: '#ffd60a' },
-  { id: 'hvezdna', name: 'Hvězdná smyčka', anim: 'loop' },
+  { id: 'hvezdna', name: 'Hvězdná smyčka', anim: 'starloop' },
   { id: 'duhovy', name: 'Duhový oheň', anim: 'fire', fire: 'rainbow' },
 ];

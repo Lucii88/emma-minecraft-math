@@ -9,6 +9,7 @@ import { sfx } from '../../core/sound';
 import { loadEvents } from '../../core/storage';
 import type { IslandId, JointMission, KnowledgeCard } from '../../core/types';
 import { Dragon } from '../components/Dragon';
+import { TrickShow } from '../components/TrickShow';
 import { Icon, SpeakButton } from '../components/Bits';
 import { IslandArt } from './MapScreen';
 import { useGx } from '../useGx';
@@ -111,20 +112,23 @@ export function MissionCard({ mission: raw }: { mission: JointMission }) {
 
 function DragonsTab() {
   const profile = useGame((s) => s.profile);
-  const [playing, setPlaying] = useState<string | null>(null);
-  const anim = TRICKS.find((t) => t.id === playing)?.anim;
+  // Každé klepnutí kousek přehraje znovu (i ten samý).
+  const [show, setShow] = useState<{ id: string; n: number } | null>(null);
+  const trick = TRICKS.find((t) => t.id === show?.id) ?? null;
+  const play = (id: string) => {
+    sfx.trick();
+    setShow((s) => ({ id, n: (s?.n ?? 0) + 1 }));
+  };
   return (
     <>
       <h2 className="section-title">Kousky, které umí {profile.dragonName || 'tvůj drak'}</h2>
       <div className="trick-row">
-        <div className={anim ? `trick-${anim === 'fire' || anim === 'smoke' ? 'hop' : anim}` : ''} key={playing ?? 'none'}>
-          {profile.dragon && <Dragon look={profile.dragon} size={160} mood={playing ? 'happy' : 'idle'} />}
-        </div>
+        {profile.dragon && <TrickShow look={profile.dragon} trick={trick} play={show?.n ?? 0} size={160} onReplay={trick ? () => play(trick.id) : undefined} />}
         <div className="tricks">
           {TRICKS.map((t) => {
             const has = profile.tricks.includes(t.id);
             return (
-              <button key={t.id} className={`chip trick-chip${has ? ' active' : ' locked'}`} disabled={!has} onClick={() => setPlaying(t.id)}>
+              <button key={t.id} className={`chip trick-chip${has ? ' active' : ' locked'}`} disabled={!has} onClick={() => play(t.id)}>
                 {has ? t.name : '?'}
               </button>
             );
