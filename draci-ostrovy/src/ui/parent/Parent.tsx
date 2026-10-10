@@ -5,7 +5,8 @@ import { gx, mapStrings, type Gender } from '../../core/gender';
 import { buildRadar, type Radar } from '../../core/radar';
 import { levelLabel } from '../../core/planner';
 import { exportAll, importAll, loadEvents, wipeAll, type Profile } from '../../core/storage';
-import { PAUSE, englishVoiceName, hasCzechVoice, hasEnglishVoice, speakEnglish, spellOut, voiceName } from '../../core/speech';
+import { PAUSE, englishVoiceName, hasCzechVoice, hasEnglishVoice, hasVoiceClips, speakEnglish, spellOut, voiceName } from '../../core/speech';
+import { EN_VOICE_TEST } from '../../content/skola/hlas';
 import { caps } from '../../core/caps';
 import type { AnswerEvent } from '../../core/types';
 import { Icon } from '../components/Bits';
@@ -696,11 +697,12 @@ function SettingsView({ onDemo }: { onDemo: () => void }) {
         </label>
         {s.schoolIsland && hasEnglishVoice() && (
           <p className="field muted small">
-            <button type="button" className="btn btn-ghost btn-small" onClick={() => speakEnglish(`Hello! Let's spell.${PAUSE}${spellOut('aeigjr')}`)}>
+            <button type="button" className="btn btn-ghost btn-small" onClick={() => speakEnglish(`${EN_VOICE_TEST}${PAUSE}${spellOut('aeigjr')}`)}>
               ▶ Vyzkoušet anglický hlas
             </button>{' '}
-            Má říct A, E, I, G, J, R (ej, í, aj, dží, džej, á). Zní nezřetelně? V Nastavení iPadu vyhledejte „Hlasy“ (Zpřístupnění), vyberte angličtinu
-            a stáhněte hlas s označením Premium nebo Vylepšený (třeba Ava). Hra ho po restartu vybere sama.
+            Má říct A, E, I, G, J, R (ej, í, aj, dží, džej, á).
+            {!hasVoiceClips() &&
+              ' Zní nezřetelně? V Nastavení iPadu vyhledejte „Hlasy“ (Zpřístupnění), vyberte angličtinu a stáhněte hlas s označením Premium nebo Vylepšený (třeba Ava). Hra ho po restartu vybere sama.'}
           </p>
         )}
         {s.schoolIsland && (

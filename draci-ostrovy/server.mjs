@@ -51,6 +51,7 @@ const TYPES = {
   '.json': 'application/json; charset=utf-8',
   '.webmanifest': 'application/manifest+json; charset=utf-8',
   '.txt': 'text/plain; charset=utf-8',
+  '.mp3': 'audio/mpeg',
 };
 const COMPRESSIBLE = new Set(['.html', '.js', '.css', '.svg', '.json', '.webmanifest', '.txt']);
 // Ikony a manifest prohlížeč stahuje bez cookie (přidání na plochu), a tak
@@ -92,7 +93,7 @@ function loadFiles(root) {
         gzip: compress ? gzipSync(body, { level: 9 }) : null,
         cache: path.startsWith('/assets/')
           ? 'private, max-age=31536000, immutable' // názvy obsahují otisk obsahu
-          : path === '/index.html'
+          : path === '/index.html' || path === '/hlas/index.json'
             ? 'no-cache'
             : 'private, max-age=86400',
       });

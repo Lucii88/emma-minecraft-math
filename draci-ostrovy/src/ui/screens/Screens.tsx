@@ -5,6 +5,7 @@ import { masteredLevels } from '../../core/model';
 import { playableSkills, stateOf } from '../../core/planner';
 import { sfx } from '../../core/sound';
 import { Dragon } from '../components/Dragon';
+import { TrickShow } from '../components/TrickShow';
 import { Icon, Sparkles } from '../components/Bits';
 import { IslandArt } from './MapScreen';
 import { MissionCard, islandBookProgress } from './Book';
@@ -126,7 +127,7 @@ export function MissionEnd() {
   const run = useGame((s) => s.run);
   const profile = useGame((s) => s.profile);
   const next = useGame((s) => s.continueRun);
-  const [trickAnim, setTrickAnim] = useState<string>('');
+  const [play, setPlay] = useState(0);
   const trickGain = run?.missionGains.find((g) => g.kind === 'trick');
   const trick = TRICKS.find((t) => t.id === trickGain?.trickId);
 
@@ -134,7 +135,7 @@ export function MissionEnd() {
     if (!trick) return;
     const t1 = setTimeout(() => {
       sfx.trick();
-      setTrickAnim(trick.anim === 'fire' || trick.anim === 'smoke' ? 'trick-hop' : `trick-${trick.anim}`);
+      setPlay(1);
     }, 400);
     return () => clearTimeout(t1);
   }, [trick]);
@@ -154,28 +155,29 @@ export function MissionEnd() {
   return (
     <div className="screen center mission-end">
       <Sparkles show={!!trick}>
-        <div className={trickAnim} style={{ display: 'inline-block' }}>
-          {profile.dragon && <Dragon look={profile.dragon} mood="happy" size={230} />}
-        </div>
-        {trick?.anim === 'fire' && trickAnim && <FireBurst color={trick.fire!} />}
+        {profile.dragon &&
+          (trick ? (
+            <TrickShow
+              look={profile.dragon}
+              trick={trick}
+              play={play}
+              size={230}
+              onReplay={() => {
+                sfx.trick();
+                setPlay((n) => n + 1);
+              }}
+            />
+          ) : (
+            <Dragon look={profile.dragon} mood="happy" size={230} />
+          ))}
       </Sparkles>
       <h1>{trick ? `Nový kousek: ${trick.name}!` : 'Hotovo!'}</h1>
+      {trick && <p className="muted small trick-hint">Klepni na draka a předvede to znovu.</p>}
       <p className="lead">{line}</p>
       <GainList gains={run.missionGains.filter((g) => g.kind !== 'trick')} />
       <button className="btn btn-primary btn-big" onClick={next} autoFocus>
         {last ? (run.day ? 'Dokončit let' : 'Zpět na mapu') : 'Další mise'}
       </button>
-    </div>
-  );
-}
-
-function FireBurst({ color }: { color: string }) {
-  const colors = color === 'rainbow' ? ['#ff595e', '#ffca3a', '#8ac926', '#1982c4', '#6a4c93'] : [color, '#fff3b0', color];
-  return (
-    <div className="fire-burst" aria-hidden>
-      {Array.from({ length: 16 }, (_, i) => (
-        <span key={i} style={{ background: colors[i % colors.length], ['--i' as string]: i }} />
-      ))}
     </div>
   );
 }

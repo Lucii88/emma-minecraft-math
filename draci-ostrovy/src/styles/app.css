@@ -311,6 +311,285 @@ h3 {
 .trick-glide { animation: t-glide 2s ease-in-out 1; }
 .trick-hop { animation: hop 0.7s ease-out 2; }
 
+/* Kousky v Knize a na konci mise: drak (trick-body) a efekt kolem (fx).
+   1em = desetina velikosti draka; tlama je zhruba uprostřed. */
+.trick-stage {
+  position: relative;
+  display: inline-block;
+  flex: none;
+}
+.trick-replay {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.trick-replay:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+.trick-body {
+  position: relative;
+  z-index: 1;
+  transform-origin: 50% 70%;
+}
+.fx {
+  position: absolute;
+  inset: -25% -20%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.fx.fx-front {
+  z-index: 2;
+}
+.fx span {
+  position: absolute;
+  opacity: 0;
+}
+.trick-hint {
+  margin: -6px 0 0;
+}
+
+.trick-hop2 { animation: hop 0.7s ease-out 2 both; }
+.trick-roar { animation: t-roar 2.2s ease-in-out both; }
+.trick-puff { animation: t-puff 0.45s ease-in-out 0.15s 4 both; }
+.trick-spin2 { animation: t-spin2 1.8s cubic-bezier(0.5, 0, 0.3, 1) both; }
+.trick-dance { animation: t-dance 2.4s ease-in-out both; }
+
+@keyframes t-roar {
+  0%, 100% { transform: none; }
+  14% { transform: translateY(0.3em) rotate(4deg) scale(0.96); }
+  28%, 72% { transform: translateY(-0.4em) rotate(-7deg) scale(1.05); }
+  50% { transform: translateY(-0.5em) rotate(-5deg) scale(1.06); }
+}
+
+@keyframes t-puff {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.05, 0.95) translateY(0.15em); }
+}
+
+@keyframes t-spin2 {
+  0% { transform: rotate(0) scale(1); }
+  50% { transform: rotate(380deg) scale(1.12) translateY(-0.6em); }
+  100% { transform: rotate(720deg) scale(1); }
+}
+
+@keyframes t-dance {
+  0%, 25%, 50%, 75%, 100% { transform: none; }
+  12% { transform: translate(-1.1em, -0.6em) rotate(-12deg); }
+  37% { transform: translate(1.1em, -0.6em) rotate(12deg); }
+  62% { transform: translate(-1.1em, -0.9em) rotate(-14deg); }
+  87% { transform: translate(1.1em, -0.9em) rotate(14deg); }
+}
+
+/* Oheň z tlamy (tlama ≈ 7em, 7.6em v rámu efektu) */
+.fx-glow {
+  left: 7em;
+  top: 7.6em;
+  width: 7em;
+  height: 7em;
+  margin: -3.5em 0 0 -3.5em;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--c), transparent 68%);
+  animation: fx-glow 1.7s ease-out 0.3s both;
+}
+.fx-flame {
+  left: 7.8em;
+  top: 7.7em;
+  width: 1.4em;
+  height: 1.4em;
+  margin: -0.7em 0 0 -0.7em;
+  border-radius: 50% 0 50% 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.85), var(--c) 58%);
+  animation: fx-flame 0.9s ease-out calc(0.35s + var(--i) * 40ms) both;
+}
+.fx-rainbow {
+  position: absolute;
+  left: 1.5em;
+  top: 0.4em;
+  width: calc(100% - 3em);
+  overflow: visible;
+  animation: fx-fade 0.8s ease-in 3s forwards;
+}
+.fx-rainbow path {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 300;
+  stroke-dashoffset: 300;
+  animation: fx-draw 1.1s ease-out 1s forwards;
+}
+
+@keyframes fx-glow {
+  0% { transform: scale(0.3); opacity: 0; }
+  25% { opacity: 0.75; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+@keyframes fx-flame {
+  0% { transform: rotate(var(--a)) translateX(0.3em) scale(0.3) rotate(45deg); opacity: 1; }
+  70% { opacity: 0.9; }
+  100% { transform: rotate(var(--a)) translateX(var(--d)) scale(2.3) rotate(45deg); opacity: 0; }
+}
+@keyframes fx-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes fx-fade {
+  to { opacity: 0; }
+}
+
+/* Kouřové kroužky */
+.fx-ring {
+  left: 7em;
+  top: 7.3em;
+  width: 2em;
+  height: 2em;
+  margin: -1em 0 0 -1em;
+  border-radius: 50%;
+  border: 0.35em solid rgba(130, 136, 152, 0.85);
+  animation: fx-ring 1.9s ease-out calc(0.2s + var(--i) * 0.45s) both;
+}
+@keyframes fx-ring {
+  0% { transform: translate(0, 0) scale(0.3); opacity: 0.95; }
+  100% { transform: translate(var(--x), -6.5em) scale(1.9); opacity: 0; }
+}
+
+/* Hvězdná smyčka */
+.fx-star {
+  left: 7em;
+  top: 7.5em;
+  width: 1.5em;
+  height: 1.5em;
+  margin: -0.75em 0 0 -0.75em;
+  background: #ffd60a;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  animation: fx-star 1s ease-out calc(var(--i) * 0.12s) both;
+}
+@keyframes fx-star {
+  0% { transform: rotate(var(--a)) translateY(-5em) scale(0); opacity: 1; }
+  40% { transform: rotate(var(--a)) translateY(-5em) scale(1.25) rotate(40deg); opacity: 1; }
+  100% { transform: rotate(var(--a)) translateY(-6em) scale(0.3) rotate(120deg); opacity: 0; }
+}
+
+/* Tanec v oblacích */
+.fx-cloud {
+  left: -4em;
+  top: var(--y);
+  width: 3.4em;
+  height: 1.2em;
+  border-radius: 1em;
+  background: #fff;
+  box-shadow: 0.9em -0.55em 0 0.1em #fff, -0.5em -0.3em 0 0 #fff;
+  filter: drop-shadow(0 0.1em 0.12em rgba(29, 78, 115, 0.25));
+  animation: fx-cloud 2.6s linear calc(var(--i) * 0.35s) both;
+}
+.fx-cloud.rev {
+  animation-name: fx-cloud-rev;
+}
+@keyframes fx-cloud {
+  0% { transform: translateX(0); opacity: 0; }
+  15%, 85% { opacity: 0.95; }
+  100% { transform: translateX(19em); opacity: 0; }
+}
+@keyframes fx-cloud-rev {
+  0% { transform: translateX(19em); opacity: 0; }
+  15%, 85% { opacity: 0.95; }
+  100% { transform: translateX(0); opacity: 0; }
+}
+
+/* Vítr a rychlost */
+.fx-wind {
+  left: -3em;
+  top: var(--y);
+  width: 4em;
+  height: 0.32em;
+  border-radius: 1em;
+  background: linear-gradient(90deg, transparent, rgba(29, 78, 115, 0.6));
+  animation: fx-wind 1.1s ease-in calc(var(--i) * 0.25s) 2 both;
+}
+@keyframes fx-wind {
+  0% { transform: translateX(0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateX(19em); opacity: 0; }
+}
+.fx-speed {
+  top: -3em;
+  left: var(--x);
+  width: 0.22em;
+  height: 3em;
+  border-radius: 1em;
+  background: linear-gradient(180deg, transparent, rgba(29, 78, 115, 0.45));
+  animation: fx-speed 0.6s ease-in calc(var(--i) * 0.12s) 3 both;
+}
+@keyframes fx-speed {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(17em); opacity: 0; }
+}
+
+/* Vývrtka: vír kolem draka */
+.fx-swirl {
+  left: 2em;
+  top: 2.5em;
+  width: 10em;
+  height: 10em;
+  border-radius: 50%;
+  border: 0.25em solid transparent;
+  border-top-color: rgba(47, 127, 168, 0.65);
+  border-right-color: rgba(47, 127, 168, 0.3);
+  animation: fx-swirl 1.1s linear both;
+}
+.fx-swirl.inner {
+  left: 3.5em;
+  top: 4em;
+  width: 7em;
+  height: 7em;
+  border-top-color: rgba(255, 183, 3, 0.75);
+  border-right-color: rgba(255, 183, 3, 0.3);
+  animation-direction: reverse;
+}
+.fx-swirl.double {
+  animation-duration: 0.9s;
+  animation-iteration-count: 2;
+}
+@keyframes fx-swirl {
+  0% { transform: rotate(0); opacity: 0; }
+  15%, 85% { opacity: 1; }
+  100% { transform: rotate(360deg); opacity: 0; }
+}
+
+/* Prach pod nohama a jiskry při dopadu */
+.fx-dust {
+  left: calc(7em + var(--x));
+  top: 11.3em;
+  width: 1.2em;
+  height: 1.2em;
+  margin: -0.6em 0 0 -0.6em;
+  border-radius: 50%;
+  background: rgba(150, 120, 90, 0.45);
+  animation: fx-dust 0.7s ease-out calc(0.4s + var(--i) * 0.03s) 2 both;
+}
+@keyframes fx-dust {
+  0% { transform: scale(0.2); opacity: 0.9; }
+  100% { transform: translateY(-0.6em) scale(1.8); opacity: 0; }
+}
+.fx-spark {
+  left: 7em;
+  top: 7.5em;
+  width: 0.6em;
+  height: 0.6em;
+  margin: -0.3em 0 0 -0.3em;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: fx-spark 0.9s ease-out 1s both;
+}
+@keyframes fx-spark {
+  0% { transform: rotate(var(--a)) translateY(-3em) scale(1); opacity: 1; }
+  100% { transform: rotate(var(--a)) translateY(-6.5em) scale(0.2); opacity: 0; }
+}
+
 @keyframes t-spin {
   0% { transform: rotate(0) scale(1); }
   50% { transform: rotate(200deg) scale(1.08); }
@@ -1526,33 +1805,6 @@ h3 {
 @keyframes spark {
   0% { transform: rotate(var(--angle)) translateY(0) scale(1); opacity: 1; }
   100% { transform: rotate(var(--angle)) translateY(-150px) scale(0.2); opacity: 0; }
-}
-
-.fire-burst {
-  position: absolute;
-  left: 50%;
-  top: 48%;
-  pointer-events: none;
-}
-
-.fire-burst {
-  top: 47%;
-}
-
-.fire-burst span {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  margin: -11px 0 0 -11px;
-  border-radius: 50% 0 50% 50%;
-  filter: blur(0.5px);
-  --a: calc(-150deg + var(--i) * 7.5deg);
-  animation: flame 1s ease-out calc(var(--i) * 25ms) 2 both;
-}
-
-@keyframes flame {
-  0% { transform: rotate(var(--a)) translateX(10px) scale(0.5); opacity: 1; }
-  100% { transform: rotate(var(--a)) translateX(150px) scale(1.9); opacity: 0; }
 }
 
 .section-title {

@@ -12,6 +12,7 @@ import { SayAnswer } from '../components/SayAnswer';
 import { caps } from '../../core/caps';
 import { judgeSay, type SayVerdict, type SpeechResult } from '../../core/saymatch';
 import { speakEnglish } from '../../core/speech';
+import { EN_SORRY, EN_UNDERSTOOD } from '../../content/skola/hlas';
 import { renderMathVisual } from '../visuals/MathVisuals';
 import { renderWorldVisual, visualSpeech } from '../visuals/WorldVisuals';
 import { EnglishSpeak, renderEnglishVisual } from '../visuals/EnglishVisuals';
@@ -27,9 +28,6 @@ const PRAISE_HARD = ['Tohle byla těžká úloha – a {vyřešila|vyřešil} js
 const PRAISE_RETRY = ['{Nevzdala|Nevzdal} ses – a vyšlo to.', 'Druhý pokus a je to tam.', '{Zkusila|Zkusil} jsi to jinak a povedlo se.'];
 const PRAISE_HINT = ['Nápověda pomohla a zbytek jsi {zvládla sama|zvládl sám}.', 'S malou nápovědou jsi na to {přišla|přišel}.'];
 const RETRY = ['Tohle ještě ne. Zkus to znovu.', 'Skoro! Zkus jinou cestu.', 'Hmm, ještě jednou – podívej se na nápovědu.'];
-// Miss Ember (školní ostrov) hodnotí mluvení anglicky.
-const EN_UNDERSTOOD = ['Great! I understood you.', 'Well done! I understood every word.', 'Yes! I understood you.', 'Perfect! I understood you.'];
-const EN_SORRY = ["Sorry, I didn't understand. Try again!", "Hmm, I didn't catch that. Try again, please!"];
 
 type Phase = 'answer' | 'confidence' | 'feedback' | 'solution' | 'open-done';
 
