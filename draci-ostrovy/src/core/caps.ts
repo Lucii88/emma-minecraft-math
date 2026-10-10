@@ -8,4 +8,7 @@ export const caps = {
   speech: false,
 };
 
-export const skillReady = (skill: SkillDef) => skill.needs !== 'speech' || caps.speech;
+/** Mluvení jde hrát s rozpoznáváním řeči na serveru, nebo když odpovědi
+ *  hodnotí rodič (přepínač „Mluvení se mnou“ v nastavení hráče). */
+export const skillReady = (skill: SkillDef, settings?: { parentSpeaking?: boolean }) =>
+  skill.needs !== 'speech' || caps.speech || !!settings?.parentSpeaking;

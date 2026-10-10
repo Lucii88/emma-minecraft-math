@@ -102,6 +102,8 @@ function ItemView({ item }: { item: Item }) {
   const [openPayload, setOpenPayload] = useState<{ text: string; ideas?: number } | null>(null);
   const [said, setSaid] = useState<SayVerdict | null>(null);
   const [sayTrouble, setSayTrouble] = useState(0);
+  // Mluvení se mnou: odpověď nahlas hodnotí rodič, mikrofon se nepoužije.
+  const parentJudges = !!profile.settings.parentSpeaking;
 
   const every = profile.settings.confidenceEvery;
   // U mluvení Miss Ember výsledek prozradí hned, otázka na jistotu by nedávala smysl.
@@ -301,7 +303,10 @@ function ItemView({ item }: { item: Item }) {
           {a.kind === 'spell' && (
             <SpellAnswer disabled={locked} resetKey={`${item.id}-${attempts}`} space={a.correct.includes(' ')} onSubmit={(w) => submit(spellMatches(w, a.correct, a.accept))} />
           )}
-          {a.kind === 'say' && (
+          {a.kind === 'say' && parentJudges && (
+            <ParentJudge disabled={locked} explanation={item.explanation} onJudge={submit} />
+          )}
+          {a.kind === 'say' && !parentJudges && (
             <>
               {said && phase === 'answer' && <HeardNote verdict={said} />}
               <SayAnswer disabled={locked} resetKey={`${item.id}-${attempts}`} refText={a.ref} onResult={onSay} onMicError={onMicError} />
@@ -360,8 +365,8 @@ function ItemView({ item }: { item: Item }) {
           {said && a.kind === 'say' && <HeardNote verdict={said} />}
           {item.sayAfter && (phase === 'feedback' || phase === 'solution') && (
             <div className="sheet-en">
-              {/* Po mluvení hlas právě řekl „I understood you“ – vzor se pustí sám jen u řešení. */}
-              <EnglishSpeak text={item.sayAfter} auto={a.kind !== 'say' || phase === 'solution'} big>
+              {/* Po mluvení s mikrofonem hlas právě řekl „I understood you“ – vzor se pak pustí sám jen u řešení. */}
+              <EnglishSpeak text={item.sayAfter} auto={a.kind !== 'say' || parentJudges || phase === 'solution'} big>
                 <span lang="en">{item.sayAfter}</span>
               </EnglishSpeak>
             </div>
@@ -404,6 +409,29 @@ function HeardNote({ verdict }: { verdict: SayVerdict }) {
           Zkus zřetelněji: <span lang="en">{verdict.unclear.join(', ')}</span>
         </p>
       )}
+    </div>
+  );
+}
+
+/** Mluvení se mnou: dítě odpoví nahlas rodiči a ten klepne, jestli to řeklo
+ *  dobře. Správná odpověď je pro rodiče schovaná, aby ji dítě nepřečetlo. */
+function ParentJudge({ disabled, explanation, onJudge }: { disabled: boolean; explanation: string; onJudge: (ok: boolean) => void }) {
+  const t = useGx();
+  return (
+    <div className="judge">
+      <p className="say-label">Rodič klepne, jestli to bylo dobře.</p>
+      <div className="judge-buttons">
+        <button className="btn btn-primary" onClick={() => onJudge(true)} disabled={disabled}>
+          ✓ {t('{Řekla|Řekl} to dobře')}
+        </button>
+        <button className="btn btn-ghost" onClick={() => onJudge(false)} disabled={disabled}>
+          Ještě ne
+        </button>
+      </div>
+      <details className="judge-peek">
+        <summary>Pro rodiče: správná odpověď</summary>
+        <p>{explanation}</p>
+      </details>
     </div>
   );
 }

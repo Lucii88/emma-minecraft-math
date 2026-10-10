@@ -1,6 +1,7 @@
-// Mluvení s Miss Ember: dítě odpovídá nahlas a hra pozná, jestli mu
-// „rozuměla“ (převod řeči na text v Azure, viz server.mjs). Hraje se jen se
-// zapnutým mluvením; jinak ji v rozehrané misi nahradí Otázky a odpovědi.
+// Mluvení s Miss Ember: dítě odpovídá nahlas. Odpověď hodnotí rodič
+// („Mluvení se mnou“ v nastavení), nebo hra sama, když má server rozpoznávání
+// řeči (Azure, viz server.mjs). Bez obojího se nehraje a v rozehrané misi ji
+// nahradí Otázky a odpovědi.
 //
 // Vzory odpovědí viz core/saymatch.ts: `*` = cokoli, `#` = číslo. Odpověď
 // stačí najít kdekoli v přepisu („It's a pencil.“ projde i na „pencil“).
@@ -142,7 +143,7 @@ export const mluveniSkill = bankSkill({
   id: 'skola.mluveni',
   island: 'skola',
   name: 'Mluvení s Miss Ember',
-  description: 'Odpovídá nahlas anglicky celou větou (I’m seven., My name is…, It’s on the desk.) a opakuje věty. Hra pozná, jestli jí bylo rozumět.',
+  description: 'Odpovídá nahlas anglicky celou větou (I’m seven., My name is…, It’s on the desk.) a opakuje věty. Hodnotí rodič, který hraje s dítětem.',
   rvp: { 1: ['CJ-3-1-01', 'CJ-3-1-02'], 2: ['CJ-5-2-01', 'CJ-5-2-03'] },
   ability: 'slovni',
   priority: 2,

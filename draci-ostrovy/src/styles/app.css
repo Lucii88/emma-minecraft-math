@@ -3066,3 +3066,37 @@ h3 {
     transition: none;
   }
 }
+
+/* Mluvení se mnou: rodič hodnotí odpověď nahlas. */
+.judge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.judge-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.judge-peek {
+  width: 100%;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+.judge-peek summary {
+  cursor: pointer;
+  text-align: center;
+  font-weight: 700;
+}
+.judge-peek p {
+  margin: 8px 0 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--parchment);
+  border: 2px dashed var(--parchment-edge);
+}
