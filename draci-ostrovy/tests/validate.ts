@@ -6,6 +6,8 @@ import { createRng } from '../src/core/rng';
 import type { Cell, IslandId, Item, JointMission, KnowledgeCard, Level, SkillDef, Visual } from '../src/core/types';
 import { BODY_REGIONS } from '../src/core/types';
 import { matchesSay, normSpeech } from '../src/core/saymatch';
+import { THINGS, allSwitchStates, batteryShorted, bulbsOf, litBulbs, netSize, solveSwitches, switchesOf, traceWires } from '../src/core/circuit';
+import type { CircuitPart } from '../src/core/types';
 
 /** Jména a pojmy z filmů, které nesmí být v kódu (veřejný repozitář). */
 export const FORBIDDEN_WORDS = [
@@ -98,6 +100,39 @@ export function validateVisual(v: Visual, where: string): string[] {
       if (!allowed.includes(v.where)) errors.push(`${where}: ${v.where} u ${v.ref} se nedá nakreslit`);
       if (!v.thing.trim()) errors.push(`${where}: chybí věc`);
       if (v.ask && CZECH.test(v.ask)) errors.push(`${where}: česká diakritika v anglické otázce`);
+      break;
+    }
+    case 'circuit': {
+      if (v.nets.length < 1 || v.nets.length > 3) errors.push(`${where}: ${v.nets.length} obvodů (povoleno 1–3)`);
+      if (v.labels && v.labels.length !== v.nets.length) errors.push(`${where}: popisky neodpovídají obvodům`);
+      for (const net of v.nets) {
+        const { w, h } = netSize(net);
+        if (w > 6 || h > 3) errors.push(`${where}: obvod ${w}×${h} se nevejde (nejvýš 6×3)`);
+        const bulbs = bulbsOf(net);
+        if (!bulbs.length) errors.push(`${where}: obvod bez žárovky`);
+        if (new Set(bulbs).size !== bulbs.length) errors.push(`${where}: dvě žárovky stejné barvy`);
+        const sws = switchesOf(net).map((x) => x.id);
+        if (new Set(sws).size !== sws.length || sws.some((x) => !/^[A-E]$/.test(x))) errors.push(`${where}: vypínače ${sws.join(',')}`);
+        const walk = (p: CircuitPart) => {
+          if (p.t === 'thing' && !THINGS[p.thing]) errors.push(`${where}: neznámá věc ${p.thing}`);
+          if (p.t === 'series' || p.t === 'parallel') {
+            if (p.parts.length < 2) errors.push(`${where}: skupina s jednou částí`);
+            p.parts.forEach(walk);
+          }
+        };
+        walk(net);
+      }
+      break;
+    }
+    case 'wires': {
+      if (v.cols < 2 || v.cols > 6 || v.rows < 2 || v.rows > 6) errors.push(`${where}: skládačka ${v.cols}×${v.rows}`);
+      if (v.tiles.length !== v.cols * v.rows) errors.push(`${where}: počet dílků nesedí`);
+      if (v.tiles.filter((t) => t.k === 'battery').length !== 1) errors.push(`${where}: musí mít právě jednu baterku`);
+      if (!v.tiles.some((t) => t.k === 'bulb')) errors.push(`${where}: skládačka bez žárovky`);
+      for (const t of v.tiles) {
+        if ((t.k === 'battery' || t.k === 'bulb') && !t.fixed) errors.push(`${where}: baterka a žárovky se nesmí otáčet`);
+        if (!Number.isInteger(t.rot) || t.rot < 0 || t.rot > 3) errors.push(`${where}: otočení ${t.rot}`);
+      }
       break;
     }
     case 'table': {
@@ -261,6 +296,33 @@ function validateOne(item: Item, skill: SkillDef, level: Level): string[] {
       if (a.ref && (a.ref.length > 200 || !/^[A-Za-z0-9 .,!?'’-]+$/.test(a.ref))) errors.push(`${where}: věta k opakování „${a.ref}“ by se nehodnotila`);
       if (a.ref && !matchesSay(a.ref, a.expect)) errors.push(`${where}: věta k opakování neodpovídá vzoru`);
       for (const t of a.tips ?? []) if (!t.tip.trim() || !normSpeech(t.when)) errors.push(`${where}: prázdná rada k mluvení`);
+      break;
+    }
+    case 'switches': {
+      const v = item.visual;
+      if (v?.type !== 'circuit' || v.nets.length !== 1) {
+        errors.push(`${where}: vypínače bez jednoho obvodu`);
+        break;
+      }
+      const net = v.nets[0];
+      const bulbs = bulbsOf(net);
+      if (!a.target.length || a.target.some((b) => !bulbs.includes(b))) errors.push(`${where}: cíl ${a.target.join(',')} mimo žárovky obvodu`);
+      if (!switchesOf(net).length) errors.push(`${where}: obvod bez vypínače`);
+      if (!solveSwitches(net, a.target)) errors.push(`${where}: cíl nejde splnit`);
+      if ([...litBulbs(net)].sort().join() === [...a.target].sort().join()) errors.push(`${where}: cíl už svítí na začátku`);
+      if (allSwitchStates(net).some((st) => batteryShorted(net, st))) errors.push(`${where}: vypínači jde udělat zkrat baterky`);
+      break;
+    }
+    case 'wires': {
+      const v = item.visual;
+      if (v?.type !== 'wires') {
+        errors.push(`${where}: dráty bez skládačky`);
+        break;
+      }
+      if (a.solution.length !== v.tiles.length) errors.push(`${where}: řešení nemá otočení pro každý dílek`);
+      if (traceWires(v, a.solution).end !== 'ok') errors.push(`${where}: řešení neuzavře kruh přes všechny žárovky`);
+      if (traceWires(v).end === 'ok') errors.push(`${where}: skládačka je složená už na začátku`);
+      if (v.tiles.some((t, i) => t.fixed && a.solution[i] % 4 !== t.rot % 4)) errors.push(`${where}: řešení otáčí pevný dílek`);
       break;
     }
     case 'order': {

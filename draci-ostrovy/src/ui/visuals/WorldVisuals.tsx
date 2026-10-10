@@ -7,6 +7,7 @@ import { DELTA, insideGrid, sameCell } from '../../core/grid';
 import { formatNumber } from '../../core/czech';
 import type { Cell, Move, Visual } from '../../core/types';
 import { Dragon, type DragonMood } from '../components/Dragon';
+import { CircuitsVisual } from './CircuitVisuals';
 
 type GridVisual = Extract<Visual, { type: 'grid' }>;
 
@@ -392,6 +393,8 @@ export function renderWorldVisual(v: Visual): ReactNode | null {
       return <StepsView {...v} />;
     case 'table':
       return <TableView {...v} />;
+    case 'circuit':
+      return <CircuitsVisual v={v} />;
     default:
       return null;
   }

@@ -82,6 +82,15 @@ export const ISLANDS: IslandDef[] = [
     available: true,
   },
   {
+    id: 'blesky',
+    name: 'Ostrov blesků',
+    where: 'na Ostrově blesků',
+    from: 'z Ostrova blesků',
+    tagline: 'Baterky, žárovky, vypínače a dráty',
+    species: { name: 'Jiskřík bouřný', description: 'Ve tmě mu svítí špička ocasu jako žárovka. Ví, kudy proud teče, a do zásuvky nikdy nestrká drápek.' },
+    available: true,
+  },
+  {
     id: 'skola',
     name: 'Školní ostrov',
     where: 'na Školním ostrově',

@@ -54,6 +54,15 @@ export function IslandArt({ id, size = 140, locked = false }: { id: IslandId; si
         ))}
       </g>
     ),
+    blesky: (
+      <g>
+        <path d="M70,24 L58,48 H70 L62,68 L86,40 H73 L82,24 Z" fill="#ffd43b" stroke="#b77b00" strokeWidth="3" strokeLinejoin="round" />
+        <circle cx="104" cy="42" r="12" fill="#fff3bf" stroke="#495057" strokeWidth="3" />
+        <path d="M99,44 L102,38 L106,44 L109,38" fill="none" stroke="#f08c00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="98" y="54" width="12" height="9" rx="2" fill="#adb5bd" stroke="#495057" strokeWidth="2.5" />
+        <path d="M120,30 L126,26 M122,42 H129 M120,54 L126,58" stroke="#f08c00" strokeWidth="2.5" strokeLinecap="round" />
+      </g>
+    ),
     skola: (
       <g>
         <rect x="54" y="40" width="34" height="24" fill="#f4a261" stroke="#8c5a3c" strokeWidth="3" />
@@ -75,19 +84,8 @@ export function IslandArt({ id, size = 140, locked = false }: { id: IslandId; si
   );
 }
 
+/** Osm ostrovů: čtyři nahoře, čtyři pod nimi (domov je dole uprostřed). */
 const POS: Record<IslandId, { x: number; y: number }> = {
-  cisla: { x: 18, y: 16 },
-  slova: { x: 50, y: 7 },
-  telo: { x: 82, y: 16 },
-  zahady: { x: 10, y: 44 },
-  trh: { x: 33, y: 34 },
-  dilna: { x: 67, y: 34 },
-  svet: { x: 90, y: 44 },
-  skola: { x: 90, y: 44 },
-};
-
-/** Se Školním ostrovem je ostrovů osm: čtyři nahoře, čtyři pod nimi. */
-const POS_8: Record<IslandId, { x: number; y: number }> = {
   cisla: { x: 13, y: 16 },
   slova: { x: 38, y: 7 },
   telo: { x: 62, y: 7 },
@@ -95,6 +93,20 @@ const POS_8: Record<IslandId, { x: number; y: number }> = {
   zahady: { x: 10, y: 44 },
   trh: { x: 34, y: 34 },
   dilna: { x: 66, y: 34 },
+  blesky: { x: 90, y: 44 },
+  skola: { x: 90, y: 44 },
+};
+
+/** Se Školním ostrovem je ostrovů devět: pět nahoře, čtyři pod nimi. */
+const POS_9: Record<IslandId, { x: number; y: number }> = {
+  cisla: { x: 10, y: 16 },
+  slova: { x: 30, y: 7 },
+  telo: { x: 50, y: 4 },
+  svet: { x: 70, y: 7 },
+  blesky: { x: 90, y: 16 },
+  zahady: { x: 10, y: 44 },
+  trh: { x: 33, y: 34 },
+  dilna: { x: 67, y: 34 },
   skola: { x: 90, y: 44 },
 };
 
@@ -104,7 +116,7 @@ export function MapScreen() {
   const go = useGame((s) => s.go);
   const startDay = useGame((s) => s.startDay);
   const islands = islandsFor(profile.settings);
-  const pos = islands.length > 7 ? POS_8 : POS;
+  const pos = islands.length > 8 ? POS_9 : POS;
 
   return (
     <div className="map-screen">
@@ -140,7 +152,7 @@ export function MapScreen() {
             onClick={() => go('island', i.id)}
             aria-label={i.available ? i.name : `${i.name} – brzy`}
           >
-            <IslandArt id={i.id} size={150} locked={!i.available} />
+            <IslandArt id={i.id} size={islands.length > 8 ? 130 : 150} locked={!i.available} />
             <span className="island-name">{i.name}</span>
             {!i.available && <span className="island-soon">v mlze – brzy</span>}
           </button>

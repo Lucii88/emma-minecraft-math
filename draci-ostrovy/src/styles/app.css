@@ -3428,3 +3428,124 @@ h3 {
   background: var(--parchment);
   border: 2px dashed var(--parchment-edge);
 }
+
+/* ---------- Ostrov blesků: obvody a dráty ---------- */
+
+.circuits {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 18px;
+}
+.circuit {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 100%;
+}
+.circuits.several .circuit-svg {
+  max-width: 200px;
+}
+.circuit-svg {
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.circuit-label {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+}
+.circuit-switch.live {
+  cursor: pointer;
+}
+.circuit-switch .switch-hit {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 3;
+}
+.circuit-switch.live:hover .switch-hit,
+.circuit-switch.live:focus-visible .switch-hit {
+  fill: rgba(255, 212, 59, 0.25);
+  stroke: #fab005;
+}
+.circuit-switch.live:focus {
+  outline: none;
+}
+.bulb-glow {
+  animation: bulb-pulse 1.2s ease-in-out infinite;
+}
+@keyframes bulb-pulse {
+  50% { opacity: 0.6; }
+}
+.circuit-answer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.wires {
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 16px;
+  background: #d0ebff;
+  border: 3px solid #74c0fc;
+  max-width: 100%;
+}
+.wire-tile {
+  width: 62px;
+  height: 62px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: #f8f9fa;
+  box-shadow: 0 2px 0 #a5d8ff;
+  cursor: pointer;
+}
+.wire-tile:disabled {
+  cursor: default;
+}
+.wire-tile.empty {
+  background: #e7f5ff;
+  box-shadow: none;
+}
+.wire-tile.fixed {
+  background: #fff3bf;
+}
+.wire-tile.broken {
+  outline: 4px solid var(--oops);
+  outline-offset: -2px;
+}
+.wire-tile:not(:disabled):hover {
+  background: #fff9db;
+}
+.tile-turn {
+  transition: transform 0.18s ease-out;
+}
+.wire-live {
+  filter: drop-shadow(0 0 4px #ffd43b);
+}
+@media (max-width: 400px) {
+  .wire-tile {
+    width: 54px;
+    height: 54px;
+  }
+  .wire-tile svg {
+    width: 54px;
+    height: 54px;
+  }
+  .wires {
+    gap: 3px;
+    padding: 6px;
+  }
+}
+
+/* Jména ostrovů na mapě v jednom řádku (s hvězdičkou kamaráda i u 9 ostrovů). */
+@media (min-width: 701px) {
+  .map-island .island-name {
+    white-space: nowrap;
+  }
+}

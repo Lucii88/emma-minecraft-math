@@ -10,7 +10,9 @@ import { MAX_PROGRAM_STEPS, shortestProgram } from './grid';
 import { createRng, type Rng } from './rng';
 import type {
   AbilityTag,
+  BulbColor,
   Cell,
+  CircuitPart,
   ChoiceOption,
   IslandId,
   Item,
@@ -23,6 +25,7 @@ import type {
 } from './types';
 
 type GridVisual = Extract<Visual, { type: 'grid' }>;
+type WiresVisual = Extract<Visual, { type: 'wires' }>;
 
 interface BaseSpec {
   /** Klíč unikátní v rámci úrovně: malá písmena bez diakritiky, číslice, pomlčky. */
@@ -110,7 +113,21 @@ export interface OpenSpec extends BaseSpec {
   countIdeas?: boolean;
 }
 
-export type Spec = ChoiceSpec | FixedSpec | NumberSpec | OrderSpec | ProgramSpec | OpenSpec | SpellSpec | LettersSpec | SaySpec;
+/** Vypínače: obvod s vypínači, rozsvítit právě žárovky `target`. */
+export interface SwitchesSpec extends Omit<BaseSpec, 'visual'> {
+  kind: 'switches';
+  net: CircuitPart;
+  target: BulbColor[];
+}
+
+/** Skládačka drátů: dlaždice v zamíchaném otočení a jedno správné otočení. */
+export interface WiresSpec extends Omit<BaseSpec, 'visual'> {
+  kind: 'wires';
+  wires: Omit<WiresVisual, 'type'>;
+  solution: number[];
+}
+
+export type Spec = ChoiceSpec | FixedSpec | NumberSpec | OrderSpec | ProgramSpec | OpenSpec | SpellSpec | LettersSpec | SaySpec | SwitchesSpec | WiresSpec;
 
 const toOption = (o: string | ChoiceOption): ChoiceOption => (typeof o === 'string' ? { label: o } : o);
 
@@ -154,6 +171,10 @@ export function buildItem(skillId: string, level: Level, s: Spec, rng: Rng): Ite
         },
       };
     }
+    case 'switches':
+      return { ...base, visual: { type: 'circuit', nets: [s.net] }, answer: { kind: 'switches', target: s.target } };
+    case 'wires':
+      return { ...base, visual: { type: 'wires', ...s.wires }, answer: { kind: 'wires', solution: s.solution } };
     case 'fixed':
       return {
         ...base,
