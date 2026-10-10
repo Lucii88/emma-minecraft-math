@@ -47,6 +47,7 @@ export function speak(text: string, onEnd?: () => void): boolean {
 }
 
 export function stopSpeaking() {
+  englishRun++; // zastaví i rozehrané hláskování (pauzy mezi písmeny)
   if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
 }
 
@@ -55,10 +56,12 @@ export function stopSpeaking() {
 // (škola učí americkou angličtinu). iPad: Samantha, Ava, Allison, Zoe, Nicky;
 // Edge: Aria, Jenny, Michelle; Chrome: „Google US English“. Když americký
 // ženský chybí, vezme se jiný americký, pak britský ženský a nakonec
-// jakýkoli anglický.
+// jakýkoli anglický. Hlasy „Premium“ a „Enhanced“ (stažené v nastavení
+// zařízení) mají přednost – zní mnohem zřetelněji než základní.
 
 let englishVoice: SpeechSynthesisVoice | null = null;
 let englishReady = false;
+let englishRun = 0;
 
 const US_FEMALE = ['Samantha', 'Ava', 'Allison', 'Zoe', 'Nicky', 'Aria', 'Jenny', 'Michelle', 'Ana', 'Susan', 'Google US English'];
 const EN_MALE = ['Daniel', 'Arthur', 'Oliver', 'George', 'Ryan', 'Thomas', 'Alex', 'Fred', 'Tom', 'Aaron', 'Guy', 'Eric', 'Christopher', 'Roger', 'Steffan', 'Brian', 'Andrew', 'Male'];
@@ -71,7 +74,14 @@ function pickEnglish() {
   const us = region('en-us');
   const gb = region('en-gb');
   const en = region('en');
-  const byName = (list: SpeechSynthesisVoice[], names: string[]) => names.map((n) => list.find((v) => v.name.includes(n))).find(Boolean);
+  // Ze jmenovaných hlasů ten nejkvalitnější, při shodě podle pořadí v seznamu.
+  const quality = (v: SpeechSynthesisVoice) => (/premium/i.test(`${v.name} ${v.voiceURI}`) ? 2 : /enhanced|vylepšen/i.test(`${v.name} ${v.voiceURI}`) ? 1 : 0);
+  const byName = (list: SpeechSynthesisVoice[], names: string[]) => {
+    const rank = (v: SpeechSynthesisVoice) => names.findIndex((n) => v.name.includes(n));
+    return list
+      .filter((v) => rank(v) >= 0)
+      .sort((a, b) => quality(b) - quality(a) || rank(a) - rank(b))[0];
+  };
   englishVoice =
     byName(us, US_FEMALE) ??
     us.find((v) => !EN_MALE.some((n) => v.name.includes(n))) ??
@@ -96,38 +106,50 @@ export function englishVoiceName(): string | null {
   return englishVoice?.name ?? null;
 }
 
-/** Přečte anglický text. Pomaleji než běžná řeč – je pro začínající děti. */
+/** Oddělovač částí anglického textu: mezi nimi hlas udělá pauzu. Samotné
+ *  písmeno je vlastní promluva – hlas ho tak přečte jako název písmena
+ *  (a = ej, i = aj). Přepis „ay“ hlas četl jako „aj“. */
+export const PAUSE = ' | ';
+const RATE = 0.75;
+const LETTER_RATE = 0.7;
+const LETTER_GAP = 500; // ms mezi písmeny
+const PART_GAP = 700; // ms mezi větou a hláskováním
+
+/** Přečte anglický text. Pomaleji než běžná řeč – je pro začínající děti.
+ *  Části oddělené `PAUSE` čte zvlášť s pauzou (hláskování po písmenech). */
 export function speakEnglish(text: string, onEnd?: () => void): boolean {
   if (typeof speechSynthesis === 'undefined') return false;
   if (!englishReady) pickEnglish();
-  if (!englishVoice) return false;
+  const voice = englishVoice;
+  if (!voice) return false;
+  const run = ++englishRun;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.voice = englishVoice;
-  u.lang = englishVoice.lang;
-  u.rate = 0.82;
-  u.pitch = 1.05;
-  if (onEnd) {
-    u.onend = onEnd;
-    u.onerror = onEnd;
-  }
-  speechSynthesis.speak(u);
+  const parts = text.split('|').map((p) => p.trim()).filter(Boolean);
+  const say = (i: number) => {
+    if (run !== englishRun) return;
+    if (i >= parts.length) return onEnd?.();
+    const letter = /^[a-z]$/i.test(parts[i]);
+    const u = new SpeechSynthesisUtterance(letter ? parts[i].toLowerCase() : parts[i]);
+    u.voice = voice;
+    u.lang = voice.lang;
+    u.rate = letter ? LETTER_RATE : RATE;
+    u.pitch = 1.05;
+    let done = false;
+    u.onend = u.onerror = () => {
+      if (done || run !== englishRun) return;
+      done = true;
+      if (i + 1 >= parts.length) return onEnd?.();
+      setTimeout(() => say(i + 1), letter && /^[a-z]$/i.test(parts[i + 1]) ? LETTER_GAP : PART_GAP);
+    };
+    speechSynthesis.speak(u);
+  };
+  say(0);
   return true;
 }
 
-/** Anglické názvy písmen tak, aby je hlas přečetl správně (samotné „A“
- *  by mohl přečíst jako člen). Americky: Z = zee. */
-const LETTER_NAMES: Record<string, string> = {
-  a: 'ay', b: 'bee', c: 'see', d: 'dee', e: 'ee', f: 'eff', g: 'gee', h: 'aitch', i: 'eye',
-  j: 'jay', k: 'kay', l: 'ell', m: 'em', n: 'en', o: 'oh', p: 'pee', q: 'cue', r: 'ar',
-  s: 'ess', t: 'tee', u: 'you', v: 'vee', w: 'double you', x: 'ex', y: 'why', z: 'zee',
-};
-
-export const letterName = (letter: string) => LETTER_NAMES[letter.toLowerCase()] ?? letter;
-
-/** Hláskování slova pro hlas: „bag“ → „bee, ay, gee“. */
+/** Hláskování slova pro hlas: „bag“ → „b | a | g“ (každé písmeno zvlášť). */
 export function spellOut(word: string): string {
-  return [...word.toLowerCase()].filter((c) => c in LETTER_NAMES).map((c) => LETTER_NAMES[c]).join(', ');
+  return [...word.toLowerCase()].filter((c) => /[a-z]/.test(c)).join(PAUSE);
 }
 
 /** iOS pustí předčítání až po prvním dotyku. Prázdná promluva při prvním

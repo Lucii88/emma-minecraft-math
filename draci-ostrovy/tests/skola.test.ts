@@ -8,7 +8,7 @@ import { buildDemo } from '../src/core/demo';
 import { availableIslands, nextItem, planDay } from '../src/core/planner';
 import { buildRadar } from '../src/core/radar';
 import { createRng } from '../src/core/rng';
-import { letterName, spellOut } from '../src/core/speech';
+import { spellOut } from '../src/core/speech';
 import { defaultProfile, type Profile } from '../src/core/storage';
 import type { Item } from '../src/core/types';
 import { spellMatches } from '../src/ui/components/Answers';
@@ -105,14 +105,12 @@ describe('obsah', () => {
     for (const n of NAMES) expect(n).toMatch(/^[A-Z][a-z]+$/);
   });
 
-  it('názvy písmen: každé písmeno má anglický i český název, hláskování je čitelné', () => {
-    for (const c of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
-      expect(LETTER_CZ[c], c).toBeTruthy();
-      expect(letterName(c), c).not.toBe(c);
-    }
-    expect(spellOut('bag')).toBe('bee, ay, gee');
-    expect(spellOut('Lucy')).toBe('ell, you, see, why');
-    expect(letterName('z')).toBe('zee');
+  it('názvy písmen: každé písmeno má český přepis, hláskování jde po písmenech s pauzou', () => {
+    for (const c of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') expect(LETTER_CZ[c], c).toBeTruthy();
+    // Každé písmeno je samostatná promluva: hlas ho přečte jako název písmena
+    // (dřívější přepis „ay“ zněl jako „aj“).
+    expect(spellOut('bag')).toBe('b | a | g');
+    expect(spellOut('Lucy')).toBe('l | u | c | y');
   });
 
   it('psaní: velikost písmen nevadí, povolené tvary platí, překlep ne', () => {

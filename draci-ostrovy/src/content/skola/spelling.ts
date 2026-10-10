@@ -4,8 +4,8 @@
 
 import { bankSkill, type ChoiceSpec, type LettersSpec, type SpellSpec } from '../../core/bank';
 import type { Rng } from '../../core/rng';
-import { letterName, spellOut } from '../../core/speech';
-import { key, letters, lettersCz, pickWord } from './common';
+import { PAUSE, spellOut } from '../../core/speech';
+import { key, lettersCz, pickWord } from './common';
 import { LETTER_CZ, NAMES, WORDS, type Word } from './ucivo';
 
 const noSpace = (w: Word) => !w.en.includes(' ');
@@ -65,7 +65,7 @@ function hlaskovane(rng: Rng, level: number): SpellSpec {
     prompt: 'Poslechni si hláskování a napiš slovo.',
     visual: { type: 'english', say: spellOut(w.en), auto: true },
     correct: w.en,
-    hints: [`Má ${letters(w.en.length)}.`, `Začíná na ${w.en.charAt(0)}.`],
+    hints: ['Poslechni si hláskování ještě jednou – klepni na reproduktor.', `Začíná na ${w.en.charAt(0)}.`],
     explain: `${lettersCz(w.en, LETTER_CZ)} = ${w.en} (${w.cs}).`,
     sayAfter: w.en,
   };
@@ -78,9 +78,9 @@ function jmeno(rng: Rng): SpellSpec {
     kind: 'spell',
     key: `jmeno-${key(name)}`,
     prompt: 'Jak se jmenuje? Napiš jméno, které slyšíš hláskovat.',
-    visual: { type: 'english', say: `My name is ${name}. ${spellOut(name)}.`, auto: true },
+    visual: { type: 'english', say: `My name is ${name}.${PAUSE}${spellOut(name)}`, auto: true },
     correct: name,
-    hints: [`Má ${letters(name.length)}.`, `Začíná na ${name.charAt(0)}.`],
+    hints: ['Poslechni si hláskování ještě jednou – klepni na reproduktor.', `Začíná na ${name.charAt(0)}.`],
     explain: `${lettersCz(name, LETTER_CZ)} = ${name}. Jména se v angličtině píšou s velkým písmenem.`,
     sayAfter: `My name is ${name}.`,
   };
@@ -93,10 +93,10 @@ function diktat(rng: Rng, level: number): SpellSpec {
     kind: 'spell',
     key: `slovo-${key(w.en)}`,
     prompt: w.pic ? 'Poslechni si slovo a napiš ho anglicky.' : `Poslechni si slovo a napiš ho anglicky. Česky: ${w.cs}`,
-    visual: w.pic ? { type: 'english', say: `${w.en}. ${w.en}.`, pic: w.pic, auto: true } : { type: 'english', say: `${w.en}. ${w.en}.`, auto: true },
+    visual: w.pic ? { type: 'english', say: `${w.en}.${PAUSE}${w.en}.`, pic: w.pic, auto: true } : { type: 'english', say: `${w.en}.${PAUSE}${w.en}.`, auto: true },
     correct: w.en,
     ...(w.accept ? { accept: w.accept } : {}),
-    hints: [`Má ${letters(w.en.length)}.`, `Začíná na ${w.en.slice(0, w.en.length > 4 ? 2 : 1)}.`],
+    hints: ['Řekni si slovo pomalu a poslouchej každou hlásku.', `Začíná na ${w.en.slice(0, w.en.length > 4 ? 2 : 1)}.`],
     explain: `${w.cs} = ${w.en}: ${[...w.en].join(' – ')}.`,
     sayAfter: w.en,
     difficulty: Math.min(0.5, (w.en.length - 5) * 0.1),
@@ -143,7 +143,7 @@ function pismeno(rng: Rng): ChoiceSpec {
   return {
     key: `pismeno-${target.toLowerCase()}-${group.toLowerCase()}`,
     prompt: 'Které písmeno slyšíš?',
-    visual: { type: 'english', say: letterName(target), auto: true },
+    visual: { type: 'english', say: target.toLowerCase(), auto: true },
     correct: target,
     wrong: [...group].filter((c) => c !== target),
     hints: ['Poslechni si ho ještě jednou.', `Česky by se zapsalo zhruba „${LETTER_CZ[target]}“.`],
