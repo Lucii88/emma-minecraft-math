@@ -3,7 +3,7 @@
 
 import type { Rng } from './rng';
 
-export type IslandId = 'cisla' | 'slova' | 'telo' | 'svet' | 'zahady' | 'trh' | 'dilna' | 'skola';
+export type IslandId = 'cisla' | 'slova' | 'telo' | 'svet' | 'zahady' | 'trh' | 'dilna' | 'blesky' | 'skola';
 
 /** L1–L5 = očekávání RVP pro 1.–5. ročník, L6 = nad rámec 1. stupně. */
 export type Level = 1 | 2 | 3 | 4 | 5 | 6;
@@ -99,6 +99,37 @@ export interface ChoiceOption {
 }
 
 // ---------------------------------------------------------------------------
+// Elektrické obvody (Ostrov blesků), výpočet viz core/circuit.ts
+
+/** Barva žárovky – zároveň její jméno v obvodu (červená, modrá, zelená, žlutá). */
+export type BulbColor = 'r' | 'b' | 'g' | 'y';
+
+/** Část obvodu připojeného k baterce. Součástky jsou ideální: drát
+ *  a zapnutý vypínač nemají odpor, žárovka ano; přerušený drát, vypnutý
+ *  vypínač, prasklá žárovka a izolant proud nepustí. */
+export type CircuitPart =
+  | { t: 'bulb'; id: BulbColor; broken?: true }
+  | { t: 'switch'; id: string; on: boolean }
+  | { t: 'wire' }
+  | { t: 'gap' }
+  /** Předmět v mezeře mezi dráty (lžička, gumička) – viz THINGS. */
+  | { t: 'thing'; thing: string }
+  /** Části za sebou (jedna cesta). */
+  | { t: 'series'; parts: CircuitPart[] }
+  /** Části vedle sebe (každá svou cestou). */
+  | { t: 'parallel'; parts: CircuitPart[] };
+
+/** Dlaždice skládačky drátů. Otočení `rot` je po směru hodin (0–3).
+ *  Rovný drát v rot 0 vede nahoru–dolů, roh v rot 0 nahoru–doprava,
+ *  baterka v rot 0 má plus nahoře a minus dole, žárovka je jako rovný drát. */
+export interface WireTile {
+  k: 'empty' | 'straight' | 'corner' | 'battery' | 'bulb';
+  rot: number;
+  /** Baterka a žárovky se neotáčejí. */
+  fixed?: true;
+}
+
+// ---------------------------------------------------------------------------
 // Mřížka (Vynálezecká dílna, mapy)
 
 /** Krok letu po mřížce: nahoru, dolů, doleva, doprava. Na mapě je sever
@@ -128,13 +159,31 @@ export type AnswerSpec =
    *  (vizuál 'grid'). Správně je KAŽDÝ program, který doletí do cíle, cestou
    *  nenarazí na skálu ani nevyletí z mapy, sebere všechna `collect` a má
    *  nejvýš `maxSteps` kroků. */
-  | { kind: 'program'; maxSteps: number; collect?: Cell[] }
+  | {
+      kind: 'program';
+      maxSteps: number;
+      collect?: Cell[];
+      /** Program z příkazů „krok × počet“ (→ ×3): nejvýš tolik příkazů. */
+      maxBlocks?: number;
+      /** Program „Opakuj n× (vzor)“: vzor nejvýš maxPattern šipek, n ≤ maxRepeat. */
+      loop?: { maxPattern: number; maxRepeat: number };
+      /** Vzorové řešení k nakreslení (u příkazů a opakování). */
+      solution?: Move[];
+    }
   /** Seřazení: dítě klepe na položky ve správném pořadí. `items` jsou už
    *  zamíchané, `correct` je správné pořadí týchž (navzájem různých) položek. */
   | { kind: 'order'; items: string[]; correct: string[] }
   /** Napsání slova na klávesnici a–z (anglický spelling). Porovnává se bez
    *  ohledu na velikost písmen; `accept` = další správné tvary (grey/gray). */
   | { kind: 'spell'; correct: string; accept?: string[] }
+  /** Vypínače (vizuál 'circuit' s jedním obvodem): hráčka přepíná vypínače
+   *  a pak zapne proud. Správně je každé nastavení, při kterém svítí právě
+   *  žárovky `target`. */
+  | { kind: 'switches'; target: BulbColor[] }
+  /** Skládačka drátů (vizuál 'wires'): hráčka otáčí dlaždice. Správně je
+   *  každé otočení, při kterém proud oběhne z baterky přes všechny žárovky
+   *  zpátky. `solution` = jedno správné otočení všech dlaždic (k ukázce). */
+  | { kind: 'wires'; solution: number[] }
   /** Odpověď nahlas (školní ostrov, jen se zapnutým mluvením). Nahrávka se
    *  přepíše na text a porovná se vzory `expect` (viz core/saymatch.ts).
    *  `model` = vzorová odpověď, `ref` = věta k opakování (hodnotí se i
@@ -180,6 +229,10 @@ export type Visual =
    *  `ask` = anglická otázka nad obrázkem (přečte se sama). */
   | { type: 'place'; thing: string; ref: 'box' | 'desk'; where: 'in' | 'on' | 'under' | 'next'; ask?: string }
   | { type: 'big'; text: string }
+  /** Elektrický obvod s baterkou (jeden, nebo víc vedle sebe s popisky A, B, C). */
+  | { type: 'circuit'; nets: CircuitPart[]; labels?: string[] }
+  /** Skládačka drátů: dlaždice po řádcích. */
+  | { type: 'wires'; cols: number; rows: number; tiles: WireTile[] }
   /** Mřížka (mapa moře, dílna): drak, cíl, skály, pojmenovaná místa, případně
    *  nakreslená cesta a růžice světových stran. */
   | {
@@ -196,6 +249,9 @@ export type Visual =
        *  v programu“). U odpovědi 'program' smí být jen chybný, k opravě. */
       path?: Move[];
       compass?: boolean;
+      /** Klíč a brána: branou drak proletí, až když sebral klíč. */
+      key?: Cell;
+      gate?: Cell;
     }
   /** Karty vedle sebe (zvířata, zboží s cenou, draci s vlastnostmi).
    *  `tag` = štítek na kartě (cena, skupina), `mark` = zvýrazněná karta. */

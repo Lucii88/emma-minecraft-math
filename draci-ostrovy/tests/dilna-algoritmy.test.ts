@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 import { algoritmyCards, algoritmyMissions, algoritmySkills } from '../src/content/dilna/algoritmy';
 import { CHYBA_FALLBACK, MISPLACED } from '../src/content/dilna/algoritmy-chyba';
-import { LET_CHECK, LET_FALLBACK } from '../src/content/dilna/algoritmy-let';
+import { BLOCKS_FALLBACK, LET_CHECK, LET_FALLBACK, LOOP, LOOP_FALLBACK, checkBlocks } from '../src/content/dilna/algoritmy-let';
 import { PICTURES_5, PICTURES_6 } from '../src/content/dilna/algoritmy-sifry';
 import { enumerateItems } from '../src/core/bank';
 import { createRng } from '../src/core/rng';
@@ -17,7 +17,7 @@ import { sweepSkill, validateCards, validateItem, validateMissions } from './val
 const EXPECTED: Record<string, { levels: Level[]; rvp: Partial<Record<Level, string[]>>; ability: string; testLike?: string }> = {
   'dilna.let': {
     levels: [1, 2, 3, 4, 5, 6],
-    rvp: { 1: ['I-5-2-01'], 2: ['I-5-2-01'], 3: ['I-5-2-01'], 4: ['I-5-2-01', 'I-5-2-03'], 5: ['I-5-2-01', 'I-5-2-03'] },
+    rvp: { 1: ['I-5-2-01'], 2: ['I-5-2-01'], 3: ['I-5-2-01'], 4: ['I-5-2-01', 'I-5-2-03'], 5: ['I-5-2-01', 'I-5-2-03'], 6: ['I-5-2-03'] },
     ability: 'prostorove',
   },
   'dilna.chyba': {
@@ -304,24 +304,28 @@ describe('Dílna (algoritmy) – karty a mise', () => {
 
 describe('Naprogramuj let draka', () => {
   const s = skill('dilna.let');
-  const RANGE: Record<number, [number, number]> = { 1: [2, 3], 2: [3, 6], 3: [5, 9], 4: [6, 11], 5: [8, 12], 6: [9, 12] };
+  // Šipky po krocích jsou na úrovních 1–5 (pětka střídá bludiště a vajíčka),
+  // příkazy a Opakuj na úrovni 6 – ty mají vlastní testy níž.
+  const STEP_LEVELS = [1, 2, 3, 4, 5] as const;
+  const RANGE: Record<number, [number, number]> = { 1: [2, 3], 2: [3, 6], 3: [5, 9], 4: [6, 11], 5: [8, 12] };
   const SHAPE: Record<number, (g: Grid, eggs: number) => boolean> = {
     1: (g, e) => (g.cols === 3 || g.cols === 4) && g.rows === 3 && !g.rocks?.length && e === 0,
     2: (g, e) => g.cols === 4 && g.rows === 4 && (g.rocks?.length ?? 0) >= 1 && (g.rocks?.length ?? 0) <= 3 && e === 0
       && g.dragon!.x !== g.goal!.x && g.dragon!.y !== g.goal!.y,
     3: (g, e) => g.cols === 5 && g.rows === 5 && (g.rocks?.length ?? 0) >= 1 && e === 1,
     4: (g, e) => g.cols >= 5 && g.cols <= 6 && g.rows >= 5 && g.rows <= 6 && e === 2,
-    5: (g, e) => g.cols === 6 && g.rows === 6 && e === 0 && (g.rocks?.length ?? 0) >= 10,
-    6: (g, e) => g.cols === 7 && g.rows === 7 && (e === 2 || e === 3),
+    // bludiště 6×6 bez vajíček, nebo 7×7 se 2–3 vajíčky
+    5: (g, e) => (g.cols === 6 && g.rows === 6 && e === 0 && (g.rocks?.length ?? 0) >= 10) || (g.cols === 7 && g.rows === 7 && (e === 2 || e === 3)),
   };
 
   it('každý let je řešitelný v povoleném počtu kroků a úrovně odpovídají popisu', () => {
     const eggCounts = new Set<number>();
-    for (const level of s.levels) {
+    for (const level of STEP_LEVELS) {
       for (const item of sample(s, level)) {
         const g = item.visual as Grid;
         const a = item.answer;
         if (a.kind !== 'program' || g?.type !== 'grid') throw new Error(`${item.id}: čekám program`);
+        expect(a.maxBlocks ?? a.loop, item.id).toBeUndefined();
         const eggs = a.collect ?? [];
         expect(SHAPE[level](g, eggs.length), item.id).toBe(true);
         expect(g.path, item.id).toBeUndefined();
@@ -331,15 +335,15 @@ describe('Naprogramuj let draka', () => {
         expect(best!, item.id).toBeLessThanOrEqual(RANGE[level][1]);
         expect(a.maxSteps, item.id).toBe(level >= 5 ? best : Math.min(12, best! + 3));
         if (level >= 5) expect(item.prompt, item.id).toContain(`Máš jen ${best}`);
-        if (level === 6) eggCounts.add(eggs.length);
+        if (level === 5) eggCounts.add(eggs.length);
       }
     }
-    expect([...eggCounts].sort()).toEqual([2, 3]);
+    expect([...eggCounts].sort()).toEqual([0, 2, 3]);
   });
 
   it('vysvětlení popisuje nejkratší let, který opravdu doletí', () => {
     const WORD: Record<string, Move> = { nahoru: 'U', dolů: 'D', doleva: 'L', doprava: 'R' };
-    for (const level of s.levels) {
+    for (const level of STEP_LEVELS) {
       for (const item of sample(s, level, 150)) {
         const g = item.visual as Grid;
         const program = [...item.explanation.matchAll(/(\d+)× (nahoru|dolů|doleva|doprava)/g)]
@@ -354,7 +358,7 @@ describe('Naprogramuj let draka', () => {
   it('nápověda ke skalám je ve správném čísle a „třeba“ jen u více nejkratších letů', () => {
     let unique = 0;
     let several = 0;
-    for (const level of s.levels) {
+    for (const level of STEP_LEVELS) {
       for (const item of sample(s, level, 150)) {
         const g = item.visual as Grid;
         const rocks = g.rocks?.length ?? 0;
@@ -373,7 +377,151 @@ describe('Naprogramuj let draka', () => {
   });
 
   it('náhradní světy splňují podmínky své úrovně', () => {
-    for (const level of s.levels) expect(LET_CHECK[level as 1](LET_FALLBACK[level as 1]), `L${level}`).not.toBeNull();
+    for (const level of [1, 2, 3, 4, 5, 6] as const) expect(LET_CHECK[level](LET_FALLBACK[level]), `L${level}`).not.toBeNull();
+    expect(checkBlocks(BLOCKS_FALLBACK)).not.toBeNull();
+    const { w, pattern, times } = LOOP_FALLBACK;
+    const g: Grid = { type: 'grid', cols: w.cols, rows: w.rows, dragon: w.dragon, goal: w.goal, rocks: w.rocks, eggs: w.eggs };
+    expect(simulate(g, Array.from({ length: times }, () => pattern).flat(), w.eggs)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Úroveň 6: příkazy „→ ×3“ (s klíčem a branou) a blok Opakuj
+
+/** Let s klíčem a branou: branou jen s klíčem. Vrací i krok, kdy sebral klíč. */
+function flyKeyed(g: Grid, program: Move[], eggs: Cell[]): { ok: boolean; keyStep: number; gateStep: number } {
+  const rocks = new Set((g.rocks ?? []).map((c) => `${c.x},${c.y}`));
+  let [x, y] = [g.dragon!.x, g.dragon!.y];
+  const got = new Set<string>();
+  let keyStep = -1;
+  let gateStep = -1;
+  const at = (c?: Cell) => !!c && c.x === x && c.y === y;
+  const pick = (i: number) => {
+    eggs.forEach((e) => at(e) && got.add(`${x},${y}`));
+    if (keyStep < 0 && at(g.key)) keyStep = i;
+  };
+  pick(0);
+  for (let i = 0; i < program.length; i++) {
+    const [nx, ny] = [x + DIR[program[i]][0], y + DIR[program[i]][1]];
+    if (nx < 0 || ny < 0 || nx >= g.cols || ny >= g.rows || rocks.has(`${nx},${ny}`)) return { ok: false, keyStep, gateStep };
+    if (g.gate && nx === g.gate.x && ny === g.gate.y) {
+      if (keyStep < 0) return { ok: false, keyStep, gateStep: i + 1 };
+      if (gateStep < 0) gateStep = i + 1;
+    }
+    [x, y] = [nx, ny];
+    pick(i + 1);
+  }
+  return { ok: x === g.goal!.x && y === g.goal!.y && got.size === eggs.length, keyStep, gateStep };
+}
+
+/** Nejméně příkazů nezávisle: hledání do šířky, kde jeden tah = let rovně
+ *  o libovolný počet políček (sebere všechno po cestě). */
+function fewestCommands(g: Grid, eggs: Cell[]): number | null {
+  const rocks = new Set((g.rocks ?? []).map((c) => `${c.x},${c.y}`));
+  const keyBit = g.key && g.gate ? 1 << eggs.length : 0;
+  const full = (1 << eggs.length) - 1;
+  const bit = (x: number, y: number) =>
+    eggs.reduce((m, e, i) => (e.x === x && e.y === y ? m | (1 << i) : m), 0) | (keyBit && g.key!.x === x && g.key!.y === y ? keyBit : 0);
+  let frontier: [number, number, number][] = [[g.dragon!.x, g.dragon!.y, bit(g.dragon!.x, g.dragon!.y)]];
+  const seen = new Set(frontier.map((st) => st.join()));
+  for (let commands = 0; frontier.length; commands++) {
+    if (frontier.some(([x, y, m]) => (m & full) === full && x === g.goal!.x && y === g.goal!.y)) return commands;
+    const next: [number, number, number][] = [];
+    for (const [x0, y0, m0] of frontier) {
+      for (const [dx, dy] of Object.values(DIR)) {
+        let [x, y, m] = [x0, y0, m0];
+        for (;;) {
+          const [nx, ny] = [x + dx, y + dy];
+          if (nx < 0 || ny < 0 || nx >= g.cols || ny >= g.rows || rocks.has(`${nx},${ny}`)) break;
+          if (keyBit && g.gate!.x === nx && g.gate!.y === ny && !(m & keyBit)) break;
+          [x, y, m] = [nx, ny, m | bit(nx, ny)];
+          const state = `${x},${y},${m}`;
+          if (seen.has(state)) continue;
+          seen.add(state);
+          next.push([x, y, m]);
+        }
+      }
+    }
+    frontier = next;
+  }
+  return null;
+}
+
+describe('Let draka – příkazy a Opakuj (úroveň 6)', () => {
+  const s = skill('dilna.let');
+  const items = sample(s, 6, 300);
+  const program = (item: Item) => {
+    if (item.answer.kind !== 'program') throw new Error(`${item.id}: čekám program`);
+    return item.answer;
+  };
+  const blocks = items.filter((i) => program(i).maxBlocks);
+  const loops = items.filter((i) => program(i).loop);
+
+  it('střídá příkazy a Opakuj, část příkazů má klíč a bránu', () => {
+    expect(blocks.length + loops.length).toBe(items.length);
+    expect(blocks.length).toBeGreaterThan(40);
+    expect(loops.length).toBeGreaterThan(40);
+    const keyed = blocks.filter((i) => (i.visual as Grid).key);
+    expect(keyed.length).toBeGreaterThan(10);
+    expect(keyed.length).toBeLessThan(blocks.length);
+    for (const item of loops) expect((item.visual as Grid).key, item.id).toBeUndefined();
+  });
+
+  it('příkazy: mapa 7×7 nebo 8×8, řešení doletí a míň příkazů nejde', () => {
+    for (const item of blocks) {
+      const g = item.visual as Grid;
+      const a = program(item);
+      const eggs = a.collect ?? [];
+      expect(g.cols === g.rows && (g.cols === 7 || g.cols === 8), item.id).toBe(true);
+      expect(eggs.length, item.id).toBeLessThanOrEqual(2);
+      expect(a.maxBlocks!, item.id).toBeGreaterThanOrEqual(4);
+      expect(a.maxBlocks!, item.id).toBeLessThanOrEqual(7);
+      expect(fewestCommands(g, eggs), item.id).toBe(a.maxBlocks);
+      expect(flyKeyed(g, a.solution!, eggs).ok, item.id).toBe(true);
+      expect(item.prompt, item.id).toContain(`Máš jen ${a.maxBlocks} příkaz`);
+      expect(item.explanation, item.id).toContain(`Stačí ${a.maxBlocks} příkaz`);
+    }
+  });
+
+  it('klíč a brána: brána je na cestě, klíč drak sebere dřív a bez klíče to nejde stejně snadno', () => {
+    for (const item of blocks.filter((i) => (i.visual as Grid).key)) {
+      const g = item.visual as Grid;
+      const a = program(item);
+      const eggs = a.collect ?? [];
+      const f = flyKeyed(g, a.solution!, eggs);
+      expect(f.gateStep, item.id).toBeGreaterThan(0);
+      expect(f.keyStep, item.id).toBeGreaterThan(0);
+      expect(f.keyStep, item.id).toBeLessThan(f.gateStep);
+      // Bez brány (a bez klíče) by stačilo míň příkazů, nebo kratší let.
+      const open: Grid = { ...g, key: undefined, gate: undefined };
+      const openBest = fewestCommands(open, eggs)!;
+      expect(openBest <= a.maxBlocks!, item.id).toBe(true);
+      expect(item.prompt, item.id).toContain('Nejdřív seber klíč');
+      expect(item.explanation, item.id).toContain('nejdřív pro klíč');
+    }
+  });
+
+  it('Opakuj: vysvětlení je vzor 2–4 šipek zopakovaný 3–5×, který doletí', () => {
+    const FROM_ARROW: Record<string, Move> = ARROW_OF;
+    for (const item of loops) {
+      const g = item.visual as Grid;
+      const a = program(item);
+      const eggs = a.collect ?? [];
+      expect(a.loop, item.id).toEqual(LOOP);
+      expect(a.maxSteps, item.id).toBe(LOOP.maxPattern * LOOP.maxRepeat);
+      const m = item.explanation.match(/^Vzor ([↑→↓← ]+) se opakuje (\d)×: Opakuj \2× \(([a-zěů, ]+)\)\.$/);
+      expect(m, item.explanation).not.toBeNull();
+      const pattern = m![1].split(' ').map((x) => FROM_ARROW[x]);
+      const times = Number(m![2]);
+      expect(pattern.length, item.id).toBeGreaterThanOrEqual(2);
+      expect(pattern.length, item.id).toBeLessThanOrEqual(LOOP.maxPattern);
+      expect(times, item.id).toBeGreaterThanOrEqual(3);
+      expect(times, item.id).toBeLessThanOrEqual(5);
+      const flight = Array.from({ length: times }, () => pattern).flat();
+      expect(simulate(g, flight, eggs), item.id).toBe(true);
+      expect(a.solution, item.id).toEqual(flight);
+      expect(eggs.length === 1 || eggs.length === 2, item.id).toBe(true);
+    }
   });
 });
 

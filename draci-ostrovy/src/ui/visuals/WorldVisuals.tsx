@@ -7,6 +7,7 @@ import { DELTA, insideGrid, sameCell } from '../../core/grid';
 import { formatNumber } from '../../core/czech';
 import type { Cell, Move, Visual } from '../../core/types';
 import { Dragon, type DragonMood } from '../components/Dragon';
+import { CircuitsVisual } from './CircuitVisuals';
 
 type GridVisual = Extract<Visual, { type: 'grid' }>;
 
@@ -34,6 +35,36 @@ function Nest({ c }: { c: Cell }) {
       <ellipse cx={x} cy={y + 8} rx="24" ry="11" fill="#8c5a3c" stroke="#5b3a29" strokeWidth="3" />
       <ellipse cx={x} cy={y + 4} rx="17" ry="6" fill="#5b3a29" />
       <path d={`M${x - 22},${y + 6} q8,-6 16,0 M${x - 4},${y + 12} q8,-6 16,0 M${x + 6},${y + 5} q7,-5 14,1`} fill="none" stroke="#c08a5b" strokeWidth="2" strokeLinecap="round" />
+    </g>
+  );
+}
+
+/** Klíč k bráně (zmizí, když ho drak sebere). */
+function GridKey({ c, gone }: { c: Cell; gone: boolean }) {
+  const { x, y } = center(c);
+  return (
+    <g className={`grid-egg${gone ? ' gone' : ''}`}>
+      <circle cx={x - 8} cy={y - 6} r="9" fill="none" stroke="#e0a800" strokeWidth="5" />
+      <path d={`M${x - 1},${y + 1} L${x + 16},${y + 18} M${x + 9},${y + 11} l5,-5 M${x + 14},${y + 16} l5,-5`} stroke="#e0a800" strokeWidth="5" strokeLinecap="round" />
+      <circle cx={x - 8} cy={y - 6} r="9" fill="none" stroke="#9c6f00" strokeWidth="1.5" />
+    </g>
+  );
+}
+
+/** Brána: zavřená (prkna a zámek), nebo otevřená (jen rám). */
+function GridGate({ c, open }: { c: Cell; open: boolean }) {
+  const { x, y } = center(c);
+  if (open) {
+    return <rect x={x - 22} y={y - 22} width="44" height="44" rx="6" fill="none" stroke="#8c5a3c" strokeWidth="3" strokeDasharray="6 5" />;
+  }
+  return (
+    <g>
+      <rect x={x - 22} y={y - 22} width="44" height="44" rx="6" fill="#8c5a3c" stroke="#5b3a29" strokeWidth="3" />
+      {[-11, 0, 11].map((dx) => (
+        <line key={dx} x1={x + dx} y1={y - 20} x2={x + dx} y2={y + 20} stroke="#5b3a29" strokeWidth="2" />
+      ))}
+      <rect x={x - 7} y={y - 4} width="14" height="12" rx="2" fill="#e0a800" stroke="#9c6f00" strokeWidth="2" />
+      <path d={`M${x - 4},${y - 4} v-4 a4,4 0 0 1 8,0 v4`} fill="none" stroke="#9c6f00" strokeWidth="2.5" />
     </g>
   );
 }
@@ -137,6 +168,8 @@ export interface GridViewProps {
   mood?: DragonMood;
   /** Indexy sebraných vajíček (zmizí). */
   collected?: number[];
+  /** Drak už má klíč – brána je otevřená. */
+  keyTaken?: boolean;
   /** Cesta k nakreslení místo `grid.path` (řešení po třech pokusech). */
   solution?: Move[];
   /** Drak se otřese (náraz). */
@@ -145,7 +178,7 @@ export interface GridViewProps {
   crash?: Cell;
 }
 
-export function GridView({ grid, dragonAt, mood = 'idle', collected = [], solution, bump = false, crash }: GridViewProps) {
+export function GridView({ grid, dragonAt, mood = 'idle', collected = [], keyTaken = false, solution, bump = false, crash }: GridViewProps) {
   const look = useGame((s) => s.profile.dragon);
   const w = grid.cols * CELL + PAD * 2;
   const h = grid.rows * CELL + PAD * 2;
@@ -157,6 +190,7 @@ export function GridView({ grid, dragonAt, mood = 'idle', collected = [], soluti
     grid.goal ? (placeOnGoal ? `Cíl: ${placeOnGoal.name}.` : 'Cíl: hnízdo.') : '',
     grid.rocks?.length ? `Skály: ${grid.rocks.length}.` : '',
     grid.eggs?.length ? `Vajíčka k sebrání: ${grid.eggs.length}.` : '',
+    grid.key && grid.gate ? 'Je tu klíč a zavřená brána.' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -179,6 +213,8 @@ export function GridView({ grid, dragonAt, mood = 'idle', collected = [], soluti
               {p.emoji}
             </text>
           ))}
+          {grid.gate && <GridGate c={grid.gate} open={keyTaken} />}
+          {grid.key && <GridKey c={grid.key} gone={keyTaken} />}
           {grid.eggs?.map((c, i) => <GridEgg key={i} c={c} gone={collected.includes(i)} />)}
           {(solution ?? grid.path) && <PathLine grid={grid} path={solution ?? grid.path!} tone={solution ? 'solution' : 'bug'} />}
           {crash && pos && (
@@ -357,6 +393,8 @@ export function renderWorldVisual(v: Visual): ReactNode | null {
       return <StepsView {...v} />;
     case 'table':
       return <TableView {...v} />;
+    case 'circuit':
+      return <CircuitsVisual v={v} />;
     default:
       return null;
   }

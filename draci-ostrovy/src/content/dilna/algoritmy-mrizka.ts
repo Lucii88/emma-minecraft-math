@@ -2,7 +2,7 @@
 // v programu): klíč odvozený z obsahu světa, náhodné světy, náhodná
 // nejkratší cesta a popis programu slovy („2× doprava, pak 1× dolů“).
 
-import { ARROW, DELTA, MOVES, MOVE_WORD, cellKey, fly, insideGrid, sameCell, shortestProgram } from '../../core/grid';
+import { ARROW, DELTA, MOVES, MOVE_WORD, cellKey, fly, insideGrid, runsOf, sameCell, shortestProgram } from '../../core/grid';
 import type { Rng } from '../../core/rng';
 import type { Cell, Move, Visual } from '../../core/types';
 
@@ -25,6 +25,9 @@ export interface World {
   goal: Cell;
   rocks: Cell[];
   eggs: Cell[];
+  /** Klíč a brána (branou jen s klíčem). */
+  key?: Cell;
+  gate?: Cell;
 }
 
 type GridVisual = Extract<Visual, { type: 'grid' }>;
@@ -39,6 +42,7 @@ export function worldKey(w: World): string {
   let key = `${w.cols}x${w.rows}-d${code(w.dragon)}-g${code(w.goal)}`;
   if (w.rocks.length) key += `-r${sortCells(w.rocks).map(code).join('')}`;
   if (w.eggs.length) key += `-e${sortCells(w.eggs).map(code).join('')}`;
+  if (w.key && w.gate) key += `-k${code(w.key)}-b${code(w.gate)}`;
   return key;
 }
 
@@ -54,6 +58,7 @@ export function gridOf(w: World, path?: Move[]): Omit<GridVisual, 'type'> & { dr
     goal: w.goal,
     ...(w.rocks.length ? { rocks: sortCells(w.rocks) } : {}),
     ...(w.eggs.length ? { eggs: sortCells(w.eggs) } : {}),
+    ...(w.key && w.gate ? { key: w.key, gate: w.gate } : {}),
     ...(path ? { path } : {}),
   };
 }
@@ -219,18 +224,7 @@ export function singleFixes(w: World, program: readonly Move[]): { step: number;
   return out;
 }
 
-/** Běhy stejných kroků: → → ↓ = [[R, 2], [D, 1]]. */
-export function runsOf(p: readonly Move[]): [Move, number][] {
-  const runs: [Move, number][] = [];
-  for (const m of p) {
-    const last = runs[runs.length - 1];
-    if (last && last[0] === m) last[1]++;
-    else runs.push([m, 1]);
-  }
-  return runs;
-}
-
-const runText = ([m, n]: [Move, number]) => `${n}× ${MOVE_WORD[m]}`;
+const runText = ({ move, times }: { move: Move; times: number }) => `${times}× ${MOVE_WORD[move]}`;
 
 /** „a, b, pak c“ */
 export function joinPak(parts: string[]): string {

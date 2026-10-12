@@ -2,12 +2,14 @@ import { useMemo, useState } from 'react';
 import { SKILL_BY_ID, islandsFor } from '../../content';
 import { useGame } from '../../core/game';
 import { sfx } from '../../core/sound';
-import type { BodyRegion, Confidence, Item } from '../../core/types';
+import type { BodyRegion, Confidence, Item, Move } from '../../core/types';
 import { capitalize, count, formatNumber } from '../../core/czech';
 import { Dragon, type DragonMood } from '../components/Dragon';
 import { ChoiceAnswer, LettersAnswer, NumberLineAnswer, NumberPad, OpenAnswer, OrderAnswer, SpellAnswer, spellMatches } from '../components/Answers';
 import { ConfidencePicker, Icon, Progress, SpeakButton } from '../components/Bits';
 import { ProgramAnswer } from '../components/ProgramAnswer';
+import { SwitchesAnswer, WiresAnswer } from '../components/CircuitAnswer';
+import { solveSwitches, switchesOf } from '../../core/circuit';
 import { SayAnswer } from '../components/SayAnswer';
 import { caps } from '../../core/caps';
 import { judgeSay, type SayVerdict, type SpeechResult } from '../../core/saymatch';
@@ -17,7 +19,7 @@ import { renderMathVisual } from '../visuals/MathVisuals';
 import { renderWorldVisual, visualSpeech } from '../visuals/WorldVisuals';
 import { EnglishSpeak, renderEnglishVisual } from '../visuals/EnglishVisuals';
 import { BodyMap, labelOf } from '../visuals/BodyMap';
-import { arrows, shortestProgram } from '../../core/grid';
+import { ARROW, arrows, runsOf, shortestProgram } from '../../core/grid';
 import { IslandArt } from './MapScreen';
 import { useGx } from '../useGx';
 
@@ -200,6 +202,7 @@ function ItemView({ item }: { item: Item }) {
     if (item.visual.type === 'body') return null; // mapa těla se vykreslí v odpovědi
     if (a.kind === 'numberline' && item.visual.type === 'numberline') return null;
     if (a.kind === 'program') return null; // mřížka s letícím drakem je součástí odpovědi
+    if (a.kind === 'switches' || a.kind === 'wires') return null; // obvod se ovládá v odpovědi
     return renderMathVisual(item.visual) ?? renderWorldVisual(item.visual) ?? renderEnglishVisual(item.visual);
   }, [item, a.kind]);
 
@@ -207,7 +210,14 @@ function ItemView({ item }: { item: Item }) {
   const solutionMoves = useMemo(() => {
     if (a.kind !== 'program' || item.visual?.type !== 'grid' || !item.visual.dragon || !item.visual.goal) return null;
     const g = item.visual;
-    return shortestProgram({ cols: g.cols, rows: g.rows, dragon: g.dragon!, goal: g.goal!, rocks: g.rocks }, a.collect ?? []);
+    if (a.solution) return a.solution;
+    return shortestProgram({ cols: g.cols, rows: g.rows, dragon: g.dragon!, goal: g.goal!, rocks: g.rocks, key: g.key, gate: g.gate }, a.collect ?? []);
+  }, [item, a]);
+
+  // Správné nastavení vypínačů pro ukázku řešení.
+  const solvedSwitches = useMemo(() => {
+    if (a.kind !== 'switches' || item.visual?.type !== 'circuit') return null;
+    return solveSwitches(item.visual.nets[0], a.target);
   }, [item, a]);
 
   const correctChoice = a.kind === 'choice' && (phase === 'feedback' || phase === 'solution') ? a.correct : null;
@@ -223,14 +233,18 @@ function ItemView({ item }: { item: Item }) {
             : a.kind === 'tap'
               ? labelOf(a.correct as BodyRegion)
               : a.kind === 'program'
-                ? `například ${arrows(solutionMoves ?? [])}`
+                ? programText(a, solutionMoves ?? [])
                 : a.kind === 'order'
                   ? a.correct.join(' → ')
                   : a.kind === 'spell'
                     ? a.correct
                     : a.kind === 'say'
                       ? a.model
-                      : '';
+                      : a.kind === 'switches'
+                        ? switchesText(item, solvedSwitches)
+                        : a.kind === 'wires'
+                          ? 'takhle'
+                          : '';
 
   // Vysvětlení občas začíná samotnou odpovědí („Fakt. Lékaři…“) – po „Správně
   // je Fakt.“ by se opakovala.
@@ -291,11 +305,19 @@ function ItemView({ item }: { item: Item }) {
             <ProgramAnswer
               grid={item.visual}
               maxSteps={a.maxSteps}
+              maxBlocks={a.maxBlocks}
+              loop={a.loop}
               collect={a.collect ?? []}
               disabled={locked}
               solution={phase === 'solution' ? solutionMoves : null}
               onResult={submit}
             />
+          )}
+          {a.kind === 'switches' && item.visual?.type === 'circuit' && (
+            <SwitchesAnswer net={item.visual.nets[0]} target={a.target} disabled={locked} solution={phase === 'solution' ? solvedSwitches : null} onResult={submit} />
+          )}
+          {a.kind === 'wires' && item.visual?.type === 'wires' && (
+            <WiresAnswer wires={item.visual} disabled={locked} solution={phase === 'solution' ? a.solution : null} onResult={submit} />
           )}
           {a.kind === 'order' && <OrderAnswer items={a.items} disabled={locked} onSubmit={(order) => submit(order.every((x, i) => x === a.correct[i]))} />}
           {a.kind === 'spell' && (
@@ -432,4 +454,26 @@ function ParentJudge({ disabled, explanation, onJudge }: { disabled: boolean; ex
       </details>
     </div>
   );
+}
+
+/** Nastavení vypínačů slovy (stejně začíná vysvětlení, aby se neopakovalo). */
+function switchesText(item: Item, solved: Record<string, boolean> | null): string {
+  if (!solved || item.visual?.type !== 'circuit') return '';
+  const ids = switchesOf(item.visual.nets[0]).map((x) => x.id);
+  const on = ids.filter((id) => solved[id]);
+  const off = ids.filter((id) => !solved[id]);
+  return `${on.length ? `zapnuté: ${on.join(', ')}` : 'všechno vypnuté'}${on.length && off.length ? `, vypnuté: ${off.join(', ')}` : ''}`;
+}
+
+/** Řešení letu slovy pro list s řešením: šipky, příkazy „→ ×3“, nebo Opakuj. */
+function programText(a: Extract<Item['answer'], { kind: 'program' }>, moves: Move[]): string {
+  if (a.loop) {
+    for (let len = 1; len <= a.loop.maxPattern; len++) {
+      if (moves.length % len) continue;
+      const pattern = moves.slice(0, len);
+      if (moves.every((m, i) => m === pattern[i % len])) return `Opakuj ${moves.length / len}× (${arrows(pattern)})`;
+    }
+  }
+  if (a.maxBlocks) return runsOf(moves).map((r) => `${ARROW[r.move]} ×${r.times}`).join(', ');
+  return `například ${arrows(moves)}`;
 }
